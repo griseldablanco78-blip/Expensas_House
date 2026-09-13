@@ -1,0 +1,21 @@
+*.iml
+.gradle
+/local.properties
+/.idea/
+/build/
+/app/build/
+/captures/
+.externalNativeBuild/
+.cxx/
+
+# Python local environment and generated files
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.streamlit/secrets.toml
+
+# Local Android signing material
+/Key/
+/app/debug/
+/app/release/
