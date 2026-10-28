@@ -42,5 +42,13 @@ data class Offer(
 data class UserPrefs(
     @PrimaryKey val id: Int = 0,
     val monthlyBudget: Double = 0.0,
-    val totalSpent: Double = 0.0
+    val totalSpent: Double = 0.0 // Mantenemos para compatibilidad rápida
+)
+
+@Entity(tableName = "expenses")
+data class Expense(
+    @PrimaryKey val id: String = UUID.randomUUID().toString(),
+    val category: String,
+    val amount: Double,
+    val timestamp: Long = System.currentTimeMillis()
 )

@@ -8,12 +8,15 @@ import androidx.compose.ui.graphics.Color
 fun expensaColors() = lightColorScheme(
     primary = Leaf,
     onPrimary = Color.White,
-    secondary = Coral,
+    secondary = Sky,
     onSecondary = Color.White,
+    tertiary = Gold,
     background = Canvas,
     surface = Color.White,
     onSurface = Ink,
-    onBackground = Ink
+    onBackground = Ink,
+    error = Coral,
+    onError = Color.White
 )
 
 @Composable

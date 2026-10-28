@@ -2,22 +2,22 @@ package com.expensahouse.app.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-// Nueva paleta de colores vibrante y profesional
-val Canvas = Color(0xFFF8F9FA) // Fondo crema muy claro
-val Ink = Color(0xFF1A1C1E)    // Texto principal casi negro
-val Muted = Color(0xFF6C757D)  // Texto secundario gris
+// Paleta "Quiet Luxury" - Elegante, minimalista y de clase alta
+val Canvas = Color(0xFFFAF9F6) // Off-white (Hueso/Champagne)
+val Ink = Color(0xFF2C2C2C)    // Carbón suave para texto
+val Muted = Color(0xFF8E8E8E)  // Gris piedra
 
-val Leaf = Color(0xFF2D6A4F)   // Verde Esmeralda (Primario)
-val SoftLeaf = Color(0xFFD8F3DC)
+val Leaf = Color(0xFF4A5D4E)   // Verde salvia oscuro (Elegante)
+val SoftLeaf = Color(0xFFE8EDE7)
 
-val Coral = Color(0xFFD90429)  // Rojo Alerta (Stock Bajo)
-val SoftCoral = Color(0xFFFFD6BA)
+val Coral = Color(0xFFBC6C4D)  // Terracota suave (Alerta refinada)
+val SoftCoral = Color(0xFFF4E9E2)
 
-val Gold = Color(0xFFF59E0B)   // Oro (En Uso)
-val SoftGold = Color(0xFFFEF3C7)
+val Gold = Color(0xFFD4AF37)   // Oro mate
+val SoftGold = Color(0xFFF9F1D8)
 
-val Sky = Color(0xFF0EA5E9)    // Azul (Info/Categorías)
-val SoftSky = Color(0xFFE0F2FE)
+val Sky = Color(0xFF7D9BB2)    // Azul acero
+val SoftSky = Color(0xFFEBF1F5)
 
-val Lavender = Color(0xFF8B5CF6) // Púrpura (Ofertas/Especial)
-val SoftLavender = Color(0xFFEDE9FE)
+val Lavender = Color(0xFF9B8EA9) // Lavanda grisáceo
+val SoftLavender = Color(0xFFF1EFF4)

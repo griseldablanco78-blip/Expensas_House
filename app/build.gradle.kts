@@ -1,9 +1,22 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
     id("com.google.devtools.ksp")
 }
+
+val localProperties = Properties().apply {
+    val propertiesFile = rootProject.file("local.properties")
+    if (propertiesFile.isFile) {
+        propertiesFile.inputStream().use { load(it) }
+    }
+}
+val expensaApiBaseUrl = localProperties.getProperty(
+    "expensa.apiBaseUrl",
+    "http://10.0.2.2:8000/"
+)
 
 android {
     namespace = "com.expensahouse.app"
@@ -15,10 +28,12 @@ android {
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
+        buildConfigField("String", "API_BASE_URL", "\"$expensaApiBaseUrl\"")
     }
 
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 
     compileOptions {

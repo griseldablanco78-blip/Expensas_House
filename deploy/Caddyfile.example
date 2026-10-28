@@ -1,0 +1,5 @@
+# Supply an actual public domain through EXPENSA_DOMAIN.
+# This is a template, not a deployment performed by Codex.
+{$EXPENSA_DOMAIN} {
+    reverse_proxy 127.0.0.1:8000
+}

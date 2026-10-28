@@ -14,8 +14,23 @@ __pycache__/
 *.py[cod]
 .pytest_cache/
 .streamlit/secrets.toml
+/data/app_state.json
+/data/stock.csv
+/data/stock.json
+.env
+Key/
+local.properties
 
 # Local Android signing material
 /Key/
 /app/debug/
 /app/release/
+
+# Authentication state and local TLS material
+/data/accounts.sqlite3*
+/certs/
+
+# Local runtime state and temporary tunnel logs
+/.runtime/
+
+data/product_images/

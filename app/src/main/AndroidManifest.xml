@@ -1,11 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-feature android:name="android.hardware.camera.any" android:required="false" />
+
     <application
         android:name=".ExpensaApp"
         android:allowBackup="true"
         android:label="Expensa House"
         android:supportsRtl="true"
         android:theme="@style/Theme.ExpensaHouse">
+        <provider
+            android:name="androidx.core.content.FileProvider"
+            android:authorities="${applicationId}.ticketphotos"
+            android:exported="false"
+            android:grantUriPermissions="true">
+            <meta-data
+                android:name="android.support.FILE_PROVIDER_PATHS"
+                android:resource="@xml/ticket_photo_paths" />
+        </provider>
         <activity
             android:name=".MainActivity"
             android:exported="true">

@@ -5,3 +5,9 @@ pandas
 plotly
 scikit-learn
 python-multipart
+Pillow>=11
+pytesseract>=0.3.13
+SpeechRecognition>=3.10,<4
+
+argon2-cffi>=23.1,<26
+python-dotenv>=1,<2

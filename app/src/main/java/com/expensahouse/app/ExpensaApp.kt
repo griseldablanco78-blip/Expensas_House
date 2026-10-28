@@ -5,15 +5,13 @@ import androidx.room.Room
 import com.expensahouse.app.data.local.ExpensaDatabase
 
 class ExpensaApp : Application() {
-    lateinit var database: ExpensaDatabase
-        private set
-
-    override fun onCreate() {
-        super.onCreate()
-        database = Room.databaseBuilder(
-            applicationContext,
-            ExpensaDatabase::class.java,
-            "expensa_db"
-        ).fallbackToDestructiveMigration().build()
-    }
+    private val databases = mutableMapOf<String, ExpensaDatabase>()
+    val database: ExpensaDatabase
+        @Synchronized get() {
+            val id = requireNotNull(com.expensahouse.app.core.auth.AuthSession.user.value).id
+            return databases.getOrPut(id) {
+                Room.databaseBuilder(applicationContext, ExpensaDatabase::class.java,
+                    "expensa_account_${id}.db").build()
+            }
+        }
 }
