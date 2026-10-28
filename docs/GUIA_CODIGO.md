@@ -113,7 +113,7 @@ Se usa JavaScript del navegador, sin React ni compilación obligatoria. `fetch` 
 | `ui/theme/` | Colores y tema de la interfaz. | Material 3 |
 | `res/xml/ticket_photo_paths.xml` | Limita qué archivos temporales de cámara puede compartir la app mediante FileProvider. | Android XML |
 
-MVVM significa separar pantalla (View), estado/coordinación (ViewModel) y datos (Model). El proyecto se acerca a ese esquema incrementalmente; algunas operaciones del escáner todavía viven en Compose y no deben presentarse como una separación completa.
+MVVM significa separar pantalla (View), estado/coordinación (ViewModel) y datos (Model). El proyecto se acerca a ese esquema incrementalmente; algunas operaciones del escáner todavía viven en Compose y mantienen una separación parcial de responsabilidades.
 
 ## Análisis y compatibilidad
 

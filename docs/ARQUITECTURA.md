@@ -65,7 +65,7 @@ La identidad, las sesiones, los permisos del hogar actual y las invitaciones ya 
 
 ## Sección futura: Mi hogar
 
-La unidad de colaboración será el **hogar**. Una persona podrá pertenecer a más de uno y tendrá un perfil distinto en cada hogar. La administradora asignará acceso mediante el **correo del usuario** y elegirá una de estas tres opciones, confirmadas por la dueña del proyecto:
+La unidad de colaboración será el **hogar**. Una persona podrá pertenecer a más de uno y tendrá un perfil distinto en cada hogar. La administradora asignará acceso mediante el **correo del usuario** y elegirá una de estos tres perfiles de acceso:
 
 | Opción | Perfil | Alcance |
 |---|---|---|

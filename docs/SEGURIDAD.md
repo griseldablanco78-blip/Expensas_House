@@ -18,9 +18,9 @@ Compatibilidad de almacenamiento: la columna y el campo API `email` guardan el i
 
 Se implementaron registro por correo y contraseña, verificación de correo, recuperación de contraseña, sesiones revocables, permisos por perfil e invitaciones desde la web. El backend protege las rutas funcionales y las rutas heredadas, incluyendo tickets, chatbot y sincronización.
 
-**HTTPS temporal ya está activo para pruebas autorizadas. El envío real de correos sigue pendiente de ingresar la credencial SMTP en el configurador local.** La URL actual está en `.runtime/public-url.txt`; falta un dominio estable para producción. No se creó una contraseña para la administradora ni se verificó su correo en su nombre. El correo indicado por la dueña del proyecto quedó configurado en el `.env` local como administradora; ese archivo no se versiona.
+El acceso HTTPS temporal permite pruebas desde dispositivos externos; la dirección vigente se configura localmente y no representa un despliegue permanente. El modo de correo requiere configuración SMTP; el modo predeterminado de usuario y contraseña no envía verificaciones por correo.
 
-La versión anterior dependía de que la PC ejecutara la API: al investigar el error del escáner no había ningún proceso escuchando en el puerto 8000. Se inició temporalmente con autorización de la usuaria y se detuvo al comenzar este trabajo de seguridad. **La versión nueva rechaza HTTP desde la Wi-Fi**, por lo que no se debe reactivar el servidor anterior para evitar el inicio de sesión. El escaneo desde el celular se retomará con la dirección HTTPS configurada.
+La API necesita un proceso activo en el servidor. El acceso HTTP por Wi-Fi está bloqueado; los dispositivos externos requieren una dirección HTTPS válida. Las cuentas administradoras se configuran mediante el procedimiento local documentado, sin credenciales predeterminadas.
 
 ## Protocolo de acceso implementado
 
@@ -71,7 +71,7 @@ SMTP_USER=USUARIO-DEL-PROVEEDOR
 SMTP_PASSWORD=CREDENCIAL-DEL-PROVEEDOR
 ```
 
-Esas credenciales se ingresan en el entorno local del servidor, nunca en el chat ni en el repositorio. El correo usado para iniciar sesión no obliga a utilizar Gmail como proveedor de envío. Si se elige SMTP de Gmail, revisar las condiciones de la cuenta y las [contraseñas de aplicación de Google](https://support.google.com/accounts/answer/185833?hl=es); no usar la contraseña habitual de Gmail en el proyecto. No se configuró ni se envió correo real durante esta entrega.
+Esas credenciales se ingresan en el entorno local del servidor, sin incluirlas en documentación, mensajes ni en el repositorio. El correo usado para iniciar sesión no obliga a utilizar Gmail como proveedor de envío. Si se elige SMTP de Gmail, revisar las condiciones de la cuenta y las [contraseñas de aplicación de Google](https://support.google.com/accounts/answer/185833?hl=es); no usar la contraseña habitual de Gmail en el proyecto. No se configuró ni se envió correo real en esta configuración.
 
 ### HTTPS
 
@@ -106,7 +106,7 @@ Referencias: [autenticación de OWASP](https://cheatsheetseries.owasp.org/cheats
 
 ## Activación temporal de pruebas autorizada
 
-Se instaló `cloudflared` y se inició un Quick Tunnel con autorización de la dueña del proyecto. La URL de la sesión actual está en `.runtime/public-url.txt` (archivo local ignorado por Git); también se configuró en `.env` y en `local.properties` para compilar Android. La API sigue escuchando solo en `127.0.0.1:8002`.
+El entorno de pruebas puede usar un Quick Tunnel de `cloudflared` habilitado explícitamente por la administración. La URL de la sesión actual está en `.runtime/public-url.txt` (archivo local ignorado por Git); también se configuró en `.env` y en `local.properties` para compilar Android. La API sigue escuchando solo en `127.0.0.1:8002`.
 
 Se comprobó por la dirección HTTPS que la página responde 200 y que `/api/stock` responde 401 sin sesión. El túnel no sustituye el login de la aplicación. La dirección es temporal: requiere la PC y el proceso de túnel activos; al generar otro túnel habrá que actualizar URL pública, origen permitido y APK. No es un despliegue de producción.
 

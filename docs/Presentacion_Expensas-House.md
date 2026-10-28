@@ -1,19 +1,19 @@
-# Expensa House · guía de revisión y ejecución para el docente
+# Presentación de Expensas House
 
 ## Qué resuelve
 
 Una aplicación doméstica para organizar existencias, preparar compras, comparar ofertas y controlar gastos. Tiene una web y un cliente Android. Ambos usan una API Python compartida. El presupuesto y los tickets son un módulo contable del hogar; no se conectan con bancos ni tarjetas.
 
-## Por dónde empezar
+## Documentación del proyecto
 
-1. Leer esta guía: problema, instalación, demostración y límites.
-2. Abrir [GUIA_CODIGO.md](GUIA_CODIGO.md): responsabilidades y archivos, con explicaciones para principiantes.
-3. Revisar [ARQUITECTURA.md](ARQUITECTURA.md): decisiones, separación incremental y evolución propuesta.
-4. Leer [GASTOS_Y_COMPROBANTES.md](GASTOS_Y_COMPROBANTES.md): OCR, archivo de lectura y cálculos mensuales.
-5. Ejecutar [REGRESION.md](REGRESION.md) y consultar [resultados locales](QA_RESULTADOS_2026-10-28.md).
-6. Consultar [PLAN_PROYECTO.md](../PLAN_PROYECTO.md) para conocer las tareas pendientes.
+1. Presentación general: propósito, instalación, funcionamiento y alcance.
+2. [Guía del código](GUIA_CODIGO.md): responsabilidades, archivos, tecnologías y librerías.
+3. [Arquitectura](ARQUITECTURA.md): decisiones, separación incremental y evolución propuesta.
+4. [Gastos y comprobantes](GASTOS_Y_COMPROBANTES.md): OCR, archivo de lectura y cálculos mensuales.
+5. [Regresión automatizada](REGRESION.md) y [resultados locales](QA_RESULTADOS_2026-10-28.md).
+6. [Plan del proyecto](../PLAN_PROYECTO.md): estado y tareas pendientes.
 
-## Arquitectura en una frase
+## Arquitectura
 
 Se utiliza un **monolito modular**: un backend organizado por responsabilidades y dos clientes independientes. La web y la API pueden ejecutarse con un único proceso local; separar carpetas no obliga a contratar dos servidores.
 
@@ -29,7 +29,7 @@ flowchart TD
     A --> R[Room: almacenamiento local Android]
 ```
 
-Parte de inventario, compras y presupuesto aún accede a persistencia desde las rutas. `app.js` y `MainActivity` conservan operaciones pendientes de extraer. El objetivo es una separación progresiva comprobable, no presentar una arquitectura terminada solo por sus nombres de carpetas.
+Parte de inventario, compras y presupuesto aún accede a persistencia desde las rutas. `app.js` y `MainActivity` conservan operaciones pendientes de extraer. La separación de responsabilidades continúa de forma incremental.
 
 ## Requisitos recomendados
 
@@ -37,7 +37,7 @@ Parte de inventario, compras y presupuesto aún accede a persistencia desde las 
 - Node.js 22 para pruebas de navegador; no es necesario para abrir la aplicación web normal.
 - Tesseract instalado en el sistema para leer imágenes. Sin él se puede interpretar texto pegado.
 - Android Studio, JDK 17 y SDK Android 35 si se revisa el cliente móvil.
-- La API local no requiere una cuenta de Vercel ni acceso a los datos del hogar de la autora.
+- La API local no requiere una cuenta de Vercel ni acceso a datos de otras instalaciones.
 
 ## Ejecución web y backend desde una copia nueva
 
@@ -53,7 +53,7 @@ Copy-Item .env.example .env
 .venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
 ```
 
-El configurador solicita un usuario y una contraseña de al menos 15 caracteres, escrita de forma oculta. La cuenta es del entorno del docente: no hay credenciales predeterminadas ni se necesita usar las de la autora.
+El configurador solicita un usuario y una contraseña de al menos 15 caracteres, escrita de forma oculta. Cada instalación tiene sus propias cuentas; no hay credenciales predeterminadas.
 
 Abrir [aplicación local](http://127.0.0.1:8000) e ingresar con la cuenta creada. Abrir [contratos de API](http://127.0.0.1:8000/docs) para inspeccionar entradas y salidas. Los endpoints privados requieren autenticación; que aparezcan en Swagger no los vuelve públicos.
 
@@ -83,20 +83,20 @@ Compilar:
 .\gradlew.bat :app:assembleDebug --console=plain
 ```
 
-## Demostración sugerida (5–7 minutos)
+## Funcionamiento de los módulos
 
-1. Mostrar inventario y lista de compras.
-2. Crear una oferta de prueba y buscarla; señalar que el origen es manual.
-3. Abrir **Presupuesto y gastos**, pegar texto o subir el ticket sintético.
-4. Revisar fecha, supermercado, productos y total antes de confirmar.
-5. Elegir el mes de compra, mostrar gasto, saldo, archivo de texto e imagen cuando exista.
-6. Consultar Boti House por presupuesto/faltantes; explicar que usa reglas y datos del hogar.
-7. Mostrar las pruebas automáticas y un reporte. Distinguir simulaciones de las integraciones reales.
+- **Inventario y compras:** registra existencias y unidades en uso, y organiza los productos pendientes de compra.
+- **Ofertas:** permite crear ofertas guardadas y consultar productos por nombre, marca o presentación. El resultado identifica la fuente disponible.
+- **Tickets:** recibe una foto o texto, genera un borrador y permite revisar fecha, supermercado, productos e importes antes de registrar el gasto.
+- **Presupuesto y gastos:** calcula el gasto del mes seleccionado, el saldo respecto del presupuesto de referencia y los totales por supermercado. El historial permite descargar texto y consultar imágenes archivadas.
+- **Boti House:** responde consultas de presupuesto y faltantes mediante reglas y datos del hogar.
+- **Sincronización:** conecta los clientes Android y web a la misma API y combina cambios según el estado disponible.
+- **Calidad:** las pruebas automatizadas verifican contratos, permisos y recorridos de interfaz con datos de prueba separados.
 
-## Qué no está terminado
+## Estado y alcance actual
 
 No hay URL de producción verificada. La persistencia sigue siendo local (JSON/SQLite/archivos); una publicación permanente necesita almacenamiento persistente o migración. La web tiene selector mensual; Android conserva el historial anterior. El presupuesto es una referencia común, no un presupuesto diferente almacenado por mes. No hay aislamiento implementado para múltiples hogares independientes. El OCR no garantiza precisión con fotografías reales y sus resultados se revisan antes de registrar gastos. La selección de cámara/galería física sigue formando parte de la regresión manual.
 
-## Archivos que no se entregan
+## Configuración y datos privados
 
-`.env`, `local.properties`, bases de cuentas, datos del hogar, imágenes de tickets personales, certificados y llaves de firma están excluidos de Git. Los ejemplos necesarios para configurar el proyecto se entregan con nombres ficticios y valores vacíos.
+`.env`, `local.properties`, bases de cuentas, datos del hogar, imágenes de tickets personales, certificados y llaves de firma están excluidos de Git. Los archivos de ejemplo contienen nombres ficticios y valores vacíos para configurar cada instalación.

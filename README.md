@@ -2,9 +2,9 @@
 
 Aplicación para organizar la despensa del hogar, preparar compras, comparar ofertas y registrar gastos a partir de tickets. Tiene dos clientes: web y Android, conectados a una API Python compartida.
 
-## Para el docente
+## Documentación del proyecto
 
-Empezar por la [guía de entrega y ejecución](docs/ENTREGA_DOCENTE.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
+[Presentación y ejecución del proyecto](docs/Presentacion_Expensas-House.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
 
 ## Enlaces
 
@@ -74,5 +74,5 @@ Ver [casos, herramientas y ejecución](docs/REGRESION.md): pytest para API, Play
 
 - [Módulo contable y archivo de comprobantes](docs/GASTOS_Y_COMPROBANTES.md).
 - [Guía de Vercel y backend persistente](deploy/VERCEL.md).
-- [Guion de presentación y demostración](docs/PRESENTACION.md).
+- [Funcionalidades y tecnologías](docs/FUNCIONALIDADES.md).
 - [Cuadernillo técnico de IA](CUADERNILLO_TECNICO_IA.md): material complementario; distinguir experimentos de funciones efectivamente integradas.

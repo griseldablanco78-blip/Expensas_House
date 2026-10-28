@@ -22,7 +22,7 @@ Ayudar a un hogar a conocer sus existencias, preparar compras y controlar gastos
 3. Mostrar descripciones editables en varias líneas en la web y conservarlas al confirmar.
 4. Incorporar alta de ofertas desde la web y prueba de equivalencia con el endpoint Android.
 5. Mostrar errores de consulta en el comparador y actualizar la versión de los archivos para evitar caché anterior.
-6. Actualizar README y guion para explicar las funciones y limitaciones reales.
+6. Actualizar README y documentación funcional con el alcance actual.
 
 ## Módulo contable incorporado
 
@@ -36,7 +36,7 @@ URL desplegada: **pendiente de publicación y verificación**. Consultar [guía 
 
 ## Próximas etapas
 
-- Reproducir el fallo de búsqueda web con la instalación y el producto utilizados por la usuaria; comprobar que ambos clientes apuntan al mismo servidor y que el proveedor devuelve ofertas vigentes.
+- Reproducir el fallo de búsqueda web con la instalación y el producto que presentan el error; comprobar que ambos clientes apuntan al mismo servidor y que el proveedor devuelve ofertas vigentes.
 - Validar OCR con fotos reales de tickets completos y medir productos reconocidos, nombres e importes contra una transcripción manual.
 - Completar extracción de pantallas y servicios de inventario, compras y presupuesto; reducir `app.js` y `MainActivity`.
 - Migrar datos del hogar a almacenamiento relacional con migraciones y respaldos; aislar hogares antes de ofrecer uso multiusuario independiente.
@@ -47,4 +47,4 @@ URL desplegada: **pendiente de publicación y verificación**. Consultar [guía 
 
 Una búsqueda equivalente muestra el mismo producto/precio en web y Android; una falla externa deja un mensaje visible. Un ticket permite revisar y guardar nombres completos, cantidades, precios y total; un reintento no duplica el gasto. Los usuarios de lectura no pueden modificar datos. La URL pública debe probarse con inicio de sesión y una operación completa antes de anunciarla.
 
-Ver [README](README.md), [arquitectura](docs/ARQUITECTURA.md) y [presentación](docs/PRESENTACION.md).
+Ver [README](README.md), [arquitectura](docs/ARQUITECTURA.md) y [presentación](docs/Presentacion_Expensas-House.md).
