@@ -1,0 +1,11 @@
+{
+  "name": "expensa-house-quality",
+  "private": true,
+  "scripts": {
+    "test:web": "playwright test",
+    "test:web:report": "playwright show-report"
+  },
+  "devDependencies": {
+    "@playwright/test": "^1.58.0"
+  }
+}

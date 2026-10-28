@@ -2,6 +2,10 @@
 
 Aplicación para organizar la despensa del hogar, preparar compras, comparar ofertas y registrar gastos a partir de tickets. Tiene dos clientes: web y Android, conectados a una API Python compartida.
 
+## Para el docente
+
+Empezar por la [guía de entrega y ejecución](docs/ENTREGA_DOCENTE.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
+
 ## Enlaces
 
 - [Repositorio](https://github.com/griseldablanco78-blip/Expensas_House)
@@ -61,6 +65,10 @@ Get-ChildItem frontend/web/js -Recurse -Filter *.js | ForEach-Object { node --ch
 ```
 
 Las pruebas usan datos temporales y proveedores simulados; no certifican precios en vivo ni la precisión de una fotografía concreta.
+
+## Regresión automatizada
+
+Ver [casos, herramientas y ejecución](docs/REGRESION.md): pytest para API, Playwright para web, Compose UI Test para Android y GitHub Actions. Las pruebas usan datos de prueba separados del hogar real.
 
 ## Publicación y presentación
 

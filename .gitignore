@@ -37,3 +37,7 @@ data/product_images/
 
 # Private purchase receipts
 /data/receipts/
+
+node_modules/
+playwright-report/
+test-results/

@@ -6,7 +6,7 @@ function renderBudgetAndExpenses() {
   const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
 
   document.getElementById('budget-total-display').textContent = `$${budget.toLocaleString('es-AR')}`;
-  
+
   const remainingDisplay = document.getElementById('budget-remaining-display');
   remainingDisplay.textContent = `$${remaining.toLocaleString('es-AR')}`;
   remainingDisplay.style.color = remaining < 0 ? 'var(--color-coral)' : 'var(--color-leaf)';
@@ -41,4 +41,3 @@ function renderBudgetAndExpenses() {
     expTbody.appendChild(tr);
   });
 }
-
