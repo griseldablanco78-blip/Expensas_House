@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=receipts-offers-5">
-  <link rel="stylesheet" href="/static/css/polish.css?v=receipts-offers-5">
+  <link rel="stylesheet" href="/static/css/style.css?v=monthly-archive-6">
+  <link rel="stylesheet" href="/static/css/polish.css?v=monthly-archive-6">
 </head>
 <body>
   <section id="auth-panel" class="auth-panel">
@@ -196,23 +196,7 @@
           <!-- Tarjetas generadas dinámicamente -->
         </div>
       </div>
-      <section class="card-panel receipt-scanner" aria-labelledby="receipt-title">
-        <h3 id="receipt-title">🧾 Escanear ticket de compra</h3>
-        <p>Subí una foto o pegá el texto. Revisá los productos antes de registrar el gasto en tu presupuesto.</p>
-        <label>Foto del ticket <input id="receipt-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label>
-        <button id="receipt-scan" class="btn-secondary" type="button">Leer foto</button>
-        <label>Texto del ticket <textarea id="receipt-text" rows="4" placeholder="2 x LECHE 1500,00 3000,00&#10;TOTAL 3000,00"></textarea></label>
-        <button id="receipt-parse" class="btn-secondary" type="button">Interpretar texto</button>
-        <p id="receipt-status" role="status" aria-live="polite"></p>
-        <div id="receipt-review" class="hidden">
-          <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
-          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unidad</th><th>Subtotal</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
-          <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
-          <label>Total gastado ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
-          <label>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
-          <button id="receipt-confirm" type="button" class="btn-primary">Confirmar ticket y descontar del presupuesto</button>
-        </div>
-      </section>
+
     </section>
 
     <!-- ========================================== -->
@@ -368,10 +352,36 @@
         </div>
         <div class="header-actions">
           <button id="btn-open-budget-modal" class="btn-secondary">⚙️ Definir Presupuesto</button>
-          <button id="btn-open-expense-modal" class="btn-primary">🧾 Cargar Ticket</button>
+          <button id="btn-open-expense-modal" class="btn-primary">+ Gasto manual</button>
         </div>
       </div>
 
+      <div class="filter-bar">
+        <label>Mes de los gastos <input id="expense-month" type="month"></label>
+        <span>El presupuesto configurado se usa como referencia para el mes elegido.</span>
+      </div>
+      <p id="expense-month-status" role="status"></p>
+      <div id="expense-store-summary" class="card-panel"></div>
+      <section class="card-panel receipt-scanner" aria-labelledby="receipt-title">
+        <h3 id="receipt-title">🧾 Escanear ticket de compra</h3>
+        <p>Subí una foto o pegá el texto. Revisá los productos antes de registrar el gasto en tu presupuesto.</p>
+        <label>Foto del ticket <input id="receipt-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label>
+        <img id="receipt-preview" class="hidden" alt="Vista completa del ticket seleccionado" style="max-width:100%;max-height:420px;object-fit:contain">
+        <label>Lectura de la foto<select id="receipt-preprocessing"><option value="standard">Normal</option><option value="adaptive">Foto con sombras · OpenCV</option></select></label>
+        <button id="receipt-scan" class="btn-secondary" type="button">Leer foto</button>
+        <label>Texto del ticket <textarea id="receipt-text" rows="4" placeholder="2 x LECHE 1500,00 3000,00&#10;TOTAL 3000,00"></textarea></label>
+        <button id="receipt-parse" class="btn-secondary" type="button">Interpretar texto</button>
+        <p id="receipt-status" role="status" aria-live="polite"></p>
+        <div id="receipt-review" class="hidden">
+          <label>Fecha de compra <input id="receipt-date" type="date" required></label>
+          <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
+          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unidad</th><th>Subtotal</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
+          <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
+          <label>Total gastado ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
+          <label>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
+          <button id="receipt-confirm" type="button" class="btn-primary">Confirmar ticket y descontar del presupuesto</button>
+        </div>
+      </section>
       <!-- Tarjeta de Progreso del Presupuesto -->
       <div class="budget-card">
         <div class="budget-header-row">
@@ -641,11 +651,12 @@
 
   </div>
   <!-- JavaScript -->
-  <script src="/static/js/core/auth.js?v=receipts-offers-5"></script>
-  <script src="/static/js/core/dom.js?v=receipts-offers-5"></script>
-  <script src="/static/js/features/offers.js?v=receipts-offers-5"></script>
-  <script src="/static/js/features/chat.js?v=receipts-offers-5"></script>
-  <script src="/static/js/features/receipts.js?v=receipts-offers-5"></script>
-  <script src="/static/js/app.js?v=receipts-offers-5"></script>
+  <script src="/static/js/core/auth.js?v=monthly-archive-6"></script>
+  <script src="/static/js/core/dom.js?v=monthly-archive-6"></script>
+  <script src="/static/js/features/offers.js?v=monthly-archive-6"></script>
+  <script src="/static/js/features/chat.js?v=monthly-archive-6"></script>
+  <script src="/static/js/features/receipts.js?v=monthly-archive-6"></script>
+  <script src="/static/js/features/expenses.js?v=monthly-archive-6"></script>
+  <script src="/static/js/app.js?v=monthly-archive-6"></script>
 </body>
 </html>

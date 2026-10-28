@@ -20,3 +20,9 @@ Las rutas absolutas `/static/...` se reescriben a los archivos de este frontend.
 ## Estado de esta entrega
 
 No hay un proyecto Vercel vinculado en el repositorio ni una URL pública verificada. Se requieren la cuenta de despliegue y el dominio del backend persistente para completar la publicación.
+
+## Importar desde GitHub
+
+En Vercel: **Add New → Project → Import Git Repository**, conectar GitHub y seleccionar `griseldablanco78-blip/Expensas_House`, rama `main`. Aplicar la raíz `frontend/web` y la configuración anterior. Si el repositorio no aparece, conceder a la integración acceso al repositorio. [Guía oficial](https://vercel.com/docs/git/vercel-for-github).
+
+El módulo contable guarda imágenes en `data/receipts` y datos/texto en `data/app_state.json`. Esos archivos no están en GitHub. No desplegar la API actual con archivos locales como si fueran almacenamiento permanente de una función. Para publicar todo sin una PC encendida, falta preparar un backend persistente o migrar datos e imágenes a servicios externos. Supabase es una alternativa a evaluar para base y archivos; no se conecta automáticamente al importar GitHub.

@@ -36,7 +36,9 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     var pending by remember { mutableStateOf(storage.getString("payload", null)?.let {
         runCatching { gson.fromJson(it, ReceiptCommit::class.java) }.getOrNull()
     }) }
-    var text by remember { mutableStateOf("") }
+    var text by remember { mutableStateOf(pending?.raw_text ?: "") }
+    var receiptImage by remember { mutableStateOf(pending?.receipt_image ?: "") }
+    var purchaseDate by remember { mutableStateOf(pending?.purchase_date ?: java.time.LocalDate.now(java.time.ZoneId.of("America/Argentina/Buenos_Aires")).toString()) }
     var store by remember { mutableStateOf(pending?.store ?: "") }
     var items by remember { mutableStateOf(pending?.items ?: emptyList()) }
     var total by remember { mutableStateOf(pending?.total?.toString() ?: "") }
@@ -60,6 +62,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             try {
                 val draft = if (photo != null) repository.scanReceipt(MultipartBody.Part.createFormData("image", "ticket.jpg", RequestBody.create(MediaType.parse("image/jpeg"), photo)))
                             else repository.parseReceipt(ReceiptText(text))
+                receiptImage = draft.receipt_image.orEmpty()
                 items = draft.items; total = draft.total.toString(); text = draft.raw_text
                 draftId = UUID.randomUUID().toString(); status = draft.warnings.joinToString("\n")
                 if (captured && draft.items.isNotEmpty()) clearCapture()
@@ -129,6 +132,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("Texto del ticket") }, enabled = !busy && pending == null)
             TextButton(onClick = { read() }, enabled = !busy && pending == null) { Text("Interpretar texto") }
             if (status.isNotBlank()) Text(status)
+            OutlinedTextField(value = purchaseDate, onValueChange = { purchaseDate = it }, label = { Text("Fecha de compra (AAAA-MM-DD)") }, enabled = !busy && pending == null)
             OutlinedTextField(value = store, onValueChange = { store = it }, label = { Text("Supermercado") }, enabled = !busy && pending == null)
             items.forEachIndexed { index, item ->
                 OutlinedTextField(value = item.description, onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(description = value) } }, label = { Text("Producto ${index + 1}") }, enabled = !busy && pending == null)
@@ -147,7 +151,8 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
         Button(enabled = !busy && (pending != null || (items.isNotEmpty() && store.isNotBlank())), onClick = {
             val amount = total.replace(',', '.').toDoubleOrNull()
             if (pending == null && (amount == null || amount <= 0 || !amount.isFinite())) { status = "Revisá el total."; return@Button }
-            val payload = pending ?: ReceiptCommit(draftId, store, items, amount!!, adjustment)
+            if (pending == null && runCatching { java.time.LocalDate.parse(purchaseDate) }.isFailure) { status = "Revisá la fecha (AAAA-MM-DD)."; return@Button }
+            val payload = pending ?: ReceiptCommit(draftId, store, items, amount!!, adjustment, purchaseDate, text, receiptImage)
             pending = payload; storage.edit().putString("payload", gson.toJson(payload)).apply(); busy = true
             scope.launch {
                 try { repository.confirmReceipt(payload); storage.edit().remove("payload").apply(); pending = null; clearCapture(); onSaved() }

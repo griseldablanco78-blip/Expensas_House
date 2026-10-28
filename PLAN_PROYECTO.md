@@ -24,6 +24,10 @@ Ayudar a un hogar a conocer sus existencias, preparar compras y controlar gastos
 5. Mostrar errores de consulta en el comparador y actualizar la versión de los archivos para evitar caché anterior.
 6. Actualizar README y guion para explicar las funciones y limitaciones reales.
 
+## Módulo contable incorporado
+
+Selector mensual en la web, gastos por supermercado, fecha de compra, saldo, archivo privado de imágenes y descarga del texto con detalle revisado. El escáner se ubica dentro de Presupuesto y gastos. Android conserva texto, fecha e imagen al confirmar. OpenCV se incorpora como lectura opcional para fotos con sombras; Tesseract sigue siendo el motor OCR. Ver [diseño y límites](docs/GASTOS_Y_COMPROBANTES.md).
+
 ## Publicación
 
 Repositorio: https://github.com/griseldablanco78-blip/Expensas_House

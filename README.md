@@ -28,9 +28,9 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 ## Funcionalidades y límites actuales
 
 - **Despensa:** stock, unidades en uso y lista de reposición.
-- **Compras y presupuesto:** lista, gastos y saldo disponible.
+- **Compras y presupuesto:** selector mensual web, total gastado, saldo y resumen por supermercado. El presupuesto es una referencia común para el mes elegido.
 - **Ofertas:** consulta ofertas guardadas y un proveedor externo si se configura `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
-- **Tickets:** foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
+- **Tickets:** foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
 - **Boti House:** consultas de ofertas, presupuesto y faltantes mediante reglas sobre datos del hogar. No se presenta como un modelo generativo entrenado.
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
 - **Acceso:** por defecto usuario y contraseña (`EXPENSA_AUTH_MODE=password`). El modo de correo verificado es opcional y requiere SMTP. Los permisos se comprueban en el servidor.
@@ -64,6 +64,7 @@ Las pruebas usan datos temporales y proveedores simulados; no certifican precios
 
 ## Publicación y presentación
 
+- [Módulo contable y archivo de comprobantes](docs/GASTOS_Y_COMPROBANTES.md).
 - [Guía de Vercel y backend persistente](deploy/VERCEL.md).
 - [Guion de presentación y demostración](docs/PRESENTACION.md).
 - [Cuadernillo técnico de IA](CUADERNILLO_TECNICO_IA.md): material complementario; distinguir experimentos de funciones efectivamente integradas.

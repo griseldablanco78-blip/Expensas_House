@@ -47,9 +47,14 @@ class SecurityTests(unittest.TestCase):
         return {'Authorization':'Bearer '+response.json()['access_token']}
 
     def test_no_anonymous_access_including_legacy_routes(self):
-        for path in ('/api/stock', '/api/budget', '/api/expenses', '/api/sync', '/stock', '/offers', '/productos_criticos'):
+        for path in ('/api/stock', '/api/budget', '/api/expenses', '/api/sync', '/stock', '/offers', '/productos_criticos', '/api/receipts/private/text', '/api/receipts/private/image'):
             with self.subTest(path=path):
                 self.assertEqual(self.client.get(path).status_code, 401)
+
+    def test_inventory_profile_cannot_download_accounting_documents(self):
+        headers = self.account('inventory@example.test', 'inventory_viewer')
+        for path in ('/api/receipts/private/text', '/api/receipts/private/image', '/api/budget?month=2026-10'):
+            self.assertEqual(self.client.get(path, headers=headers).status_code, 403)
 
     def test_incomplete_setup_does_not_consume_registration_attempts(self):
         with patch.object(sec, 'mail_ready', return_value=False):

@@ -34,5 +34,5 @@ data class ProductOffer(val product: String, val store: String, val promo_price:
     val conditions: String? = null, val source: String? = null)
 data class ReceiptText(val text: String)
 data class ReceiptLine(val description: String, val quantity: Double, val unit_price: Double, val line_total: Double)
-data class ReceiptDraft(val items: List<ReceiptLine>, val total: Double, val warnings: List<String>, val raw_text: String)
-data class ReceiptCommit(val id: String, val store: String, val items: List<ReceiptLine>, val total: Double, val adjustment_note: String = "")
+data class ReceiptDraft(val items: List<ReceiptLine>, val total: Double, val warnings: List<String>, val raw_text: String, val receipt_image: String? = null)
+data class ReceiptCommit(val id: String, val store: String, val items: List<ReceiptLine>, val total: Double, val adjustment_note: String = "", val purchase_date: String? = null, val raw_text: String = "", val receipt_image: String = "")

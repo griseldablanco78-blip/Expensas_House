@@ -15,7 +15,7 @@ Mostrar `frontend/web`, `backend/app/api`, `backend/app/services`, `backend/app/
 1. Iniciar sesión y mostrar stock y unidades abiertas.
 2. Agregar un producto y comprobar la lista de compras.
 3. Crear una oferta real indicando producto, presentación, supermercado y precio. Buscar ese producto en el comparador. Explicar si la fuente es guardada o externa.
-4. Subir un ticket completo; revisar el texto OCR y cada producto. Corregir errores, indicar supermercado y confirmar. Mostrar detalle del gasto y presupuesto disponible.
+4. Subir un ticket completo; revisar el texto OCR y cada producto. Corregir errores, indicar supermercado y confirmar. Mostrar detalle del gasto, descargar el archivo de texto, abrir la imagen de respaldo y cambiar de mes para ver gastos por supermercado y presupuesto disponible.
 5. Preguntar al chatbot por saldo o faltantes y mostrar la sección correspondiente.
 6. Si Android está conectado al mismo servidor, sincronizar y comparar datos.
 

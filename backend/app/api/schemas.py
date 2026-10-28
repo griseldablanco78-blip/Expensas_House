@@ -1,4 +1,5 @@
 """HTTP request contracts shared by the API routes."""
+from datetime import date
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel, Field
 
@@ -28,7 +29,7 @@ class ShoppingItemModel(BaseModel):
 
 
 class BudgetModel(BaseModel):
-    monthlyBudget: float
+    monthlyBudget: float = Field(ge=0, allow_inf_nan=False)
 
 
 
@@ -72,6 +73,9 @@ class ReceiptCommit(BaseModel):
     total: float = Field(gt=0, allow_inf_nan=False)
     category: str = "Comestibles"
     adjustment_note: str = ""
+    purchase_date: date | None = None
+    raw_text: str = Field(default="", max_length=100000)
+    receipt_image: str = Field(default="", pattern=r"^(?:[a-f0-9]{32})?$")
 
 
 

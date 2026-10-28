@@ -10,6 +10,7 @@ const state = {
   shopping: [],
   budget: { monthlyBudget: 0, totalSpent: 0 },
   expenses: [],
+  expenseMonth: new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date()).slice(0, 7),
   activeTab: 'comparator',
   speechRecognition: null,
   isRecordingVoice: false,
@@ -77,23 +78,30 @@ function switchTab(tabId) {
 // ==========================================================================
 // CARGA Y SINCRONIZACIÓN DE DATOS CON FASTAPI
 // ==========================================================================
+let dataLoadSerial = 0;
 async function loadAllData() {
+  const serial = ++dataLoadSerial;
   try {
     const [stockRes, shopRes, budgetRes, expRes] = await Promise.all([
       fetch('/api/stock'),
       fetch('/api/shopping'),
-      window.currentUser?.role === 'inventory_viewer' ? Promise.resolve({json: async () => ({monthlyBudget:0,totalSpent:0})}) : fetch('/api/budget'),
+      window.currentUser?.role === 'inventory_viewer' ? Promise.resolve({json: async () => ({monthlyBudget:0,totalSpent:0})}) : fetch(`/api/budget?month=${encodeURIComponent(state.expenseMonth)}`),
       window.currentUser?.role === 'inventory_viewer' ? Promise.resolve({json: async () => []}) : fetch('/api/expenses')
     ]);
 
-    state.stock = await stockRes.json();
-    state.shopping = await shopRes.json();
-    state.budget = await budgetRes.json();
-    state.expenses = await expRes.json();
+    const responses = [stockRes, shopRes, budgetRes, expRes];
+    const values = await Promise.all(responses.map(response => response.json()));
+    if (serial !== dataLoadSerial) return;
+    const failed = responses.findIndex(response => response.ok === false);
+    if (failed >= 0) throw new Error(values[failed].detail || 'No se pudieron consultar los datos.');
+    [state.stock, state.shopping, state.budget, state.expenses] = values;
+    document.getElementById('expense-month-status').textContent = '';
 
     updateUI();
     showSyncIndicator(true);
   } catch (error) {
+    if (serial !== dataLoadSerial) return;
+    document.getElementById('expense-month-status').textContent = error.message;
     console.error('Error cargando datos del servidor:', error);
     showToast('⚠️ Error al sincronizar con el servidor.');
     showSyncIndicator(false);
@@ -613,51 +621,17 @@ async function deleteShoppingItem(id) {
 // ==========================================================================
 // PRESUPUESTO & GASTOS
 // ==========================================================================
-function renderBudgetAndExpenses() {
-  const budget = state.budget.monthlyBudget || 0;
-  const spent = state.budget.totalSpent || 0;
-  const remaining = budget - spent;
-  const pct = budget > 0 ? Math.min(100, Math.round((spent / budget) * 100)) : 0;
-
-  document.getElementById('budget-total-display').textContent = `$${budget.toLocaleString('es-AR')}`;
-  
-  const remainingDisplay = document.getElementById('budget-remaining-display');
-  remainingDisplay.textContent = `$${remaining.toLocaleString('es-AR')}`;
-  remainingDisplay.style.color = remaining < 0 ? 'var(--color-coral)' : 'var(--color-leaf)';
-
-  const progressBar = document.getElementById('budget-progress-bar');
-  progressBar.style.width = `${pct}%`;
-  progressBar.className = `progress-bar-fill ${pct > 90 ? 'warning' : ''}`;
-
-  document.getElementById('budget-spent-text').textContent = `Total gastado: $${spent.toLocaleString('es-AR')}`;
-  document.getElementById('budget-percent-text').textContent = `${pct}% utilizado`;
-
-  // Tabla de gastos
-  const expTbody = document.getElementById('expenses-table-body');
-  expTbody.innerHTML = '';
-
-  if (state.expenses.length === 0) {
-    expTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted);">Aún no hay tickets registrados.</td></tr>';
-    return;
-  }
-
-  state.expenses.forEach(e => {
-    const dateStr = e.timestamp ? new Date(e.timestamp).toLocaleDateString('es-AR') : 'Reciente';
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td>${dateStr}</td>
-      <td><span class="cat-badge">${escapeHtml(e.category)}</span></td>
-      <td>${escapeHtml(e.note || '-')} ${(e.items || []).length ? `<details><summary>Ver ${e.items.length} productos</summary>${e.items.map(i => `${escapeHtml(i.description)} · ${Number(i.quantity)} × $${Number(i.unit_price)} = $${Number(i.line_total)}`).join('<br>')}</details>` : ''}</td>
-      <td class="text-right" style="font-weight:800; font-family:var(--font-heading); color:var(--text-main);">$${(e.amount || 0).toLocaleString('es-AR')}</td>
-    `;
-    expTbody.appendChild(tr);
-  });
-}
-
 // ==========================================================================
 // MODALES DE FORMULARIO
 // ==========================================================================
 function initEventListeners() {
+  const monthInput = document.getElementById('expense-month');
+  monthInput.value = state.expenseMonth;
+  monthInput.addEventListener('change', async () => {
+    if (!monthInput.value) return;
+    state.expenseMonth = monthInput.value;
+    await loadAllData();
+  });
   // Buscador principal
   const searchInput = document.getElementById('ai-search-input');
   const searchBtn = document.getElementById('btn-ai-search');
@@ -710,7 +684,7 @@ function initEventListeners() {
   setupReceiptScanner();
   setupSavedOffers();
   document.getElementById("offer-sort").addEventListener("change", () => performAIComparison(searchInput.value));
-  if (location.hash === "receipts") switchTab("comparator");
+  if (location.hash === "receipts") switchTab("budget");
 }
 
 function setupModalTriggers() {
@@ -855,7 +829,8 @@ function setupFormSubmits() {
         body: JSON.stringify({ monthlyBudget: amount })
       });
       const data = await res.json();
-      state.budget = data.user_prefs;
+      if (!res.ok) throw new Error(data.detail || "No se pudo guardar el presupuesto.");
+      await loadAllData();
       closeModal('modal-budget');
       updateUI();
       showToast('💰 Presupuesto mensual actualizado.');
@@ -880,8 +855,8 @@ function setupFormSubmits() {
         body: JSON.stringify(payload)
       });
       const data = await res.json();
-      state.expenses.unshift(data.expense);
-      state.budget.totalSpent = (state.budget.totalSpent || 0) + payload.amount;
+      if (!res.ok) throw new Error(data.detail || "No se pudo registrar el gasto.");
+      await loadAllData();
       closeModal('modal-expense');
       updateUI();
       showToast('🧾 Ticket registrado con éxito.');

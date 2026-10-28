@@ -34,3 +34,6 @@ local.properties
 /.runtime/
 
 data/product_images/
+
+# Private purchase receipts
+/data/receipts/

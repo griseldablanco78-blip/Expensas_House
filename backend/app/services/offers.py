@@ -173,9 +173,12 @@ def chat_response(message, context=None):
     if text in {'hola', 'buenas', 'ayuda', 'menu', 'buen dia', 'buenos dias'}:
         return {'answer': 'Elegí: 1 Ofertas · 2 Presupuesto · 3 Faltantes.'}
     if option == '2' or re.search(r'\b(presupuesto|saldo|gaste|gastado|gastos|plata|dinero)\b', text):
-        prefs = get_user_prefs()
+        from datetime import datetime
+        from backend.app.services.expense_reporting import monthly_summary, HOUSEHOLD_TZ
+        month = datetime.now(HOUSEHOLD_TZ).strftime('%Y-%m')
+        prefs = monthly_summary(month)
         budget, spent = prefs.get('monthlyBudget', 0), prefs.get('totalSpent', 0)
-        return {'answer': f"Presupuesto: ${budget:,.2f}\nGastado: ${spent:,.2f}\nDisponible: ${budget-spent:,.2f}", 'action': 'budget'}
+        return {'answer': f"Mes {month} · Presupuesto: ${budget:,.2f}\nGastado: ${spent:,.2f}\nDisponible: ${budget-spent:,.2f}", 'action': 'budget'}
     if option == '3' or re.search(r'\b(faltantes|falta|faltan|stock|reponer|reposicion|terminando)\b', text):
         critical = [s for s in get_stock() if s.get('stockQuantity', 0) <= 1]
         answer = '\n'.join(f"• {s['name']}: {s.get('stockQuantity', 0)} cerradas" for s in critical)

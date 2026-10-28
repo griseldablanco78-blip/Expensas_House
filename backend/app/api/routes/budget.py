@@ -1,5 +1,5 @@
 """Budget HTTP routes."""
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from backend.app.api.schemas import BudgetModel, ExpenseModel
 from backend.app.infrastructure.json_store import get_user_prefs, update_user_prefs, get_expenses, add_expense
 
@@ -7,8 +7,14 @@ router = APIRouter(tags=["budget"])
 
 
 @router.get("/api/budget")
-def api_get_budget():
+def api_get_budget(month: str | None = None):
     """Retorna el presupuesto mensual y el total gastado."""
+    if month is not None:
+        from backend.app.services.expense_reporting import monthly_summary
+        try:
+            return monthly_summary(month)
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
     return get_user_prefs()
 
 

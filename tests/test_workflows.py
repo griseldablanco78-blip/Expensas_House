@@ -74,6 +74,54 @@ class Workflows(unittest.TestCase):
         self.assertEqual(draft['items'][0]['quantity'], 2)
         self.assertEqual(draft['items'][0]['line_total'], 3000)
 
+    def test_monthly_budget_rejects_negative_and_receipt_rejects_invalid_date(self):
+        self.assertEqual(self.client.post('/api/budget', json={'monthlyBudget': -1}).status_code, 422)
+        ticket = {'id': 'date', 'store': 'Super A', 'total': 100,
+                  'items': [{'description': 'Arroz', 'quantity': 1, 'unit_price': 100, 'line_total': 100}],
+                  'purchase_date': '2026-02-31'}
+        self.assertEqual(self.client.post('/api/receipts/confirm', json=ticket).status_code, 422)
+        self.assertEqual(self.client.get('/api/expenses').json(), [])
+
+    def test_monthly_report_uses_purchase_date_and_argentine_midnight(self):
+        from datetime import datetime, timezone
+        self.state['expenses'] = [
+            {'id': 'oct', 'amount': 1200, 'store': 'Super A', 'purchase_date': '2026-10-10'},
+            {'id': 'nov', 'amount': 500, 'store': 'Super B', 'purchase_date': '2026-11-01'},
+            {'id': 'boundary', 'amount': 300, 'note': 'Super A',
+             'timestamp': int(datetime(2026, 11, 1, 1, tzinfo=timezone.utc).timestamp() * 1000)}]
+        db.save_db(self.state)
+        october = self.client.get('/api/budget?month=2026-10').json()
+        self.assertEqual(october['totalSpent'], 1500)
+        self.assertEqual(october['remaining'], 8500)
+        self.assertEqual(october['by_store'], [{'store': 'Super A', 'amount': 1500}])
+        self.assertEqual(self.client.get('/api/budget?month=2026-11').json()['totalSpent'], 500)
+        self.assertEqual(self.client.get('/api/budget?month=2026-13').status_code, 422)
+
+    def test_receipt_archive_text_date_and_duplicate_do_not_double_spend(self):
+        from backend.app.services import receipt_archive
+        content = BytesIO()
+        Image.new('RGB', (200, 400), 'white').save(content, format='PNG')
+        with patch.object(receipt_archive, 'ARCHIVE_DIR', Path(self.directory.name) / 'receipts'), patch(
+                'backend.app.api.routes.receipts.scan_receipt', return_value=parse_receipt('LECHE 1500,00\nTOTAL 1500,00')):
+            draft = self.client.post('/api/receipts/scan', files={'image': ('ticket.png', content.getvalue(), 'image/png')}).json()
+            self.assertTrue(receipt_archive.image_path(draft['receipt_image']).is_file())
+            # An unconfirmed upload is never directly available as a registered expense.
+            self.assertEqual(self.client.get('/api/receipts/' + draft['receipt_image'] + '/image').status_code, 404)
+            ticket = {key: draft[key] for key in ('items', 'total', 'raw_text', 'receipt_image')}
+            ticket.update(id='archived', store='Super A', purchase_date='2026-10-12')
+            response = self.client.post('/api/receipts/confirm', json=ticket)
+            self.assertEqual(response.status_code, 200, response.text)
+            self.assertTrue(self.client.post('/api/receipts/confirm', json=ticket).json()['duplicate'])
+            text = self.client.get('/api/receipts/archived/text')
+            self.assertEqual(text.status_code, 200)
+            self.assertIn('Super A', text.text)
+            self.assertIn('2026-10-12', text.text)
+            self.assertIn('LECHE 1500,00', text.text)
+            image = self.client.get('/api/receipts/archived/image')
+            self.assertEqual(image.status_code, 200)
+            self.assertEqual(Image.open(BytesIO(image.content)).size, (200, 400))
+            self.assertEqual(self.client.get('/api/budget?month=2026-10').json()['totalSpent'], 1500)
+
     def test_confirm_receipt_updates_budget_once_and_preserves_details(self):
         ticket = {'id': 'receipt-1', 'store': 'Supermercado', 'total': 3000,
                   'items': [{'description': 'Leche', 'quantity': 2, 'unit_price': 1500, 'line_total': 3000}]}

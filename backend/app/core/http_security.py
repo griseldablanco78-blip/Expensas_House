@@ -35,7 +35,7 @@ class HttpSecurityMiddleware(BaseHTTPMiddleware):
         response.headers['Permissions-Policy'] = 'camera=(self), microphone=(self), geolocation=()'
         response.headers['Content-Security-Policy'] = (
             "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
-            "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: https:; "
+            "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; "
             "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'")
         if request.url.path.startswith('/api/') or request.url.path in ('/stock', '/offers', '/productos_criticos', '/'):
             response.headers['Cache-Control'] = 'no-store'

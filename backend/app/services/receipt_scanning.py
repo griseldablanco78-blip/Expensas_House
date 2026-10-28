@@ -67,7 +67,7 @@ def parse_receipt(text):
             'raw_text': text}
 
 
-def scan_receipt(content):
+def scan_receipt(content, preprocessing="standard"):
     try:
         from PIL import Image, ImageOps, ImageFilter, UnidentifiedImageError
         import pytesseract
@@ -89,6 +89,16 @@ def scan_receipt(content):
             if scale > 1:
                 image = image.resize((round(image.width * scale), round(image.height * scale)), Image.Resampling.LANCZOS)
         image = ImageOps.autocontrast(image).filter(ImageFilter.SHARPEN)
+        if preprocessing == 'adaptive':
+            try:
+                import cv2
+                import numpy as np
+            except ImportError as exc:
+                raise RuntimeError('Instalá requirements-ocr.txt para procesar fotos con sombras mediante OpenCV.') from exc
+            pixels = np.asarray(image)
+            pixels = cv2.adaptiveThreshold(pixels, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C,
+                                           cv2.THRESH_BINARY, 31, 15)
+            image = Image.fromarray(pixels)
         image = ImageOps.expand(image, border=24, fill='white')
         text = pytesseract.image_to_string(image, lang=os.getenv('TESSERACT_LANG', 'eng'),
                                           config='--psm 6 -c preserve_interword_spaces=1', timeout=40)
@@ -99,5 +109,7 @@ def scan_receipt(content):
     except pytesseract.TesseractError as exc:
         raise RuntimeError('Tesseract no pudo leer el ticket. Revisá el idioma OCR instalado.') from exc
     except RuntimeError as exc:
-        raise RuntimeError('La lectura OCR agotó el tiempo disponible. Probá recortar la foto.') from exc
+        if 'timeout' in str(exc).lower():
+            raise RuntimeError('La lectura OCR agotó el tiempo disponible. Probá una foto más nítida.') from exc
+        raise
     return parse_receipt(text)

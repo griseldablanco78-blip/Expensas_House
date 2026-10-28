@@ -4,6 +4,8 @@ function setupReceiptScanner() {
   const rows = byId('receipt-lines');
   const storageKey = `expensa_pending_receipt_${window.currentUser.id}`;
   let draftId = null;
+  let receiptImage = '';
+  byId('receipt-date').value = new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date());
   let pending = null;
   try { pending = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch { localStorage.removeItem(storageKey); }
   let busy = false;
@@ -48,10 +50,11 @@ function setupReceiptScanner() {
         body = JSON.stringify({text: byId('receipt-text').value});
         headers['Content-Type'] = 'application/json';
       }
-      const response = await fetch(`/api/receipts/${photo ? 'scan' : 'parse'}`, {method:'POST', headers, body});
+      const response = await fetch(`/api/receipts/${photo ? 'scan?preprocessing=' + encodeURIComponent(byId('receipt-preprocessing').value) : 'parse'}`, {method:'POST', headers, body});
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'No se pudo leer el ticket.');
       draftId = crypto.randomUUID ? crypto.randomUUID() : `receipt-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      receiptImage = data.receipt_image || '';
       rows.replaceChildren(); data.items.forEach(addLine);
       byId('receipt-text').value = data.raw_text;
       byId('receipt-total').value = data.total;
@@ -62,6 +65,15 @@ function setupReceiptScanner() {
     finally { busy = false; }
   }
 
+  let previewUrl = null;
+  byId('receipt-photo').addEventListener('change', () => {
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
+    const photo = byId('receipt-photo').files[0];
+    const preview = byId('receipt-preview');
+    preview.classList.toggle('hidden', !photo);
+    if (photo) { previewUrl = URL.createObjectURL(photo); preview.src = previewUrl; }
+    else { previewUrl = null; preview.removeAttribute('src'); }
+  });
   byId('receipt-scan').addEventListener('click', () => readReceipt(true));
   byId('receipt-parse').addEventListener('click', () => readReceipt(false));
   byId('receipt-add-line').addEventListener('click', () => addLine());
@@ -75,7 +87,8 @@ function setupReceiptScanner() {
         const total = Number(byId('receipt-total').value);
         if (!store || !items.length || !total || items.some(i => !i.description || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0))
           throw new Error('Completá el supermercado, los productos y todos los importes positivos.');
-        pending = {id: draftId, store, total, items, adjustment_note: byId('receipt-adjustment').value.trim()};
+        if (!byId('receipt-date').value) throw new Error('Elegí la fecha de compra.');
+        pending = {id: draftId, store, total, items, purchase_date:byId('receipt-date').value, raw_text:byId('receipt-text').value, receipt_image:receiptImage, adjustment_note: byId('receipt-adjustment').value.trim()};
         localStorage.setItem(storageKey, JSON.stringify(pending));
       }
       busy = true; byId('receipt-confirm').disabled = true;
@@ -99,6 +112,8 @@ function setupReceiptScanner() {
   if (pending) {
     byId('receipt-review').classList.remove('hidden');
     pending.items.forEach(addLine);
+    byId('receipt-date').value = pending.purchase_date || byId('receipt-date').value;
+    byId('receipt-text').value = pending.raw_text || '';
     byId('receipt-store').value = pending.store;
     byId('receipt-total').value = pending.total;
     byId('receipt-adjustment').value = pending.adjustment_note;
