@@ -26,4 +26,3 @@ with tempfile.TemporaryDirectory(prefix='expensa-e2e-') as directory:
         connection.execute('INSERT INTO memberships VALUES (?, ?)', ('qa-owner','admin'))
     from backend.app.main import create_app
     uvicorn.run(create_app(), host='127.0.0.1', port=18765)
-
