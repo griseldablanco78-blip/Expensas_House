@@ -27,6 +27,11 @@ def create_app():
     def home():
         return FileResponse(WEB_FRONTEND_DIR / "index.html")
 
+    @application.get('/api/system/info', include_in_schema=False)
+    def public_environment():
+        import os
+        return {'mode': 'demo' if os.getenv('EXPENSA_DEMO_MODE') == '1' else 'standard'}
+
     return application
 
 

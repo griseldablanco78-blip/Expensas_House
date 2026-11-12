@@ -14,8 +14,8 @@ def register_receipt(payload):
     if existing:
         return {"status": "success", "expense": existing, "duplicate": True}
     for item in payload["items"]:
-        if abs(cents(item["quantity"] * item["unit_price"]) - cents(item["line_total"])) > .02:
-            raise ReceiptValidationError("Revisá cantidad, precio unitario y subtotal de cada producto.")
+        if abs(cents(item["quantity"] * item["unit_price"] - item.get("discount", 0)) - cents(item["line_total"])) > .02:
+            raise ReceiptValidationError("Revisá cantidad, precio unitario, descuento e importe neto de cada producto.")
     subtotal = cents(sum(i['line_total'] for i in payload['items']))
     if abs(subtotal - payload["total"]) > .02 and not payload["adjustment_note"].strip():
         raise ReceiptValidationError("El total difiere de los productos. Indicá el descuento, impuesto o ajuste del ticket.")

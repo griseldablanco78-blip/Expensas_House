@@ -59,7 +59,7 @@ def download_receipt_text(expense_id: str):
              'Supermercado: ' + (expense.get('store') or expense.get('note', '')),
              'Fecha: ' + str(expense.get('purchase_date') or ''),
              'Total: ' + str(expense['amount']), '', 'Detalle revisado:']
-    lines.extend(f"{i['description']} | {i['quantity']} x {i['unit_price']} = {i['line_total']}" for i in expense.get('items', []))
+    lines.extend(f"{i['description']} | {i['quantity']} x {i['unit_price']} - descuento {i.get('discount', 0)} = neto {i['line_total']} | {i.get('detail', '')}" for i in expense.get('items', []))
     lines.extend(['', 'Texto reconocido (puede contener errores):', expense.get('raw_text', '')])
     return Response('\n'.join(lines), media_type='text/plain; charset=utf-8',
                     headers={'Content-Disposition': 'attachment; filename="comprobante.txt"'})

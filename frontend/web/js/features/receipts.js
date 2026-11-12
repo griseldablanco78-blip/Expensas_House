@@ -12,18 +12,18 @@ function setupReceiptScanner() {
 
   function addLine(item = {}) {
     const row = document.createElement('tr');
-    ['description', 'quantity', 'unit_price', 'line_total'].forEach(field => {
+    ['description', 'detail', 'quantity', 'unit_price', 'discount', 'line_total'].forEach(field => {
       const cell = row.insertCell();
-      const input = document.createElement(field === 'description' ? 'textarea' : 'input');
+      const input = document.createElement(['description', 'detail'].includes(field) ? 'textarea' : 'input');
       input.dataset.field = field;
-      if (field === 'description') { input.rows = 3; } else { input.type = 'number'; }
-      if (input.type === 'number') { input.min = '.01'; input.step = '.01'; }
-      input.value = item[field] ?? (field === 'quantity' ? 1 : '');
-      input.setAttribute('aria-label', {description:'Descripción', quantity:'Cantidad', unit_price:'Precio unitario', line_total:'Subtotal'}[field]);
+      if (['description', 'detail'].includes(field)) { input.rows = 3; } else { input.type = 'number'; }
+      if (input.type === 'number') { input.min = field === 'discount' ? '0' : '.01'; input.step = '.01'; }
+      input.value = item[field] ?? (field === 'quantity' ? 1 : field === 'discount' ? 0 : '');
+      input.setAttribute('aria-label', {description:'Producto', detail:'Detalle', quantity:'Cantidad', unit_price:'Precio unitario', discount:'Descuento', line_total:'Importe neto'}[field]);
       input.addEventListener('input', () => {
-        if (field === 'quantity' || field === 'unit_price') {
+        if (['quantity', 'unit_price', 'discount'].includes(field)) {
           row.querySelector('[data-field=line_total]').value =
-            (Number(row.querySelector('[data-field=quantity]').value) * Number(row.querySelector('[data-field=unit_price]').value)).toFixed(2);
+            (Number(row.querySelector('[data-field=quantity]').value) * Number(row.querySelector('[data-field=unit_price]').value) - Number(row.querySelector('[data-field=discount]').value)).toFixed(2);
         }
       });
       cell.appendChild(input);
@@ -51,10 +51,10 @@ function setupReceiptScanner() {
         headers['Content-Type'] = 'application/json';
       }
       const response = await fetch(`/api/receipts/${photo ? 'scan?preprocessing=' + encodeURIComponent(byId('receipt-preprocessing').value) : 'parse'}`, {method:'POST', headers, body});
-      const data = await response.json();
+      const data = await readApiJson(response);
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'No se pudo leer el ticket.');
       draftId = crypto.randomUUID ? crypto.randomUUID() : `receipt-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      receiptImage = data.receipt_image || '';
+      if (photo) receiptImage = data.receipt_image || '';
       rows.replaceChildren(); data.items.forEach(addLine);
       byId('receipt-text').value = data.raw_text;
       byId('receipt-total').value = data.total;
@@ -85,7 +85,7 @@ function setupReceiptScanner() {
           [input.dataset.field, input.type === 'number' ? Number(input.value) : input.value.trim()])));
         const store = byId('receipt-store').value.trim();
         const total = Number(byId('receipt-total').value);
-        if (!store || !items.length || !total || items.some(i => !i.description || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0))
+        if (!store || !items.length || !total || items.some(i => !i.description || !Number.isFinite(i.quantity) || !Number.isFinite(i.unit_price) || !Number.isFinite(i.line_total) || !Number.isFinite(i.discount) || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0 || i.discount < 0))
           throw new Error('Completá el supermercado, los productos y todos los importes positivos.');
         if (!byId('receipt-date').value) throw new Error('Elegí la fecha de compra.');
         pending = {id: draftId, store, total, items, purchase_date:byId('receipt-date').value, raw_text:byId('receipt-text').value, receipt_image:receiptImage, adjustment_note: byId('receipt-adjustment').value.trim()};
@@ -94,13 +94,15 @@ function setupReceiptScanner() {
       busy = true; byId('receipt-confirm').disabled = true;
       status.textContent = 'Registrando el ticket…';
       const response = await fetch('/api/receipts/confirm', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(pending)});
-      const data = await response.json();
+      const data = await readApiJson(response);
       if (!response.ok) {
         if (response.status >= 400 && response.status < 500) {
           pending = null; localStorage.removeItem(storageKey);
         }
         throw new Error(typeof data.detail === 'string' ? data.detail : 'Revisá los importes del ticket.');
       }
+      const savedMonth = (data.expense?.purchase_date || pending.purchase_date || '').slice(0, 7);
+      if (savedMonth) { state.expenseMonth = savedMonth; byId('expense-month').value = savedMonth; }
       pending = null; localStorage.removeItem(storageKey);
       byId('receipt-review').classList.add('hidden');
       status.textContent = 'Ticket registrado. El total se descontó del presupuesto disponible.';

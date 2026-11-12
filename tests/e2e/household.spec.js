@@ -2,8 +2,8 @@ const { test, expect } = require('@playwright/test');
 
 test.beforeEach(async ({page}) => {
   await page.goto('/');
-  await page.locator('#auth-email').fill('qa-owner');
-  await page.locator('#auth-password').fill('Solo para pruebas locales 2026');
+  await page.locator('#auth-email').fill('test123');
+  await page.locator('#auth-password').fill('PruebasTest1234');
   await page.locator('#auth-submit').click();
   await expect(page.locator('#app-shell')).toBeVisible();
 });
@@ -68,4 +68,35 @@ test('WEB-04: foto legible pasa por Tesseract y permite revisar el detalle', asy
   await expect(page.locator('#receipt-review')).toBeVisible({timeout:60000});
   await expect(page.locator('#receipt-lines tr')).toHaveCount(2);
   await expect(page.locator('#receipt-total')).toHaveValue('2700');
+});
+
+test('WEB-05: corregir OCR conserva imagen y guarda descuento/neto en el mes de compra', async ({page}) => {
+  await page.locator('[data-tab="budget"]').click();
+  await page.locator('#receipt-photo').setInputFiles(require('path').join(__dirname,'../fixtures/ticket-sintetico.png'));
+  await page.locator('#receipt-scan').click();
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(2, {timeout:60000});
+  await page.locator('#receipt-parse').click();
+  await expect(page.locator('#receipt-status')).toContainText('Revisá descripción');
+  const first = page.locator('#receipt-lines tr').first();
+  await first.locator('[data-field="detail"]').fill('Envase de un litro');
+  await first.locator('[data-field="discount"]').fill('150');
+  await expect(first.locator('[data-field="line_total"]')).toHaveValue('1350.00');
+  await page.locator('#receipt-total').fill('2550');
+  await page.locator('#receipt-store').fill('Super descuento QA');
+  await page.locator('#receipt-date').fill('2026-12-05');
+  await page.locator('#receipt-confirm').click();
+  await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
+  await expect(page.locator('#expense-month')).toHaveValue('2026-12');
+  await expect(page.locator('#budget-spent-text')).toContainText('2.550');
+  await expect(page.locator('#expense-products-body')).toContainText('Envase de un litro');
+  await expect(page.locator('#expense-products-body')).toContainText('150,00');
+  const image = await page.getByText('Ver comprobante').getAttribute('href');
+  expect((await page.request.get(image)).status()).toBe(200);
+});
+
+test('WEB-06: API sin conexión muestra diagnóstico y no una excepción JSON', async ({page}) => {
+  await page.route('**/api/offers/compare*', route => route.fulfill({status:502,contentType:'text/html',body:'Backend unavailable'}));
+  await page.locator('#ai-search-input').fill('leche');
+  await page.locator('#btn-ai-search').click();
+  await expect(page.locator('#offer-source-status')).toContainText('backend esté activo');
 });

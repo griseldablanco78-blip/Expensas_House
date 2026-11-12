@@ -95,6 +95,16 @@ def compare_supermarket_offers(raw_query, sort='discount'):
     query = clean_query(raw_query)
     tokens = set(query.split())
     remote, warning = ratoneando_offers(query) if query else ([], '')
+    if query and os.getenv('EXPENSA_LIVE_OFFERS', '0') == '1':
+        from backend.app.services.catalog_search import catalog_offers
+        # Fetch by product words; filter normalized pack sizes below.
+        source_query = ' '.join(t for t in query.split() if not re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t))
+        live, live_warning = catalog_offers(source_query or query)
+        if not os.getenv('RATONEANDO_API_URL', '').strip():
+            warning = ''
+        remote.extend(live)
+        warning = ' '.join(filter(None, [warning, live_warning]))
+        warning = ' '.join(filter(None, [warning, 'Precios del catálogo web: pueden variar por zona, disponibilidad y condiciones de compra.']))
     offers = []
     missing_prices = 0
     sizes = {t for t in tokens if re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t)}

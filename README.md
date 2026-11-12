@@ -33,8 +33,8 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 
 - **Despensa:** stock, unidades en uso y lista de reposición.
 - **Compras y presupuesto:** selector mensual web, total gastado, saldo y resumen por supermercado. El presupuesto es una referencia común para el mes elegido.
-- **Ofertas:** consulta ofertas guardadas y un proveedor externo si se configura `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
-- **Tickets:** foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
+- **Ofertas:** consulta ofertas guardadas; con `EXPENSA_LIVE_OFFERS=1` también consulta catálogos públicos de Carrefour/Jumbo. Ratoneando permanece como proveedor opcional configurado por `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
+- **Tickets:** tabla de productos por supermercado con detalle, precio unitario, descuento e importe neto; foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
 - **Boti House:** consultas de ofertas, presupuesto y faltantes mediante reglas sobre datos del hogar. No se presenta como un modelo generativo entrenado.
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
 - **Acceso:** por defecto usuario y contraseña (`EXPENSA_AUTH_MODE=password`). El modo de correo verificado es opcional y requiere SMTP. Los permisos se comprueban en el servidor.
@@ -69,6 +69,8 @@ Las pruebas usan datos temporales y proveedores simulados; no certifican precios
 ## Regresión automatizada
 
 Ver [casos, herramientas y ejecución](docs/REGRESION.md): pytest para API, Playwright para web, Compose UI Test para Android y GitHub Actions. Las pruebas usan datos de prueba separados del hogar real.
+
+Ver [diagnóstico del escáner, modelo OCR, formatos y ofertas](docs/ESCANER_Y_OFERTAS.md).
 
 ## Publicación y presentación
 

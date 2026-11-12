@@ -28,8 +28,8 @@ document.addEventListener('DOMContentLoaded', () => bootAuthentication(() => {
   initSpeechRecognition();
   initEventListeners();
   loadAllData().then(() => {
-    // Comparación inicial por defecto para impresionar al usuario
-    if (window.currentUser.role !== 'inventory_viewer') performAIComparison("leche entera");
+    // Consulta inicial amplia para mostrar las fuentes disponibles.
+    if (window.currentUser.role !== 'inventory_viewer') performAIComparison("leche");
     else switchTab('stock');
   });
   setupMembers();

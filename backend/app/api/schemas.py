@@ -59,6 +59,8 @@ class AndroidSyncPayload(BaseModel):
 
 
 class ReceiptLine(BaseModel):
+    detail: str = Field(default="", max_length=500)
+    discount: float = Field(default=0, ge=0, allow_inf_nan=False)
     description: str = Field(min_length=1, max_length=250)
     quantity: float = Field(gt=0, allow_inf_nan=False)
     unit_price: float = Field(gt=0, allow_inf_nan=False)

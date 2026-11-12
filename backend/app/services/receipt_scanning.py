@@ -19,6 +19,11 @@ def parse_receipt(text):
     for line in text.splitlines():
         line = line.strip()
         norm = normalize(line)
+        quantity = 1.0
+        qty = re.match(r'^(\d+(?:[.,]\d+)?)\s*[xX×]\s*', line)
+        if qty:
+            quantity = float(qty[1].replace(',', '.'))
+            line = line[qty.end():].strip()
         values = list(re.finditer(amount, line))
         if not values:
             # Preserve wrapped names, but do not attach fiscal/header lines to products.
@@ -40,11 +45,6 @@ def parse_receipt(text):
         if line[last.end():].strip(' *') not in ('', 'A', 'B', 'C'):
             continue
         description = line[:values[0].start()].strip(' $:-')
-        quantity = 1.0
-        qty = re.match(r'^(\d+(?:[.,]\d+)?)\s*[xX]\s*', description)
-        if qty:
-            quantity = float(qty[1].replace(',', '.'))
-            description = description[qty.end():].strip()
         description = ' '.join([*pending_description, description]).strip()
         pending_description = []
         if quantity <= 0 or not re.search(r'[a-zA-ZáéíóúñÁÉÍÓÚÑ]', description):
@@ -53,7 +53,7 @@ def parse_receipt(text):
         if not line_total:
             continue
         unit_price = money(values[0][1]) if len(values) > 1 else cents(line_total / quantity)
-        items.append({'description': description, 'quantity': quantity,
+        items.append({'description': description, 'detail': '', 'discount': 0, 'quantity': quantity,
                       'unit_price': unit_price, 'line_total': line_total})
     subtotal = cents(sum(i['line_total'] for i in items))
     if total is None:
@@ -101,7 +101,7 @@ def scan_receipt(content, preprocessing="standard"):
             image = Image.fromarray(pixels)
         image = ImageOps.expand(image, border=24, fill='white')
         text = pytesseract.image_to_string(image, lang=os.getenv('TESSERACT_LANG', 'eng'),
-                                          config='--psm 6 -c preserve_interword_spaces=1', timeout=40)
+                                          config='--oem 1 --psm 6 -c preserve_interword_spaces=1', timeout=40)
     except pytesseract.TesseractNotFoundError as exc:
         raise RuntimeError('Falta instalar Tesseract OCR. También podés pegar el texto del ticket.') from exc
     except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as exc:
@@ -112,4 +112,6 @@ def scan_receipt(content, preprocessing="standard"):
         if 'timeout' in str(exc).lower():
             raise RuntimeError('La lectura OCR agotó el tiempo disponible. Probá una foto más nítida.') from exc
         raise
-    return parse_receipt(text)
+    result = parse_receipt(text)
+    result['ocr'] = {'engine': 'Tesseract', 'model': 'LSTM', 'language': os.getenv('TESSERACT_LANG', 'eng')}
+    return result

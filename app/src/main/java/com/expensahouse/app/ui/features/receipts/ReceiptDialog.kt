@@ -46,6 +46,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     var status by remember { mutableStateOf(if (pending != null) "Ticket pendiente: reintentá el mismo envío para evitar duplicados." else "") }
     var busy by remember { mutableStateOf(false) }
     var draftId by remember { mutableStateOf(UUID.randomUUID().toString()) }
+    var galleryUri by rememberSaveable { mutableStateOf<String?>(null) }
     var capturePath by rememberSaveable { mutableStateOf<String?>(null) }
     var cameraOpen by rememberSaveable { mutableStateOf(false) }
     fun clearCapture() {
@@ -62,7 +63,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             try {
                 val draft = if (photo != null) repository.scanReceipt(MultipartBody.Part.createFormData("image", "ticket.jpg", RequestBody.create(MediaType.parse("image/jpeg"), photo)))
                             else repository.parseReceipt(ReceiptText(text))
-                receiptImage = draft.receipt_image.orEmpty()
+                if (photo != null) receiptImage = draft.receipt_image.orEmpty()
                 items = draft.items; total = draft.total.toString(); text = draft.raw_text
                 draftId = UUID.randomUUID().toString(); status = draft.warnings.joinToString("\n")
                 if (captured && draft.items.isNotEmpty()) clearCapture()
@@ -77,6 +78,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     fun loadPhoto(uri: Uri, captured: Boolean = false) {
         if (busy || pending != null) return
         busy = true
+        if (!captured) galleryUri = uri.toString()
         status = "Preparando foto del ticket…"
         scope.launch {
             try {
@@ -128,6 +130,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             if (capturePath != null && !cameraOpen) TextButton(onClick = {
                 capturePath?.let { loadPhoto(Uri.fromFile(File(it)), captured = true) }
             }, enabled = !busy && pending == null) { Text("Volver a leer la foto tomada") }
+            if (galleryUri != null) TextButton(onClick = { galleryUri?.let { loadPhoto(Uri.parse(it)) } }, enabled = !busy && pending == null) { Text("Volver a leer la foto elegida") }
             if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Procesando ticket…") }
             OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("Texto del ticket") }, enabled = !busy && pending == null)
             TextButton(onClick = { read() }, enabled = !busy && pending == null) { Text("Interpretar texto") }
@@ -136,11 +139,13 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             OutlinedTextField(value = store, onValueChange = { store = it }, label = { Text("Supermercado") }, enabled = !busy && pending == null)
             items.forEachIndexed { index, item ->
                 OutlinedTextField(value = item.description, onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(description = value) } }, label = { Text("Producto ${index + 1}") }, enabled = !busy && pending == null)
-                Text("${item.quantity} × $${item.unit_price} = $${item.line_total}")
+                OutlinedTextField(value = item.detail.orEmpty(), onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(detail = value) } }, label = { Text("Detalle del producto") }, enabled = !busy && pending == null)
+                Text("${item.quantity} × $${item.unit_price} − $${item.discount} = neto $${item.line_total}")
                 Row {
-                    ReceiptNumber(item.quantity, "Cantidad", Modifier.weight(1f), !busy && pending == null) { quantity -> items = items.toMutableList().also { it[index] = item.copy(quantity = quantity, line_total = kotlin.math.round(quantity * item.unit_price * 100) / 100) } }
-                    ReceiptNumber(item.unit_price, "Precio unidad", Modifier.weight(1f), !busy && pending == null) { price -> items = items.toMutableList().also { it[index] = item.copy(unit_price = price, line_total = kotlin.math.round(item.quantity * price * 100) / 100) } }
+                    ReceiptNumber(item.quantity, "Cantidad", Modifier.weight(1f), !busy && pending == null) { quantity -> items = items.toMutableList().also { it[index] = item.copy(quantity = quantity, line_total = kotlin.math.round((quantity * item.unit_price - item.discount) * 100) / 100) } }
+                    ReceiptNumber(item.unit_price, "Precio unidad", Modifier.weight(1f), !busy && pending == null) { price -> items = items.toMutableList().also { it[index] = item.copy(unit_price = price, line_total = kotlin.math.round((item.quantity * price - item.discount) * 100) / 100) } }
                 }
+                ReceiptNumber(item.discount, "Descuento de la línea ($)", Modifier.fillMaxWidth(), !busy && pending == null, allowZero = true) { discount -> items = items.toMutableList().also { it[index] = item.copy(discount = discount, line_total = kotlin.math.round((item.quantity * item.unit_price - discount) * 100) / 100) } }
                 TextButton(onClick = { items = items.filterIndexed { i, _ -> i != index } }, enabled = !busy && pending == null) { Text("Quitar producto") }
             }
             TextButton(onClick = { items = items + ReceiptLine("Producto", 1.0, 1.0, 1.0) }, enabled = !busy && pending == null) { Text("+ Producto") }
@@ -167,11 +172,11 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
 
 
 @Composable
-private fun ReceiptNumber(value: Double, label: String, modifier: Modifier, enabled: Boolean, onChange: (Double) -> Unit) {
+private fun ReceiptNumber(value: Double, label: String, modifier: Modifier, enabled: Boolean, allowZero: Boolean = false, onChange: (Double) -> Unit) {
     var text by remember { mutableStateOf(value.toString()) }
     LaunchedEffect(value) { if (text.replace(',', '.').toDoubleOrNull() != value) text = value.toString() }
     OutlinedTextField(value = text, onValueChange = { input ->
         text = input
-        input.replace(',', '.').toDoubleOrNull()?.takeIf { it > 0 && it.isFinite() }?.let(onChange)
+        input.replace(',', '.').toDoubleOrNull()?.takeIf { (it > 0 || (allowZero && it == 0.0)) && it.isFinite() }?.let(onChange)
     }, label = { Text(label) }, modifier = modifier, enabled = enabled)
 }

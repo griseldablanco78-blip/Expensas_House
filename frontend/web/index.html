@@ -13,10 +13,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=monthly-archive-6">
-  <link rel="stylesheet" href="/static/css/polish.css?v=monthly-archive-6">
+  <link rel="stylesheet" href="/static/css/style.css?v=tickets-live-7">
+  <link rel="stylesheet" href="/static/css/polish.css?v=tickets-live-7">
 </head>
 <body>
+  <p id="environment-notice" hidden role="status" style="padding:12px;text-align:center;background:#fff3cd;color:#503b00">Entorno de pruebas · datos ficticios y cuenta compartida. Usá comprobantes de ejemplo.</p>
   <section id="auth-panel" class="auth-panel">
     <aside class="auth-story"><span class="eyebrow">TU HOGAR, EN ORDEN</span><div class="auth-house" aria-hidden="true">⌂</div><h1>Menos pendientes.<br>Más tranquilidad.</h1><p>Tu alacena, tus compras y tu presupuesto, juntos en un solo lugar.</p><div class="auth-story-footer">Expensa House <span>Hecho para compartir en casa.</span></div></aside>
     <div class="auth-card"><span class="auth-wordmark">EXPENSA <strong>HOUSE</strong></span><h2 id="auth-heading">Qué bueno verte.</h2><p class="auth-intro">Ingresá para organizar tu hogar.</p>
@@ -375,7 +376,7 @@
         <div id="receipt-review" class="hidden">
           <label>Fecha de compra <input id="receipt-date" type="date" required></label>
           <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
-          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unidad</th><th>Subtotal</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
+          <div class="table-container"><table class="data-table"><thead><tr><th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario ($)</th><th>Descuento de la línea ($)</th><th>Importe neto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
           <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
           <label>Total gastado ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
           <label>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
@@ -404,6 +405,11 @@
         </div>
       </div>
 
+      <div class="card-panel mt-4">
+        <h3>Productos comprados · mes seleccionado</h3>
+        <p>Importe neto = cantidad × precio unitario − descuento de la línea. Los ajustes generales del ticket se muestran en su comprobante.</p>
+        <div class="table-container"><table class="data-table"><thead><tr><th>Supermercado</th><th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario</th><th>Descuento</th><th>Importe neto</th></tr></thead><tbody id="expense-products-body"></tbody></table></div>
+      </div>
       <!-- Historial de Gastos / Tickets -->
       <div class="card-panel mt-4">
         <h3>🧾 Historial de Tickets y Compras</h3>
@@ -651,12 +657,13 @@
 
   </div>
   <!-- JavaScript -->
-  <script src="/static/js/core/auth.js?v=monthly-archive-6"></script>
-  <script src="/static/js/core/dom.js?v=monthly-archive-6"></script>
-  <script src="/static/js/features/offers.js?v=monthly-archive-6"></script>
-  <script src="/static/js/features/chat.js?v=monthly-archive-6"></script>
-  <script src="/static/js/features/receipts.js?v=monthly-archive-6"></script>
-  <script src="/static/js/features/expenses.js?v=monthly-archive-6"></script>
-  <script src="/static/js/app.js?v=monthly-archive-6"></script>
+  <script src="/static/js/core/api.js?v=tickets-live-7"></script>
+  <script src="/static/js/core/auth.js?v=tickets-live-7"></script>
+  <script src="/static/js/core/dom.js?v=tickets-live-7"></script>
+  <script src="/static/js/features/offers.js?v=tickets-live-7"></script>
+  <script src="/static/js/features/chat.js?v=tickets-live-7"></script>
+  <script src="/static/js/features/receipts.js?v=tickets-live-7"></script>
+  <script src="/static/js/features/expenses.js?v=tickets-live-7"></script>
+  <script src="/static/js/app.js?v=tickets-live-7"></script>
 </body>
 </html>

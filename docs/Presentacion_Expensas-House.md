@@ -6,7 +6,7 @@ Una aplicación doméstica para organizar existencias, preparar compras, compara
 
 ## Documentación del proyecto
 
-1. Presentación general: propósito, instalación, funcionamiento y alcance.
+1. Presentación general: propósito, instalación, funcionamiento y alcance. [Documentación en GitHub](https://github.com/griseldablanco78-blip/Expensas_House/tree/main/docs).
 2. [Guía del código](GUIA_CODIGO.md): responsabilidades, archivos, tecnologías y librerías.
 3. [Arquitectura](ARQUITECTURA.md): decisiones, separación incremental y evolución propuesta.
 4. [Gastos y comprobantes](GASTOS_Y_COMPROBANTES.md): OCR, archivo de lectura y cálculos mensuales.
@@ -100,3 +100,7 @@ No hay URL de producción verificada. La persistencia sigue siendo local (JSON/S
 ## Configuración y datos privados
 
 `.env`, `local.properties`, bases de cuentas, datos del hogar, imágenes de tickets personales, certificados y llaves de firma están excluidos de Git. Los archivos de ejemplo contienen nombres ficticios y valores vacíos para configurar cada instalación.
+
+## Actualización funcional
+
+La versión 1.1.0 incorpora detalle, descuento e importe neto por producto en tickets, conservación de la imagen al corregir OCR y búsqueda de catálogos públicos Carrefour/Jumbo. Ver [escáner y ofertas](ESCANER_Y_OFERTAS.md). El entorno publicado es de pruebas y utiliza datos ficticios separados.

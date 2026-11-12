@@ -24,6 +24,20 @@ function renderBudgetAndExpenses() {
 
   const expenses = state.expenses.filter(e => (e.purchase_date || (e.timestamp ? new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires', year:'numeric', month:'2-digit', day:'2-digit'}).format(new Date(e.timestamp)) : '')).startsWith(state.expenseMonth));
   document.getElementById('expense-store-summary').textContent = (state.budget.by_store || []).map(group => `${group.store}: $${group.amount.toLocaleString('es-AR')}`).join(' · ') || 'Sin gastos para este mes.';
+  const products = document.getElementById('expense-products-body');
+  products.replaceChildren();
+  expenses.forEach(expense => (expense.items || []).forEach(item => {
+    const row = document.createElement('tr');
+    const currency = value => '$' + Number(value || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
+    [expense.store || expense.note || 'Sin supermercado', item.description, item.detail || '—', item.quantity,
+      currency(item.unit_price), currency(item.discount), currency(item.line_total)].forEach(value => {
+        const cell = row.insertCell(); cell.textContent = String(value);
+      });
+    products.appendChild(row);
+  }));
+  if (!products.children.length) {
+    const cell = products.insertRow().insertCell(); cell.colSpan = 7; cell.textContent = 'Sin productos detallados en este mes.';
+  }
   if (expenses.length === 0) {
     expTbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:1.5rem; color:var(--text-muted);">Aún no hay tickets registrados.</td></tr>';
     return;

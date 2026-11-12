@@ -1,5 +1,5 @@
 async function performAIComparison(query) {
-  if (!query || !query.trim()) return;
+  if (!query || !query.trim()) { document.getElementById('offer-source-status').textContent = 'Escribí el producto que querés buscar.'; return; }
   const serial = ++comparisonSerial;
 
   const loading = document.getElementById('comparator-loading');
@@ -12,7 +12,7 @@ async function performAIComparison(query) {
 
   try {
     const res = await fetch(`/api/offers/compare?q=${encodeURIComponent(query)}&sort=${document.getElementById('offer-sort').value}`);
-    const data = await res.json();
+    const data = await readApiJson(res);
     if (!res.ok) throw new Error(data.detail || "No se pudieron consultar las ofertas");
     if (serial === comparisonSerial) renderComparisonResults(data);
   } catch (error) {
@@ -44,7 +44,7 @@ function renderComparisonResults(data) {
   alert.style.display = analysis.stock_alert ? 'block' : 'none';
   const container = document.getElementById('supermarket-cards-container');
   container.replaceChildren();
-  if (!offers.length) container.textContent = 'No hay ofertas coincidentes. Podés consultar Ratoneando con el enlace de arriba.';
+  if (!offers.length) container.textContent = 'No hay coincidencias con precio en las fuentes disponibles. Probá con menos palabras, por ejemplo leche o arroz, y revisá el estado de las fuentes indicado arriba.';
   offers.forEach((off, index) => {
     const card = document.createElement('div');
     card.className = `store-card ${index === 0 ? 'is-winner' : ''}`;

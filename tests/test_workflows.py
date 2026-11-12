@@ -26,7 +26,7 @@ class Workflows(unittest.TestCase):
         app.dependency_overrides[require_member] = allowed
         self.addCleanup(lambda: app.dependency_overrides.pop(require_member, None))
         self.directory = tempfile.TemporaryDirectory()
-        self.patches = [patch.object(db, 'DB_FILE', str(Path(self.directory.name) / 'state.json')),
+        self.patches = [patch.dict('os.environ', {'EXPENSA_LIVE_OFFERS': '0'}), patch.object(db, 'DB_FILE', str(Path(self.directory.name) / 'state.json')),
                         patch.object(db, 'export_to_legacy_formats')]
         for item in self.patches:
             item.start()
@@ -121,6 +121,26 @@ class Workflows(unittest.TestCase):
             self.assertEqual(image.status_code, 200)
             self.assertEqual(Image.open(BytesIO(image.content)).size, (200, 400))
             self.assertEqual(self.client.get('/api/budget?month=2026-10').json()['totalSpent'], 1500)
+
+    def test_decimal_quantity_is_not_parsed_as_price(self):
+        draft = parse_receipt('LECHE ENTERA\n2,00 x 1.500,00 3.000,00 A\nTOTAL 3.000,00')
+        self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA')
+        self.assertEqual(draft['items'][0]['quantity'], 2)
+        self.assertEqual(draft['items'][0]['unit_price'], 1500)
+
+    def test_product_discount_and_detail_are_saved_and_deduct_net_amount(self):
+        ticket = {'id':'discounted', 'store':'Super QA', 'purchase_date':'2026-11-12', 'total':2800,
+                  'items':[{'description':'Leche', 'detail':'Entera 1 litro', 'quantity':2,
+                            'unit_price':1500, 'discount':200, 'line_total':2800}]}
+        response = self.client.post('/api/receipts/confirm', json=ticket)
+        self.assertEqual(response.status_code, 200, response.text)
+        saved = response.json()['expense']
+        self.assertEqual(saved['items'][0]['discount'], 200)
+        self.assertEqual(saved['items'][0]['detail'], 'Entera 1 litro')
+        self.assertEqual(self.client.get('/api/budget?month=2026-11').json()['totalSpent'], 2800)
+        self.assertIn('descuento 200', self.client.get('/api/receipts/discounted/text').text)
+        ticket['id'] = 'invalid-discount'; ticket['items'][0]['discount'] = 500
+        self.assertEqual(self.client.post('/api/receipts/confirm', json=ticket).status_code, 422)
 
     def test_confirm_receipt_updates_budget_once_and_preserves_details(self):
         ticket = {'id': 'receipt-1', 'store': 'Supermercado', 'total': 3000,

@@ -7,7 +7,7 @@ if os.getenv('EXPENSA_E2E') != '1':
     raise SystemExit('Only run through the isolated Playwright configuration.')
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 os.environ.update(EXPENSA_AUTH_MODE='password', EXPENSA_PUBLIC_URL='http://127.0.0.1:18765',
-                  EXPENSA_ALLOWED_ORIGINS='http://127.0.0.1:18765', RATONEANDO_API_URL='')
+                  EXPENSA_ALLOWED_ORIGINS='http://127.0.0.1:18765', RATONEANDO_API_URL='', EXPENSA_LIVE_OFFERS='0')
 from backend.app.infrastructure import json_store as store
 from backend.app.core import security
 from backend.app.services import receipt_archive
@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='expensa-e2e-') as directory:
                    'user_prefs':{'id':0,'monthlyBudget':10000,'totalSpent':0}})
     with security.database() as connection:
         connection.execute('INSERT INTO users VALUES (?, ?, ?, 1)',
-                           ('qa-owner','qa-owner',security.HASHER.hash('Solo para pruebas locales 2026')))
-        connection.execute('INSERT INTO memberships VALUES (?, ?)', ('qa-owner','admin'))
+                           ('test123','test123',security.HASHER.hash('PruebasTest1234')))
+        connection.execute('INSERT INTO memberships VALUES (?, ?)', ('test123','admin'))
     from backend.app.main import create_app
     uvicorn.run(create_app(), host='127.0.0.1', port=18765)
