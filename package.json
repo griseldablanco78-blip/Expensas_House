@@ -3,7 +3,8 @@
   "private": true,
   "scripts": {
     "test:web": "playwright test",
-    "test:web:report": "playwright show-report"
+    "test:web:report": "playwright show-report",
+    "test:public": "playwright test --config=playwright.public.config.js"
   },
   "devDependencies": {
     "@playwright/test": "^1.58.0"

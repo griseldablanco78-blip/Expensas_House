@@ -95,7 +95,7 @@ Compilar:
 
 ## Estado y alcance actual
 
-No hay URL de producción verificada. La persistencia sigue siendo local (JSON/SQLite/archivos); una publicación permanente necesita almacenamiento persistente o migración. La web tiene selector mensual; Android conserva el historial anterior. El presupuesto es una referencia común, no un presupuesto diferente almacenado por mes. No hay aislamiento implementado para múltiples hogares independientes. El OCR no garantiza precisión con fotografías reales y sus resultados se revisan antes de registrar gastos. La selección de cámara/galería física sigue formando parte de la regresión manual.
+La [URL pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) está verificada. El frontend está publicado en Vercel y el backend de demostración requiere que la PC, la API y el túnel sigan activos. No es una instalación de producción permanente. La persistencia sigue siendo local (JSON/SQLite/archivos); una publicación permanente necesita almacenamiento persistente o migración. La web tiene selector mensual; Android conserva el historial anterior. El presupuesto es una referencia común, no un presupuesto diferente almacenado por mes. No hay aislamiento implementado para múltiples hogares independientes. El OCR no garantiza precisión con fotografías reales y sus resultados se revisan antes de registrar gastos. La selección de cámara/galería física sigue formando parte de la regresión manual.
 
 ## Configuración y datos privados
 

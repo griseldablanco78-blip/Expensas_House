@@ -1,6 +1,6 @@
 # Plan y estado de Expensa House
 
-Actualizado: 28 de octubre de 2026.
+Actualizado: 12 de noviembre de 2026.
 
 ## Propósito
 
@@ -32,7 +32,7 @@ Selector mensual en la web, gastos por supermercado, fecha de compra, saldo, arc
 
 Repositorio: https://github.com/griseldablanco78-blip/Expensas_House
 
-URL desplegada: **pendiente de publicación y verificación**. Consultar [guía de Vercel](deploy/VERCEL.md). No reemplazar este estado por una dirección supuesta.
+URL de pruebas verificada: [Expensas House](https://expensas-house-griselda-blanco.vercel.app). El frontend está desplegado en Vercel y el backend de demostración permanece en la PC mediante un túnel temporal. Consultar [guía de Vercel](deploy/VERCEL.md). No reemplazar este estado por una dirección supuesta.
 
 ## Próximas etapas
 
@@ -48,3 +48,7 @@ URL desplegada: **pendiente de publicación y verificación**. Consultar [guía 
 Una búsqueda equivalente muestra el mismo producto/precio en web y Android; una falla externa deja un mensaje visible. Un ticket permite revisar y guardar nombres completos, cantidades, precios y total; un reintento no duplica el gasto. Los usuarios de lectura no pueden modificar datos. La URL pública debe probarse con inicio de sesión y una operación completa antes de anunciarla.
 
 Ver [README](README.md), [arquitectura](docs/ARQUITECTURA.md) y [presentación](docs/Presentacion_Expensas-House.md).
+
+## Verificación del 12/11/2026
+
+Corregidos el enrutamiento web/API, conservación de imagen al corregir OCR, mes mostrado al guardar, cantidades decimales y cálculo por producto con descuento/neto. La búsqueda de catálogos usa codificación `%20` para espacios. Pasaron 50 pruebas de backend, 6 escenarios locales de navegador y un escenario público desde Vercel que verificó login, precios reales, OCR, confirmación del gasto neto y descarga de comprobantes.

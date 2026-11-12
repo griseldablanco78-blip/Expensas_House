@@ -21,7 +21,7 @@ Las rutas absolutas `/static/...` se reescriben a los archivos de este frontend.
 
 ## Estado de esta entrega
 
-El frontend tiene configuración de rutas estáticas, pero todavía no hay una URL pública verificada ni un rewrite activo a la API. Se requieren un backend persistente y su dominio HTTPS para que funcionen el login, la búsqueda de ofertas y el resto de las llamadas `/api/...`.
+La [URL pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) está desplegada y conectada a la API de demostración por rewrite. Se verificaron login, ofertas, escaneo, gasto neto y comprobantes desde el navegador. El backend sigue siendo temporal y depende de la PC; la publicación permanente requiere infraestructura persistente.
 
 ## Importar desde GitHub
 
@@ -33,4 +33,4 @@ El módulo contable guarda imágenes en `data/receipts` y datos/texto en `data/a
 
 El proyecto `expensas-house` utiliza framework `Other`, raíz `frontend/web`, sin compilación ni instalación de paquetes y salida `.`. `frontend/web/vercel.json` conecta la API de demostración mediante rewrite y desactiva caché de respuestas privadas. La protección adicional de Vercel se retiró con autorización explícita para publicar el entorno de pruebas; la sesión y los permisos de la aplicación permanecen activos.
 
-La API de demostración se inicia con `scripts/iniciar_demo.py`, guarda datos ficticios en `.runtime/demo` y requiere el dominio HTTPS del túnel en `EXPENSA_PUBLIC_URL`, además del dominio frontend en `EXPENSA_ALLOWED_ORIGINS`. El túnel actual es temporal; si cambia, deben actualizarse el rewrite y la URL compilada en Android y volver a desplegar. La URL de producción funcional se registra una vez verificado el despliegue. No equivale a un backend permanente en la nube.
+La API de demostración se inicia con `scripts/iniciar_demo.py`, guarda datos ficticios en `.runtime/demo` y requiere el dominio HTTPS del túnel en `EXPENSA_PUBLIC_URL`, además del dominio frontend en `EXPENSA_ALLOWED_ORIGINS`. El túnel actual es temporal; si cambia, deben actualizarse el rewrite y la URL compilada en Android y volver a desplegar. La URL pública verificada es https://expensas-house-griselda-blanco.vercel.app. No equivale a un backend permanente en la nube.

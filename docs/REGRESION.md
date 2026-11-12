@@ -65,3 +65,7 @@ El diagnóstico prueba disponibilidad pública y rechazo de lectura de gastos si
 Cada falla debe registrar: ID del caso, versión/commit, entorno, pasos, esperado, observado y evidencia sin datos privados. Dar por terminada una regresión únicamente cuando pasen sus controles requeridos; indicar los casos manuales pendientes y distinguir resultados locales de resultados de CI.
 
 Documentación de referencia: [pytest y unittest](https://docs.pytest.org/en/stable/how-to/unittest.html), [servidor de Playwright](https://playwright.dev/docs/test-webserver), [trazas de Playwright](https://playwright.dev/docs/trace-viewer), [pruebas Compose](https://developer.android.com/develop/ui/compose/testing).
+
+## Regresión pública del entorno de demostración
+
+`npm run test:public` usa `playwright.public.config.js` y verifica la URL de Vercel. El test exige `mode=demo` antes de iniciar sesión y genera únicamente un gasto sintético. Consulta fuentes reales de precios, por lo que depende de su disponibilidad y no se agrega a la regresión de CI aislada. Ver [resultados del 12/11/2026](QA_RESULTADOS_2026-11-12.md).

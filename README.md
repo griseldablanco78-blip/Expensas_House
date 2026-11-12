@@ -10,7 +10,7 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 
 - [Repositorio](https://github.com/griseldablanco78-blip/Expensas_House)
 - [Plan y estado del proyecto](PLAN_PROYECTO.md)
-- URL pública: **pendiente de despliegue verificado**. La dirección local no es una URL pública.
+- [Aplicación pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) · datos ficticios. Backend temporal en la PC; requiere API y túnel activos.
 - Desarrollo local: http://localhost:8000 · API interactiva: http://localhost:8000/docs
 
 ## Organización y responsabilidades
@@ -78,3 +78,7 @@ Ver [diagnóstico del escáner, modelo OCR, formatos y ofertas](docs/ESCANER_Y_O
 - [Guía de Vercel y backend persistente](deploy/VERCEL.md).
 - [Funcionalidades y tecnologías](docs/FUNCIONALIDADES.md).
 - [Cuadernillo técnico de IA](CUADERNILLO_TECNICO_IA.md): material complementario; distinguir experimentos de funciones efectivamente integradas.
+
+## Acceso al entorno de pruebas
+
+Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta pertenece a una demostración aislada; usar únicamente comprobantes ficticios. Versión Android: 1.1.0.
