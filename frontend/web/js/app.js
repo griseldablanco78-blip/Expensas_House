@@ -32,6 +32,7 @@ document.addEventListener('DOMContentLoaded', () => bootAuthentication(() => {
     if (window.currentUser.role !== 'inventory_viewer') performAIComparison("leche");
     else switchTab('stock');
   });
+  startDataAutoRefresh();
   setupMembers();
 }));
 
@@ -79,6 +80,19 @@ function switchTab(tabId) {
 // CARGA Y SINCRONIZACIÓN DE DATOS CON FASTAPI
 // ==========================================================================
 let dataLoadSerial = 0;
+let dataRefreshTimer = null;
+
+function startDataAutoRefresh() {
+  if (dataRefreshTimer) window.clearInterval(dataRefreshTimer);
+  dataRefreshTimer = window.setInterval(() => {
+    if (!document.hidden) loadAllData();
+  }, 15000);
+
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden) loadAllData();
+  });
+}
+
 async function loadAllData() {
   const serial = ++dataLoadSerial;
   try {

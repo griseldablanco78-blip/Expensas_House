@@ -1,128 +1,191 @@
-# Cuadernillo - acceso a la actividad de Clase 10
+# Cuadernillo académico: Expensa House
 
-**Estudiante:** Griselda Blanco  
-**Repositorio:** Seminario2026  
-**Rama:** `Proyecto_Integrador`  
-**Carpeta de entrega:** `clase_10/`  
-**Formato investigado:** modelo completo de PyTorch.
+**Autora:** Griselda Blanco  
+**Proyecto:** Expensa House  
+**Repositorio:** https://github.com/griseldablanco78-blip/Expensas_House  
+**Aplicación web publicada:** https://expensas-house-griselda-blanco.vercel.app
 
-[Entrar a la entrega de Clase 10](https://github.com/griseldablanco78-blip/Seminario2026/tree/Proyecto_Integrador/clase_10)
+## Datos de acceso a la demostración
 
-[Abrir directamente el notebook](https://github.com/griseldablanco78-blip/Seminario2026/blob/Proyecto_Integrador/clase_10/Clase_10_Blanco_Griselda.ipynb)
+- **Usuario:** `test123`
+- **Contraseña:** `PruebasTest1234`
+- **Versión Android:** `1.1.0`
 
-La entrega contiene el notebook con su recorrido ejecutado y la actividad final. Las predicciones personales aún señaladas como pendientes deben completarse y revisarse antes de presentar la entrega como terminada.
+La cuenta anterior corresponde exclusivamente al entorno ficticio de pruebas. Utilizo los datos de demostración y no información personal.
 
----
+## Presentación del proyecto
 
-# 📘 Cuadernillo Técnico de Inteligencia Artificial y Tecnologías - Expensa House
+Desarrollé Expensa House como una aplicación doméstica para organizar la despensa, preparar la lista de compras, comparar ofertas y registrar gastos mediante tickets. El proyecto dispone de una aplicación Android y una aplicación web que utilizan la misma API desarrollada en Python.
 
-Este documento detalla la arquitectura de Inteligencia Artificial, los modelos preentrenados adaptados desde **Hugging Face**, las librerías, marcos de trabajo y el stack tecnológico utilizado en el desarrollo del ecosistema **Expensa House** (Aplicación Móvil Android + Servicio Web FastAPI + Dashboard Streamlit).
+La web está publicada en Vercel y permite probar el sistema desde un navegador. Android guarda los datos localmente en una base Room y los sincroniza con el backend. La sincronización no es una nube automática permanente: el backend de demostración utiliza un túnel temporal y debe permanecer activo en mi computadora.
 
----
+## Problema que resolví
 
-## 1. 🤖 Modelos de Inteligencia Artificial Implementados
+Un hogar debe llevar diferentes controles: productos disponibles, unidades abiertas, faltantes, presupuesto, gastos y fotografías de tickets. Estos datos pueden cargarse manualmente o extraerse con diferentes herramientas. Mi objetivo fue integrar esos ingresos, mantener el estado común y permitir consultar el sistema desde dos clientes.
 
-El sistema utiliza una arquitectura **híbrida** que combina modelos de aprendizaje profundo (*Deep Learning*) preentrenados de Hugging Face y Google, junto con algoritmos de aprendizaje supervisado (*Machine Learning*) entrenados con datos locales.
+## Arquitectura general
 
----
+```text
+Android (Kotlin + Compose)
+            |
+            | Retrofit / HTTP / JSON
+            v
+Web (HTML + CSS + JavaScript) -> Vercel
+            |
+            v
+FastAPI + servicios Python
+            |
+            +--> JSON: stock, compras, ofertas y gastos
+            +--> SQLite: cuentas y sesiones
+            +--> Archivos privados: imágenes de tickets y ofertas
+            +--> Tesseract y OpenCV: lectura de comprobantes
+```
 
-### A. Reconocimiento de Voz a Texto (Speech-to-Text)
+Android conserva una copia local con Room/SQLite. Cuando existe conexión, solicita el estado o envía su instantánea al backend. El servidor combina los cambios con el estado central y devuelve el resultado. Si la API no responde, los datos escritos en el teléfono siguen disponibles localmente.
 
-#### 🔬 Nombre Técnico del Modelo:
-- **`facebook/wav2vec2-large-xlsr-53-spanish`** (Hugging Face Transformers)
-- **Android SpeechRecognizer API / Google Speech Recognition Engine**
+## Estructura de carpetas
 
-#### 📌 Descripción y Origen:
-Modelo acústico y de lenguaje preentrenado basado en la arquitectura **Wav2Vec 2.0** de Meta AI, ajustado finamente (*fine-tuned*) para el idioma español (`es-AR`). En la aplicación móvil y el entorno web, procesa las ondas de audio capturadas por el micrófono para transformarlas en texto plano estructurado.
+```text
+backend/app/
+  main.py                 Configuración principal de FastAPI
+  api/routes/             Endpoints de stock, compras, presupuesto, ofertas,
+                           chatbot, voz, tickets, autenticación y sincronización
+  api/schemas.py          Validación de solicitudes
+  services/               OCR, tickets, ofertas, sincronización y reportes
+  infrastructure/         Persistencia JSON y exportaciones compatibles
+  core/                   Seguridad, autenticación y rutas
 
-#### 🟢 Aporte Positivo (Beneficios para App y Web):
-- **Carga de Productos Ultrarrápida**: Permite a los usuarios dictar ítems en lugar de escribirlos manualmente (ej.: *"Leche entera La Serenísima"*).
-- **Inclusión y Accesibilidad**: Simplifica el uso del sistema para usuarios en movimiento o con dificultades de tipeo.
-- **Normalización Fonética**: Interpreta variaciones dialectales del español rioplatense.
+frontend/web/
+  index.html              Interfaz principal
+  css/                    Estilos
+  js/app.js               Navegación y carga de datos
+  js/core/                API y autenticación
+  js/features/            Ofertas, chatbot, tickets y gastos
+  vercel.json             Publicación y redirección de /api
 
-#### 🔴 Aspectos Negativos y Limitaciones (Trade-offs):
-- **Sensibilidad al Ruido de Fondo**: Requiere cierto nivel de claridad ambiental para evitar confusiones en marcas específicas.
-- **Dependencia de Red / Latencia**: En dispositivos de gama baja o conexiones lentas, la llamada al motor de reconocimiento puede experimentar un leve retraso.
+app/src/main/
+  java/com/expensahouse/app/
+    data/local/           Base Room
+    data/remote/          Clientes Retrofit
+    data/repository/      Acceso a datos
+    domain/model/         Modelos de negocio
+    ui/                   Pantallas Compose y ViewModels
 
----
+modelos/
+  modelo_prediccion.py    Experimento de clasificación con Random Forest
 
-### B. Visión por Computadora y Reconocimiento Óptico de Caracteres (OCR de Tickets)
+data/
+  app_state.json          Estado local del hogar
+  receipts/               Imágenes privadas de comprobantes
 
-#### 🔬 Nombre Técnico del Modelo / Librería:
-- **`com.google.mlkit:text-recognition`** (Google ML Kit Vision API / Tesseract Engine)
+tests/                    Pruebas unitarias, seguridad y Playwright
+docs/                     Arquitectura y documentación técnica
+deploy/                   Configuración de publicación
+scripts/                  Instalación, demostración y diagnóstico
+```
 
-#### 📌 Descripción y Origen:
-Modelo de visión artificial basado en redes neuronales convolucionales (*CNN*) entrenado masivamente para detectar y extraer estructuras de texto en imágenes complejas como tickets, facturas y comprobantes impresos de supermercados.
+## Tecnologías aplicadas
 
-#### 🟢 Aporte Positivo (Beneficios para App y Web):
-- **Desmenuzamiento Automático de Tickets**: Extrae línea por línea cada producto adquirido junto con su importe individual.
-- **Imputación de Categorías**: Permite clasificar automáticamente cada ítem en **Verdulería, Carnicería, Limpieza, Comestibles o Hogar**.
-- **Control Presupuestario Preciso**: Suma los importes individuales y actualiza el saldo disponible sin errores de tipeo humano.
+| Componente | Tecnología | Uso |
+|---|---|---|
+| Android | Kotlin, Jetpack Compose | Interfaz móvil |
+| Base local Android | Room sobre SQLite | Cache y uso sin conexión |
+| Comunicación móvil | Retrofit y OkHttp | Solicitudes REST |
+| Backend | Python, FastAPI y Uvicorn | API compartida |
+| Web | HTML, CSS y JavaScript | Interfaz publicada |
+| Publicación web | Vercel | Hospedaje estático y proxy de `/api` |
+| Base central actual | JSON | Estado compartido del hogar |
+| Cuentas y sesiones | SQLite | Usuarios, contraseñas y permisos |
+| Contratos | Pydantic | Validación de datos |
+| OCR | Tesseract, Pillow y OpenCV opcional | Lectura de tickets |
+| Análisis | Pandas, NumPy y scikit-learn | Limpieza y experimento predictivo |
+| Pruebas | Pytest, unittest, Playwright | API, seguridad y navegador |
 
-#### 🔴 Aspectos Negativos y Limitaciones (Trade-offs):
-- **Calidad de la Fotografía**: Tickets arrugados, borrosos o con poca iluminación pueden dificultar la separación exacta de nombres y precios.
-- **Variaciones de Formato**: Facturas de pequeños comercios sin formato estándar requieren expresiones regulares de respaldo (*Regex fallback*).
+## Base de datos y persistencia
 
----
+Utilizo dos bases según su responsabilidad:
 
-### C. Procesamiento de Lenguaje Natural (PLN) y Comparador de Ofertas con IA
+- **Room/SQLite en Android** conserva el inventario, compras, ofertas, presupuesto y gastos del teléfono.
+- **SQLite del backend** conserva cuentas y sesiones.
+- **JSON en el servidor** conserva el estado compartido actual del hogar.
 
-#### 🔬 Nombre Técnico del Modelo:
-- **`sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2`** / **`xlm-roberta-base`** (Hugging Face Hub)
-- **Motor de Veredicto Inteligente (`web/ai_comparator.py`)**
+Las imágenes de tickets y ofertas se guardan como archivos privados. Esta distribución permite una demostración funcional, pero todavía no es una arquitectura de producción compartida con múltiples hogares. Para una publicación permanente necesito migrar el estado central a PostgreSQL u otro servicio relacional y almacenar las imágenes en un servicio de archivos persistente.
 
-#### 📌 Descripción y Origen:
-Modelos del lenguaje basados en arquitecturas Transformer multilingües. Mapean frases y nombres de productos a un espacio vectorial de incrustaciones (*embeddings*) para calcular similitudes semánticas entre las consultas del usuario y las ofertas publicadas por los supermercados.
+## Sincronización web y app
 
-#### 🟢 Aporte Positivo (Beneficios para App y Web):
-- **Cruce de Ofertas Complejas**: Analiza promociones del tipo *2da unidad al 70%*, *3x2* o *descuentos por tarjeta* y calcula el costo efectivo por unidad.
-- **Veredictos de Compra Inteligentes**: Cruza el nivel de stock en casa con la oferta y aconseja si conviene comprar 1 unidad o realizar acopio.
-- **Asistente Boti House**: Proporciona respuestas contextuales a preguntas sobre presupuesto, stock y ofertas con botones de navegación directa.
+Android puede enviar una instantánea completa mediante `POST /api/sync`. La base Room conserva los datos para usar la app sin conexión. Al iniciar o realizar una operación, la app intentará sincronizar con el servidor.
 
-#### 🔴 Aspectos Negativos y Limitaciones (Trade-offs):
-- **Estructuras de Promociones Cambiantes**: Promociones bancarias combinadas muy específicas requieren constante actualización de reglas en la base de ofertas.
+La web consulta stock, compras, presupuesto y gastos. Agregué una actualización automática cada quince segundos y también actualizo al volver a mostrar la pestaña del navegador. Así, los cambios enviados desde Android pueden aparecer en Vercel sin recargar manualmente la página.
 
----
+El flujo actual es por solicitudes: no utiliza WebSockets ni notificaciones en tiempo real. Si el backend del túnel cambia o se corta, la web muestra un error de conexión y Android conserva sus datos locales.
 
-### D. Modelo Predictivo de Reposición de Stock
+## Módulos de inteligencia artificial
 
-#### 🔬 Nombre Técnico del Algoritmo:
-- **`sklearn.ensemble.RandomForestClassifier`** (Scikit-Learn Machine Learning)
+### 1. Voz a texto
 
-#### 📌 Descripción y Origen:
-Modelo supervisado de clasificación basado en un ensamble de 100 árboles de decisión, entrenado sobre el conjunto de datos de movimientos del hogar (`data/inventario_movimientos_limpio.csv`).
+En el navegador utilicé **Web Speech API** con idioma `es-AR`. Android utiliza el reconocedor de voz del sistema. Existe también un endpoint en FastAPI que recibe un archivo de audio y usa **SpeechRecognition** con el motor Google, pero no desarrollé ni entrené un modelo propio de voz.
 
-#### 🟢 Aporte Positivo (Beneficios para App y Web):
-- **Predicción de Agotamiento de Stock**: Identifica qué productos entrarán en estado crítico antes de que se agoten.
-- **Robustez frente a Outliers**: Maneja adecuadamente picos atípicos de consumo en fechas especiales.
+Este módulo convierte el mensaje hablado en texto y lo usa para buscar productos u operar los campos admitidos. Puede equivocarse con marcas, acentos, ruido ambiental o conectividad.
 
-#### 🔴 Aspectos Negativos y Limitaciones (Trade-offs):
-- **Problema de "Arrancado en Frío" (*Cold Start*)**: Requiere que un producto tenga al menos algunos registros de movimiento previos para realizar predicciones precisas.
+### 2. Chatbot Boti House
 
----
+Implementé Boti House mediante reglas de texto y datos reales del hogar. Reconoce consultas sobre ofertas, presupuesto y faltantes, calcula respuestas y abre la pestaña correspondiente.
 
-## 2. 🛠️ Ficha Técnica de Tecnologías y Librerías Utilizadas
+No entrené ni integré un modelo generativo como ChatGPT. Por eso la documentación académica debe presentar esta función como un chatbot basado en reglas y no como un modelo de lenguaje entrenado.
 
-| Componente | Tecnología / Librería | Versión | Propósito Técnico |
-| :--- | :--- | :--- | :--- |
-| **Android UI** | Jetpack Compose (Material3) | 2024.12.01 (BOM) | Diseño declarativo reactivo de la interfaz móvil. |
-| **Android Language** | Kotlin | 2.0.21 | Lenguaje principal de desarrollo móvil. |
-| **Persistencia Móvil** | Room Database | 2.6.1 | Base de datos SQLite reactiva local en el teléfono. |
-| **Red Móvil** | Retrofit 2 & OkHttp 4 | 2.11.0 / 4.12.0 | Cliente HTTP para sincronización REST con el servidor FastAPI. |
-| **Reconocimiento Voz Android**| Android SpeechRecognizer API | Native SDK | Conversión de voz a texto en Android. |
-| **OCR Móvil** | Google ML Kit Text Recognition | 16.0.0 | Extracción de texto desde imágenes de tickets. |
-| **Backend API** | FastAPI + Uvicorn | 0.110+ | Servidor RESTful asíncrono para sincronización y endpoints IA. |
-| **Dashboard Web** | Streamlit | 1.39+ | Panel web interactivo con controles, gráficos y voz. |
-| **Visualización Web** | Plotly Express | 5.20+ | Gráficos interactivos de distribución de stock y gastos. |
-| **Procesamiento Datos** | Pandas & NumPy | 2.2+ / 1.26+ | Limpieza, estructuración y manipulación de datasets. |
-| **Modelos IA / PLN** | Hugging Face Transformers | 4.39+ | Modelos de lenguaje y procesamiento acústico de voz. |
-| **Machine Learning** | Scikit-Learn | 1.4+ | Clasificador Random Forest para reposición de stock. |
+### 3. Buscador y comparador de ofertas
 
----
+El buscador normaliza el texto, elimina palabras de consulta, conserva nombre y presentación, compara ofertas guardadas y consulta proveedores externos autorizados si están configurados. También calcula el precio efectivo visible y informa cuándo una promoción corresponde a unidades múltiples.
 
-## 3. 🎯 Resumen de Impacto Técnico
+No generó precios ni predije promociones. Los precios provienen de ofertas cargadas manualmente o de catálogos públicos. Esta función utiliza reglas y coincidencia textual; no utilizo embeddings, red neuronal ni modelo entrenado propio para el buscador.
 
-El ecosistema **Expensa House** logra unificar en un solo entorno móvil y web:
-1. **Entrada de datos multimodal**: Tipeo manual, dictado por voz y escaneo OCR de tickets.
-2. **Sincronización en espejo**: Mantiene la consistencia de inventario y finanzas en tiempo real entre el celular y la web.
-3. **Toma de decisiones asistida por IA**: Sugiere compras óptimas combinando promociones reales de supermercados con las necesidades reales del hogar.
+### 4. OCR de tickets
+
+Utilicé Tesseract con modelos `spa+eng`, Pillow para orientación y contraste y OpenCV opcional para sombras. Las expresiones y reglas permiten separar productos, cantidades, precios y descuentos.
+
+Tesseract y los datos utilizados no fueron entrenados por mí. Corregí el resultado antes de confirmar el gasto. El OCR puede fallar con tickets arrugados, cortados o mal iluminados.
+
+## Modelo predictivo de reposición
+
+El archivo `modelos/modelo_prediccion.py` implementa un experimento separado con **Random Forest Classifier** de scikit-learn. Entrené sobre el CSV `inventario_movimientos_limpio.csv`, aunque ese archivo no forma parte del flujo central actual.
+
+La predicción objetivo es:
+
+> ¿El producto necesita reposición?
+
+Las variables preparadas fueron categoría, frecuencia de consumo y gasto acumulado. El código calcula el stock según compras y consumos y define crítico cuando el stock calculado es menor o igual a dos.
+
+El modelo no está integrado todavía en el inventario de producción. La app genera automáticamente la lista de faltantes según reglas simples: si el stock es menor o igual a uno. Por este motivo no presento el Random Forest como una precisión comprobada del producto hasta que haya datos históricos suficientes y se guarde el modelo entrenado.
+
+## Predicciones y decisiones implementadas
+
+| Función | Tipo de predicción o decisión | Estado |
+|---|---|---|
+| Reposición Android | Si una unidad disponible es 0 o 1, agrego el producto a faltantes | Activa |
+| Random Forest | Clasifica si un producto necesita reposición | Experimento separado |
+| Comparador | Ordena por precio o descuento y elige una oferta visible | Activa |
+| OCR | Extrae caracteres y interpreta líneas del ticket | Activa |
+| Voz | Convierte audio en texto | Activa en navegadores compatibles |
+| Chatbot | Selecciona una respuesta por palabras clave y contexto | Activa |
+
+## Acceso, seguridad y pruebas
+
+FastAPI verifica usuario y permisos antes de devolver datos o aceptar cambios. Las contraseñas se protegen con Argon2 y las sesiones utilizan cookies HTTP-only. El modo de demostración exige datos ficticios y no debe utilizar comprobantes personales.
+
+Probé el backend con Pytest/unittest, la interfaz web con Playwright y el cliente Android con pruebas Compose/JUnit cuando corresponde. Las pruebas usan datos temporales.
+
+## Limitaciones académicas actuales
+
+- El backend de demostración depende de la PC y de un túnel temporal.
+- El JSON y las imágenes no son persistentes en Vercel.
+- No existe aislamiento completo de hogares independientes.
+- El historial predictivo todavía es insuficiente para obtener un modelo fiable.
+- Los proveedores externos pueden modificar precios o denegar consultas.
+- El OCR requiere revisión humana.
+- La sincronización Android utiliza instantáneas y no operaciones individuales con historial completo.
+
+## Conclusión
+
+Con este proyecto integré una aplicación móvil, una aplicación web y un backend compartido. Incorporé carga manual, voz a texto, OCR, chatbot por reglas, comparación de ofertas y un experimento predictivo separado.
+
+Aprendí a diferenciar funciones realmente entrenadas de modelos preentrenados, reglas locales y asistentes conversacionales. El próximo paso académico y técnico será migrar el almacenamiento central, añadir datos históricos reales de consumo y entrenamiento periódico y utilizar una infraestructura permanente.

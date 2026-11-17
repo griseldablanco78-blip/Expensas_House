@@ -1,106 +1,47 @@
-# Presentación de Expensas House
+# Presentación académica de Expensa House
 
-## Qué resuelve
+**Autora:** Griselda Blanco  
+**Repositorio:** https://github.com/griseldablanco78-blip/Expensas_House  
+**Web:** https://expensas-house-griselda-blanco.vercel.app  
+**Usuario de prueba:** `test123`  
+**Contraseña de prueba:** `PruebasTest1234`
 
-Una aplicación doméstica para organizar existencias, preparar compras, comparar ofertas y controlar gastos. Tiene una web y un cliente Android. Ambos usan una API Python compartida. El presupuesto y los tickets son un módulo contable del hogar; no se conectan con bancos ni tarjetas.
+## Resumen
 
-## Documentación del proyecto
+Desarrollé Expensa House para administrar despensa, compras, presupuesto y comprobantes desde Android y desde una web. Ambos clientes consultan una API Python compartida.
 
-1. Presentación general: propósito, instalación, funcionamiento y alcance. [Documentación en GitHub](https://github.com/griseldablanco78-blip/Expensas_House/tree/main/docs).
-2. [Guía del código](GUIA_CODIGO.md): responsabilidades, archivos, tecnologías y librerías.
-3. [Arquitectura](ARQUITECTURA.md): decisiones, separación incremental y evolución propuesta.
-4. [Gastos y comprobantes](GASTOS_Y_COMPROBANTES.md): OCR, archivo de lectura y cálculos mensuales.
-5. [Regresión automatizada](REGRESION.md) y [resultados locales](QA_RESULTADOS_2026-10-28.md).
-6. [Plan del proyecto](../PLAN_PROYECTO.md): estado y tareas pendientes.
+## Tecnologías
 
-## Arquitectura
+Utilicé Kotlin y Jetpack Compose en Android; Room/SQLite para datos locales; Retrofit para las llamadas HTTP; FastAPI y Python en el backend; HTML, CSS y JavaScript en la web; JSON y SQLite en el almacenamiento actual; Tesseract y Pillow para OCR; y scikit-learn para un experimento predictivo.
 
-Se utiliza un **monolito modular**: un backend organizado por responsabilidades y dos clientes independientes. La web y la API pueden ejecutarse con un único proceso local; separar carpetas no obliga a contratar dos servidores.
+## Tres módulos principales de asistencia
 
-```mermaid
-flowchart TD
-    W[Frontend web: HTML, CSS y JavaScript] -->|HTTP / JSON| API[FastAPI: rutas, contratos y permisos]
-    A[Android: Kotlin y Compose] -->|HTTP / JSON| API
-    API --> S[Servicios: ofertas, tickets y sincronización]
-    S --> P[Persistencia del hogar: JSON]
-    API --> U[Cuentas y sesiones: SQLite]
-    S --> O[Tesseract y OpenCV opcional]
-    S --> F[Archivos privados de comprobantes]
-    A --> R[Room: almacenamiento local Android]
-```
+1. **Voz a texto:** convierto el habla en texto mediante Web Speech API o el reconocedor Android. Luego utilizo el texto para buscar ofertas o completar consultas.
+2. **Chatbot Boti House:** responde mediante reglas a consultas de ofertas, presupuesto y faltantes. No entrené un modelo generativo.
+3. **Buscador de ofertas:** normaliza la consulta, busca coincidencias y compara precios publicados. Las ofertas pueden ser manuales o provenir de fuentes externas configuradas.
 
-Parte de inventario, compras y presupuesto aún accede a persistencia desde las rutas. `app.js` y `MainActivity` conservan operaciones pendientes de extraer. La separación de responsabilidades continúa de forma incremental.
+También utilizo OCR para leer tickets. El motor reconoce texto, mientras que las reglas de Python separan productos, cantidades y precios.
 
-## Requisitos recomendados
+## Predicción
 
-- Git y Python 3.12 para API/web y pruebas.
-- Node.js 22 para pruebas de navegador; no es necesario para abrir la aplicación web normal.
-- Tesseract instalado en el sistema para leer imágenes. Sin él se puede interpretar texto pegado.
-- Android Studio, JDK 17 y SDK Android 35 si se revisa el cliente móvil.
-- La API local no requiere una cuenta de Vercel ni acceso a datos de otras instalaciones.
+Entrené experimentalmente un Random Forest para clasificar si un producto necesita reposición. Las variables fueron categoría, frecuencia de consumo y gasto acumulado. El objetivo fue predecir stock crítico.
 
-## Ejecución web y backend desde una copia nueva
+Todavía no incorporé ese modelo a la operación principal. Android identifica faltantes con una regla simple basada en el stock disponible.
 
-En PowerShell:
+## Datos móviles y web
 
-```powershell
-git clone https://github.com/griseldablanco78-blip/Expensas_House.git
-Set-Location Expensas_House
-python -m venv .venv
-.venv/Scripts/python.exe -m pip install -r requirements.txt
-Copy-Item .env.example .env
-.venv/Scripts/python.exe scripts/crear_administradora.py
-.venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
-```
+Android guarda una copia en Room. Al iniciar o modificar datos, intenta sincronizar una instantánea con FastAPI. La web desplegada obtiene el estado central desde la API y actualiza sus módulos cada quince segundos.
 
-El configurador solicita un usuario y una contraseña de al menos 15 caracteres, escrita de forma oculta. Cada instalación tiene sus propias cuentas; no hay credenciales predeterminadas.
+La sincronización depende de que el backend esté disponible. El backend de demostración está temporalmente alojado en mi computadora mediante un túnel HTTPS, por lo que puede dejar de responder si apago la PC o cambia el túnel.
 
-Abrir [aplicación local](http://127.0.0.1:8000) e ingresar con la cuenta creada. Abrir [contratos de API](http://127.0.0.1:8000/docs) para inspeccionar entradas y salidas. Los endpoints privados requieren autenticación; que aparezcan en Swagger no los vuelve públicos.
+## Enlaces de documentación
 
-Al crear el almacenamiento, el código actual incluye datos domésticos de ejemplo. Sirven para demostración y no certifican precios ni promociones vigentes. El proveedor de ofertas externo es opcional y está sin configurar en `.env.example`.
+- [Repositorio GitHub](https://github.com/griseldablanco78-blip/Expensas_House)
+- [Cuadernillo técnico](../CUADERNILLO_TECNICO_IA.md)
+- [Arquitectura](ARQUITECTURA.md)
+- [Escáner y ofertas](ESCANER_Y_OFERTAS.md)
+- [Guía de publicación](../deploy/VERCEL.md)
 
-### Escaneo de imágenes
+## Alcance y próximos pasos
 
-Instalar Tesseract desde su distribución para el sistema operativo e indicar su ejecutable en `TESSERACT_CMD` cuando no esté disponible en PATH. Indicar únicamente idiomas instalados en `TESSERACT_LANG`.
-
-Para el modo de fotos con sombras:
-
-```powershell
-.venv/Scripts/python.exe -m pip install -r requirements-ocr.txt
-```
-
-El flujo normal funciona con Pillow y Tesseract; OpenCV es opcional. Para una prueba reproducible puede usarse `tests/fixtures/ticket-sintetico.png`, sin datos personales.
-
-### Android
-
-Abrir la raíz del repositorio en Android Studio y sincronizar Gradle. Crear `local.properties` con la ubicación del SDK del equipo y `expensa.apiBaseUrl` apuntando a la API de prueba. Para una revisión local sin publicar la API, conectar un emulador o un teléfono por USB y ejecutar `adb reverse tcp:8000 tcp:8000`; configurar `expensa.apiBaseUrl=http://127.0.0.1:8000/` en `local.properties`, compilar e instalar la variante debug. El reenvío ADB lleva ese puerto del dispositivo a la API loopback de la PC. HTTP está permitido únicamente en este recorrido local de depuración. Para acceso por Internet o Wi-Fi usar una API HTTPS accesible.
-
-Un teléfono no puede acceder al servidor de la PC usando `127.0.0.1`, porque esa dirección se refiere al propio teléfono. Los enlaces temporales de túnel cambian y pueden vencer; no están versionados como dirección de producción. Nunca desactivar la validación TLS para resolver un problema de conexión.
-
-Compilar:
-
-```powershell
-.\gradlew.bat :app:assembleDebug --console=plain
-```
-
-## Funcionamiento de los módulos
-
-- **Inventario y compras:** registra existencias y unidades en uso, y organiza los productos pendientes de compra.
-- **Ofertas:** permite crear ofertas guardadas y consultar productos por nombre, marca o presentación. El resultado identifica la fuente disponible.
-- **Tickets:** recibe una foto o texto, genera un borrador y permite revisar fecha, supermercado, productos e importes antes de registrar el gasto.
-- **Presupuesto y gastos:** calcula el gasto del mes seleccionado, el saldo respecto del presupuesto de referencia y los totales por supermercado. El historial permite descargar texto y consultar imágenes archivadas.
-- **Boti House:** responde consultas de presupuesto y faltantes mediante reglas y datos del hogar.
-- **Sincronización:** conecta los clientes Android y web a la misma API y combina cambios según el estado disponible.
-- **Calidad:** las pruebas automatizadas verifican contratos, permisos y recorridos de interfaz con datos de prueba separados.
-
-## Estado y alcance actual
-
-La [URL pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) está verificada. El frontend está publicado en Vercel y el backend de demostración requiere que la PC, la API y el túnel sigan activos. No es una instalación de producción permanente. La persistencia sigue siendo local (JSON/SQLite/archivos); una publicación permanente necesita almacenamiento persistente o migración. La web tiene selector mensual; Android conserva el historial anterior. El presupuesto es una referencia común, no un presupuesto diferente almacenado por mes. No hay aislamiento implementado para múltiples hogares independientes. El OCR no garantiza precisión con fotografías reales y sus resultados se revisan antes de registrar gastos. La selección de cámara/galería física sigue formando parte de la regresión manual.
-
-## Configuración y datos privados
-
-`.env`, `local.properties`, bases de cuentas, datos del hogar, imágenes de tickets personales, certificados y llaves de firma están excluidos de Git. Los archivos de ejemplo contienen nombres ficticios y valores vacíos para configurar cada instalación.
-
-## Actualización funcional
-
-La versión 1.1.0 incorpora detalle, descuento e importe neto por producto en tickets, conservación de la imagen al corregir OCR y búsqueda de catálogos públicos Carrefour/Jumbo. Ver [escáner y ofertas](ESCANER_Y_OFERTAS.md). El entorno publicado es de pruebas y utiliza datos ficticios separados.
+La versión actual es un proyecto académico demostrable, no un sistema de producción. El próximo paso será reemplazar JSON por una base relacional persistente, guardar imágenes en almacenamiento externo y mantener un histórico suficiente para entrenar y validar modelos predictivos.

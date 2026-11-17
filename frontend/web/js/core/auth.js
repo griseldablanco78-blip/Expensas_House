@@ -32,6 +32,10 @@ async function bootAuthentication(onReady) {
     if (invitation) {
       try {
         const response = await fetch('/api/auth/accept-invitation', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:invitation})});
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          throw new Error('El servidor no está disponible. La API temporal puede haberse desconectado.');
+        }
         const data = await response.json();
         if (response.ok) { user = data.user; window.currentUser = user; sessionStorage.removeItem('expensa_invitation'); }
         else status.textContent = data.detail;
@@ -77,6 +81,10 @@ async function bootAuthentication(onReady) {
         : ['verify', 'reset-password'].includes(mode.value) ? {token:code.value.trim(), password:password.value}
         : {email:email.value};
       const response = await fetch(`/api/auth/${changing ? 'change-password-at-login' : mode.value}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+      const contentType = response.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('El servidor no está disponible. La API temporal puede haberse desconectado.');
+      }
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Revisá los datos del formulario.');
       password.value = '';
