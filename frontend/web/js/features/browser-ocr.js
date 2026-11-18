@@ -30,12 +30,15 @@ async function browserReceiptOcr(file, mode, progress) {
       document.head.appendChild(script);
     });
   }
-  if (!receiptWorkerPromise) receiptWorkerPromise=Tesseract.createWorker(['spa','eng'],1,{
+  if (!receiptWorkerPromise) receiptWorkerPromise=Tesseract.createWorker('spa',1,{
     workerPath:'/static/vendor/ocr/worker.min.js', corePath:'/static/vendor/ocr/core',
     langPath:'/static/vendor/ocr/lang', workerBlobURL:false,
-    logger:event=>{if(event.status==='recognizing text') progress('Leyendo en el dispositivo… '+Math.round(event.progress*100)+'%');}
+    logger:event=>{
+      const labels={'recognizing text':'Leyendo en el dispositivo','loading language traineddata':'Descargando modelo en español','loading tesseract core':'Preparando motor OCR','initializing tesseract':'Iniciando lector','initializing api':'Preparando idioma'};
+      if(labels[event.status]) progress(labels[event.status]+'… '+Math.round((event.progress||0)*100)+'%');
+    }
   }).catch(error=>{receiptWorkerPromise=null;throw error;});
-  progress('Preparando el lector en español e inglés…');
+  progress('Preparando el lector en español…');
   const worker=await receiptWorkerPromise;
   await worker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1'});
   const result=await worker.recognize(canvas);

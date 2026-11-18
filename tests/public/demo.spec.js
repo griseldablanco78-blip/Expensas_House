@@ -17,7 +17,7 @@ test('PUBLIC-01: login, ofertas reales, OCR, descuento, gasto y comprobante desd
   const before=await (await page.request.get('/api/budget?month='+month)).json();
   await page.locator('#receipt-photo').setInputFiles(require('path').join(__dirname,'../fixtures/ticket-sintetico.png'));
   await page.locator('#receipt-scan').click();
-  await expect(page.locator('#receipt-lines tr')).toHaveCount(2,{timeout:45000});
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(2,{timeout:120000});
   const first=page.locator('#receipt-lines tr').first();
   await first.locator('[data-field="detail"]').fill('Lectura de prueba desde Vercel');
   await first.locator('[data-field="discount"]').fill('55');

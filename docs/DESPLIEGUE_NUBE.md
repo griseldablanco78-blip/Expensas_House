@@ -14,7 +14,7 @@ La web y la API FastAPI se ejecutan en Vercel. No requieren una PC encendida ni 
 | FastAPI en Vercel | Autenticación, permisos, validación y reglas del hogar. |
 | PostgreSQL en Supabase | Cuentas, sesiones y estado persistente del hogar. |
 | Supabase Storage privado | Fotografías de comprobantes y productos. |
-| Tesseract.js | OCR en el navegador con modelos LSTM español e inglés alojados junto con la web. |
+| Tesseract.js | OCR en el navegador con modelos LSTM español alojados junto con la web. |
 
 OpenAPI describe los endpoints y sus datos; no es un proveedor de alojamiento ni un modelo de IA.
 

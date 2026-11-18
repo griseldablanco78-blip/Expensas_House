@@ -12,7 +12,7 @@ Desarrollé Expensa House para administrar despensa, compras, presupuesto y comp
 
 ## Tecnologías
 
-El proyecto utiliza Kotlin y Jetpack Compose en Android; Room/SQLite para la copia local; Retrofit para llamadas HTTP; FastAPI y Python en Vercel; HTML, CSS y JavaScript en la web; PostgreSQL y Storage privado de Supabase para persistencia; Tesseract.js y modelos LSTM español/inglés para OCR en el navegador; y scikit-learn para un experimento predictivo. El desarrollo local conserva adaptadores JSON y SQLite.
+El proyecto utiliza Kotlin y Jetpack Compose en Android; Room/SQLite para la copia local; Retrofit para llamadas HTTP; FastAPI y Python en Vercel; HTML, CSS y JavaScript en la web; PostgreSQL y Storage privado de Supabase para persistencia; Tesseract.js y modelos LSTM español para OCR en el navegador; y scikit-learn para un experimento predictivo. El desarrollo local conserva adaptadores JSON y SQLite.
 
 ## Tres módulos principales de asistencia
 
