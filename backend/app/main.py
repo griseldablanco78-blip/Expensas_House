@@ -38,7 +38,8 @@ def create_app():
         import os
         from backend.app.infrastructure import postgres
         return {'mode': 'demo' if os.getenv('EXPENSA_DEMO_MODE') == '1' else 'standard',
-                'storage':'postgres' if postgres.enabled() else 'local', 'ocr':'device'}
+                'storage':'postgres' if postgres.enabled() else 'local', 'ocr':'device',
+                'shared_account':os.getenv('EXPENSA_SHARED_ACCOUNT') == '1'}
 
     return application
 
