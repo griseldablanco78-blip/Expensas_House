@@ -49,6 +49,35 @@ class Workflows(unittest.TestCase):
         self.assertEqual(draft['subtotal'], 4200)
         self.assertTrue(draft['warnings'])
 
+    def test_receipt_excludes_fiscal_data_and_keeps_vat_and_inline_discount(self):
+        draft = parse_receipt('COMERCIO QA S.A.\nCUIT 30-00000000-0\nAv. Siempreviva 123\nLECHE ENTERA\n2 x 1500,00 2800,00\nTOTAL 2800,00\nIVA CONTENIDO 21,00% 485,95\nPUNTOS CLIENTE 100,00')
+        self.assertEqual(len(draft['items']), 1)
+        self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA')
+        self.assertEqual(draft['items'][0]['discount'], 200)
+        self.assertEqual(draft['vat_amount'], 485.95)
+        payload = {**draft, 'id':'vat-included', 'store':'Super QA'}
+        saved = self.client.post('/api/receipts/confirm', json=payload)
+        self.assertEqual(saved.status_code, 200, saved.text)
+        self.assertEqual(saved.json()['expense']['amount'], 2800)
+        self.assertEqual(saved.json()['expense']['vat_amount'], 485.95)
+        self.assertTrue(self.client.post('/api/receipts/confirm', json=payload).json()['duplicate'])
+        self.assertEqual(db.load_db()['user_prefs']['totalSpent'], 2800)
+        self.assertIn('485.95', self.client.get('/api/receipts/vat-included/text').text)
+
+    def test_receipt_separate_vat_requires_explicit_selection(self):
+        payload = {'id':'vat-separate', 'store':'Super QA', 'total':1210, 'vat_amount':210,
+                   'items':[{'description':'Producto QA','quantity':1,'unit_price':1000,'line_total':1000}]}
+        self.assertEqual(self.client.post('/api/receipts/confirm', json=payload).status_code, 422)
+        payload['vat_included'] = False
+        self.assertEqual(self.client.post('/api/receipts/confirm', json=payload).status_code, 200)
+        self.assertEqual(db.load_db()['user_prefs']['totalSpent'], 1210)
+
+    def test_receipt_multiple_vat_rates_and_product_discount(self):
+        draft = parse_receipt('PAN 1000,00\nDESCUENTO PRODUCTO -100,00\nTOTAL 900,00\nIVA 21% 100,00\nIVA 10,50% 50,00')
+        self.assertEqual(draft['vat_amount'], 150)
+        self.assertEqual(draft['items'][0]['discount'], 100)
+        self.assertEqual(draft['subtotal'], 900)
+
     def test_wrapped_receipt_description_survives_confirmation(self):
         draft = parse_receipt('SUPERMERCADO\nLECHE ENTERA\nLARGA VIDA 1 LITRO\n1.500,00\nTOTAL 1.500,00')
         self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA LARGA VIDA 1 LITRO')

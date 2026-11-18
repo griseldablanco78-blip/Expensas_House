@@ -133,3 +133,22 @@ test('WEB-07: descargar el lector pausa la sincronización y luego la reanuda', 
     await expect.poll(() => stockRequests).toBeGreaterThan(before);
   } finally { release(); }
 });
+
+
+test('WEB-08: IVA incluido se conserva sin descontarlo dos veces', async ({page}) => {
+  await page.locator('[data-tab="budget"]').click();
+  await page.locator('#receipt-text').fill('CUIT 30-00000000-0\nLECHE QA 1500,00 1400,00\nTOTAL 1400,00\nIVA CONTENIDO 21% 242,98');
+  await page.locator('#receipt-parse').click();
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(1);
+  await expect(page.locator('#receipt-vat')).toHaveValue('242.98');
+  await expect(page.locator('#receipt-vat-included')).toBeChecked();
+  await expect(page.locator('[data-field="discount"]')).toHaveValue('100');
+  await page.locator('#receipt-store').fill('IVA QA');
+  await page.locator('#receipt-date').fill('2026-09-15');
+  await page.locator('#receipt-confirm').click();
+  await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
+  const saved = (await (await page.request.get('/api/expenses')).json()).find(e => e.store === 'IVA QA');
+  expect(saved.amount).toBe(1400);
+  expect(saved.vat_amount).toBe(242.98);
+  await expect(page.locator('#budget-spent-text')).toContainText('1.400');
+});

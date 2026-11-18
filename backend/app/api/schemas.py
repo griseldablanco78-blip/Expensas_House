@@ -73,6 +73,8 @@ class ReceiptCommit(BaseModel):
     store: str = Field(min_length=1, max_length=150)
     items: List[ReceiptLine] = Field(min_length=1, max_length=300)
     total: float = Field(gt=0, allow_inf_nan=False)
+    vat_amount: float | None = Field(default=None, ge=0, allow_inf_nan=False)
+    vat_included: bool = True
     category: str = "Comestibles"
     adjustment_note: str = ""
     purchase_date: date | None = None

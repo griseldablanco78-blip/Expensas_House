@@ -60,6 +60,8 @@ function setupReceiptScanner() {
       rows.replaceChildren(); data.items.forEach(addLine);
       byId('receipt-text').value = data.raw_text;
       byId('receipt-total').value = data.total;
+      byId('receipt-vat').value = data.vat_amount ?? '';
+      byId('receipt-vat-included').checked = data.vat_included !== false;
       byId('receipt-adjustment').value = '';
       byId('receipt-review').classList.remove('hidden');
       status.textContent = ['Revisá descripción, cantidad, precio y total.', ...data.warnings].join(' ');
@@ -90,7 +92,7 @@ function setupReceiptScanner() {
         if (!store || !items.length || !total || items.some(i => !i.description || !Number.isFinite(i.quantity) || !Number.isFinite(i.unit_price) || !Number.isFinite(i.line_total) || !Number.isFinite(i.discount) || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0 || i.discount < 0))
           throw new Error('Completá el supermercado, los productos y todos los importes positivos.');
         if (!byId('receipt-date').value) throw new Error('Elegí la fecha de compra.');
-        pending = {id: draftId, store, total, items, purchase_date:byId('receipt-date').value, raw_text:byId('receipt-text').value, receipt_image:receiptImage, adjustment_note: byId('receipt-adjustment').value.trim()};
+        pending = {id: draftId, store, total, items, vat_amount:byId('receipt-vat').value === '' ? null : Number(byId('receipt-vat').value), vat_included:byId('receipt-vat-included').checked, purchase_date:byId('receipt-date').value, raw_text:byId('receipt-text').value, receipt_image:receiptImage, adjustment_note: byId('receipt-adjustment').value.trim()};
         localStorage.setItem(storageKey, JSON.stringify(pending));
       }
       busy = true; byId('receipt-confirm').disabled = true;
@@ -120,6 +122,8 @@ function setupReceiptScanner() {
     byId('receipt-text').value = pending.raw_text || '';
     byId('receipt-store').value = pending.store;
     byId('receipt-total').value = pending.total;
+    byId('receipt-vat').value = pending.vat_amount ?? '';
+    byId('receipt-vat-included').checked = pending.vat_included !== false;
     byId('receipt-adjustment').value = pending.adjustment_note;
     status.textContent = 'Hay un ticket pendiente de confirmación. Tocá confirmar para reintentar el mismo envío.';
   }

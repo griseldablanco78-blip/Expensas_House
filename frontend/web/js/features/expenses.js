@@ -49,7 +49,7 @@ function renderBudgetAndExpenses() {
     tr.innerHTML = `
       <td>${dateStr}</td>
       <td><span class="cat-badge">${escapeHtml(e.category)}</span></td>
-      <td>${escapeHtml(e.store || e.note || '-')} ${(e.items || []).length ? `<details><summary>Ver ${e.items.length} productos</summary>${e.items.map(i => `${escapeHtml(i.description)} · ${Number(i.quantity)} × $${Number(i.unit_price)} = $${Number(i.line_total)}`).join('<br>')}</details>` : ''} ${e.source === 'receipt' ? `<p><a href="/api/receipts/${encodeURIComponent(e.id)}/text" download>Descargar texto</a>${e.receipt_image ? ` · <a href="/api/receipts/${encodeURIComponent(e.id)}/image" target="_blank" rel="noopener">Ver comprobante</a>` : ''}</p>` : ''}</td>
+      <td>${escapeHtml(e.store || e.note || '-')} ${(e.items || []).length ? `<details><summary>Ver ${e.items.length} productos</summary>${e.items.map(i => `${escapeHtml(i.description)} · ${Number(i.quantity)} × $${Number(i.unit_price)} = $${Number(i.line_total)}`).join('<br>')}</details>` : ''} ${e.source === 'receipt' ? `<p>IVA: ${e.vat_amount == null ? 'No informado' : '$' + Number(e.vat_amount).toLocaleString('es-AR')} (${e.vat_included === false ? 'separado' : 'incluido'})</p><p><a href="/api/receipts/${encodeURIComponent(e.id)}/text" download>Descargar texto</a>${e.receipt_image ? ` · <a href="/api/receipts/${encodeURIComponent(e.id)}/image" target="_blank" rel="noopener">Ver comprobante</a>` : ''}</p>` : ''}</td>
       <td class="text-right" style="font-weight:800; font-family:var(--font-heading); color:var(--text-main);">$${(e.amount || 0).toLocaleString('es-AR')}</td>
     `;
     expTbody.appendChild(tr);

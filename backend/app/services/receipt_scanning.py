@@ -14,11 +14,36 @@ def cents(value):
 def parse_receipt(text):
     items, warnings = [], []
     total = None
+    vat_amount = None
+    vat_parts = []
+    vat_summary = False
+    finished = False
     amount = r'(?<![\d.,])\$?\s*(\d[\d.,]*[.,]\d{2})(?![\d.,])'
     pending_description = []
     for line in text.splitlines():
         line = line.strip()
         norm = normalize(line)
+        if re.match(r'^total productos\b', norm):
+            pending_description = []
+            continue
+        # Fiscal and payment data are never product descriptions.
+        fiscal = re.search(r'\b(cuit|c\.u\.i\.t|iibb|domicilio|direccion|telefono|fecha|hora|cajero|caja|sucursal|factura|comprobante|consumidor final|inicio actividades|cae|cai|subtotal|efectivo|tarjeta|debito|credito|vuelto|cambio|pago)\b', norm)
+        if re.search(r'\biva\b', norm):
+            tax_values = [m for m in re.finditer(amount, line) if not line[m.end():].lstrip().startswith('%')]
+            if tax_values:
+                tax = money(tax_values[-1][1])
+                # Prefer the explicit total over individual tax-rate rows.
+                if re.search(r'total|contenido', norm):
+                    vat_amount = tax
+                    vat_summary = True
+                elif not vat_summary:
+                    vat_parts.append(tax)
+                    vat_amount = cents(sum(vat_parts))
+            pending_description = []
+            continue
+        if fiscal or re.search(r'\b(?:s\.?a\.?|s\.?r\.?l\.?)$', norm) or re.match(r'^(av[ .]|avenida |calle |ruta |codigo postal|razon social|s\.?a\.?$|s\.?r\.?l\.?$)', norm):
+            pending_description = []
+            continue
         quantity = 1.0
         qty = re.match(r'^(\d+(?:[.,]\d+)?)\s*[xX×]\s*', line)
         if qty:
@@ -35,6 +60,20 @@ def parse_receipt(text):
         if re.match(r'^(?:importe\s+)?total\b', norm) and not norm.startswith('total productos'):
             pending_description = []
             total = money(values[-1][1])
+            finished = True
+            continue
+        if finished:
+            continue
+        if re.match(r'^(?:descuento|bonificacion) (?:producto|articulo)\b', norm) and items:
+            discount = money(values[-1][1])
+            previous = items[-1]
+            if discount and previous['discount'] == 0 and discount < previous['line_total']:
+                previous['discount'] = discount
+                previous['line_total'] = cents(previous['line_total'] - discount)
+                warnings.append('Revisá el descuento asignado al producto anterior.')
+            else:
+                warnings.append('Descuento de producto ambiguo: revisalo manualmente.')
+            pending_description = []
             continue
         if re.search(r'\b(subtotal|cuit|iva|cambio|vuelto|efectivo|tarjeta|debito|credito|pago|ahorro|descuento|bonificacion)\b', norm):
             pending_description = []
@@ -53,7 +92,12 @@ def parse_receipt(text):
         if not line_total:
             continue
         unit_price = money(values[0][1]) if len(values) > 1 else cents(line_total / quantity)
-        items.append({'description': description, 'detail': '', 'discount': 0, 'quantity': quantity,
+        discount = cents(quantity * unit_price - line_total)
+        if discount < 0:
+            warnings.append('Revisá el precio unitario y el importe de ' + description)
+            unit_price = cents(line_total / quantity)
+            discount = 0
+        items.append({'description': description, 'detail': '', 'discount': discount, 'quantity': quantity,
                       'unit_price': unit_price, 'line_total': line_total})
     subtotal = cents(sum(i['line_total'] for i in items))
     if total is None:
@@ -64,7 +108,7 @@ def parse_receipt(text):
     if not items:
         warnings.append('No se reconocieron productos. Podés agregarlos manualmente.')
     return {'items': items, 'total': total, 'subtotal': subtotal, 'warnings': warnings,
-            'raw_text': text}
+            'raw_text': text, 'vat_amount': vat_amount, 'vat_included': True}
 
 
 def scan_receipt(content, preprocessing="standard"):

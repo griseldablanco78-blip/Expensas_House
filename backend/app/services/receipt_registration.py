@@ -17,7 +17,11 @@ def register_receipt(payload):
         if abs(cents(item["quantity"] * item["unit_price"] - item.get("discount", 0)) - cents(item["line_total"])) > .02:
             raise ReceiptValidationError("Revisá cantidad, precio unitario, descuento e importe neto de cada producto.")
     subtotal = cents(sum(i['line_total'] for i in payload['items']))
-    if abs(subtotal - payload["total"]) > .02 and not payload["adjustment_note"].strip():
+    vat = payload.get('vat_amount')
+    if vat is not None and vat > payload['total']:
+        raise ReceiptValidationError('El IVA no puede superar el total pagado.')
+    accounted_total = subtotal + (vat or 0) if not payload.get('vat_included', True) else subtotal
+    if abs(accounted_total - payload["total"]) > .02 and not payload["adjustment_note"].strip():
         raise ReceiptValidationError("El total difiere de los productos. Indicá el descuento, impuesto o ajuste del ticket.")
     image = payload.get('receipt_image', '')
     if image:
@@ -26,6 +30,7 @@ def register_receipt(payload):
             raise ReceiptValidationError('No se encontró la imagen del comprobante. Volvé a subirla.')
     expense = add_expense({"id": payload["id"], "amount": cents(payload["total"]),
         "category": payload["category"], "note": payload["store"],
+        "vat_amount": vat, "vat_included": payload.get("vat_included", True),
         "items": payload["items"], "store": payload['store'],
         "purchase_date": str(payload['purchase_date']) if payload.get('purchase_date') else None,
         "raw_text": payload.get('raw_text', ''), "receipt_image": image,

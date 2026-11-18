@@ -42,6 +42,8 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     var store by remember { mutableStateOf(pending?.store ?: "") }
     var items by remember { mutableStateOf(pending?.items ?: emptyList()) }
     var total by remember { mutableStateOf(pending?.total?.toString() ?: "") }
+    var vat by remember { mutableStateOf(pending?.vat_amount?.toString() ?: "") }
+    var vatIncluded by remember { mutableStateOf(pending?.vat_included ?: true) }
     var adjustment by remember { mutableStateOf(pending?.adjustment_note ?: "") }
     var status by remember { mutableStateOf(if (pending != null) "Ticket pendiente: reintentá el mismo envío para evitar duplicados." else "") }
     var busy by remember { mutableStateOf(false) }
@@ -66,6 +68,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
                             else repository.parseReceipt(ReceiptText(text))
                 if (photo != null) receiptImage = draft.receipt_image.orEmpty()
                 items = draft.items; total = draft.total.toString(); text = draft.raw_text
+                vat = draft.vat_amount?.toString().orEmpty(); vatIncluded = draft.vat_included
                 draftId = UUID.randomUUID().toString(); status = draft.warnings.joinToString("\n")
                 if (captured && draft.items.isNotEmpty()) clearCapture()
             } catch (error: Exception) { status = errorText(error) }
@@ -150,6 +153,9 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
                 TextButton(onClick = { items = items.filterIndexed { i, _ -> i != index } }, enabled = !busy && pending == null) { Text("Quitar producto") }
             }
             TextButton(onClick = { items = items + ReceiptLine("Producto", 1.0, 1.0, 1.0) }, enabled = !busy && pending == null) { Text("+ Producto") }
+            OutlinedTextField(value = vat, onValueChange = { vat = it }, label = { Text("IVA informado ($; vacío si no figura)") }, enabled = !busy && pending == null)
+            Row { Checkbox(checked = vatIncluded, onCheckedChange = { vatIncluded = it }, enabled = !busy && pending == null); Text("IVA incluido en los precios") }
+            Text("Se descuenta el total pagado. El IVA incluido no se suma de nuevo.")
             OutlinedTextField(value = total, onValueChange = { total = it }, label = { Text("Total gastado") }, enabled = !busy && pending == null)
             OutlinedTextField(value = adjustment, onValueChange = { adjustment = it }, label = { Text("Ajuste por impuestos o descuentos") }, enabled = !busy && pending == null)
         }
@@ -158,7 +164,9 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             val amount = total.replace(',', '.').toDoubleOrNull()
             if (pending == null && (amount == null || amount <= 0 || !amount.isFinite())) { status = "Revisá el total."; return@Button }
             if (pending == null && runCatching { java.time.LocalDate.parse(purchaseDate) }.isFailure) { status = "Revisá la fecha (AAAA-MM-DD)."; return@Button }
-            val payload = pending ?: ReceiptCommit(draftId, store, items, amount!!, adjustment, purchaseDate, text, receiptImage)
+            val vatAmount = vat.replace(',', '.').toDoubleOrNull()
+            if (pending == null && vat.isNotBlank() && (vatAmount == null || !vatAmount.isFinite() || vatAmount < 0)) { status = "Revisá el IVA."; return@Button }
+            val payload = pending ?: ReceiptCommit(draftId, store, items, amount!!, adjustment, purchaseDate, text, receiptImage, vatAmount, vatIncluded)
             pending = payload; storage.edit().putString("payload", gson.toJson(payload)).apply(); busy = true
             scope.launch {
                 try { repository.confirmReceipt(payload); storage.edit().remove("payload").apply(); pending = null; clearCapture(); onSaved() }

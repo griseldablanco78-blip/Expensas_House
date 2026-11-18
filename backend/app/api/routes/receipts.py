@@ -79,7 +79,9 @@ def download_receipt_text(expense_id: str):
     lines = ['Expensa House - Comprobante de gasto',
              'Supermercado: ' + (expense.get('store') or expense.get('note', '')),
              'Fecha: ' + str(expense.get('purchase_date') or ''),
-             'Total: ' + str(expense['amount']), '', 'Detalle revisado:']
+             'Total: ' + str(expense['amount']),
+             'IVA informado: ' + str(expense.get('vat_amount') if expense.get('vat_amount') is not None else 'No informado'),
+             'IVA incluido: ' + ('Sí' if expense.get('vat_included', True) else 'No'), '', 'Detalle revisado:']
     lines.extend(f"{i['description']} | {i['quantity']} x {i['unit_price']} - descuento {i.get('discount', 0)} = neto {i['line_total']} | {i.get('detail', '')}" for i in expense.get('items', []))
     lines.extend(['', 'Texto reconocido (puede contener errores):', expense.get('raw_text', '')])
     return Response('\n'.join(lines), media_type='text/plain; charset=utf-8',

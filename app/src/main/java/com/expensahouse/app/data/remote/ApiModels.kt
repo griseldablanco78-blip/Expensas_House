@@ -28,11 +28,22 @@ data class SyncResponse(
 
 data class ChatRequest(val message: String, val context: String? = null)
 data class ChatAnswer(val answer: String, val action: String? = null, val context: String? = null, val comparison: Comparison? = null)
-data class Comparison(val offers: List<ProductOffer> = emptyList(), val warning: String? = null)
+data class Comparison(
+    val offers: List<ProductOffer> = emptyList(), val warning: String? = null,
+    val product_name: String? = null, val cleaned_query: String? = null,
+    val top_offer: ProductOffer? = null, val ai_analysis: ComparisonAnalysis? = null,
+    val external_search_url: String? = null
+)
+data class BestPrice(val store: String = "", val price: Double = 0.0)
+data class ComparisonAnalysis(val best_single: BestPrice? = null, val max_saving_percent: Double = 0.0,
+    val verdict: String? = null, val stock_alert: String? = null)
 data class ProductOffer(val product: String, val store: String, val promo_price: Double,
     val promo_text: String, val image_url: String? = null, val direct_link: String? = null,
-    val conditions: String? = null, val source: String? = null)
+    val conditions: String? = null, val source: String? = null,
+    val id: String = "", val brand: String? = null, val saving_percent: Double = 0.0,
+    val promo_type: String? = null, val size_confirmed: Boolean = true,
+    val updated_at: String? = null, val unit: String? = null, val unit_price: Double? = null)
 data class ReceiptText(val text: String)
 data class ReceiptLine(val description: String, val quantity: Double, val unit_price: Double, val line_total: Double, val detail: String = "", val discount: Double = 0.0)
-data class ReceiptDraft(val items: List<ReceiptLine>, val total: Double, val warnings: List<String>, val raw_text: String, val receipt_image: String? = null)
-data class ReceiptCommit(val id: String, val store: String, val items: List<ReceiptLine>, val total: Double, val adjustment_note: String = "", val purchase_date: String? = null, val raw_text: String = "", val receipt_image: String = "")
+data class ReceiptDraft(val items: List<ReceiptLine>, val total: Double, val warnings: List<String>, val raw_text: String, val receipt_image: String? = null, val vat_amount: Double? = null, val vat_included: Boolean = true)
+data class ReceiptCommit(val id: String, val store: String, val items: List<ReceiptLine>, val total: Double, val adjustment_note: String = "", val purchase_date: String? = null, val raw_text: String = "", val receipt_image: String = "", val vat_amount: Double? = null, val vat_included: Boolean = true)

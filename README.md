@@ -2,6 +2,8 @@
 
 Aplicación para organizar la despensa del hogar, preparar compras, comparar ofertas y registrar gastos a partir de tickets. Tiene dos clientes: web y Android, conectados a una API Python compartida.
 
+[Actualización: lectura de tickets, IVA y detalle de ofertas en Android](docs/ACTUALIZACION_TICKETS_OFERTAS.md).
+
 ## Documentación del proyecto
 
 [Presentación y ejecución del proyecto](docs/Presentacion_Expensas-House.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
