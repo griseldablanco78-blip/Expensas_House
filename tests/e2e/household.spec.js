@@ -100,3 +100,33 @@ test('WEB-06: API sin conexión muestra diagnóstico y no una excepción JSON', 
   await page.locator('#btn-ai-search').click();
   await expect(page.locator('#offer-source-status')).toContainText('backend esté activo');
 });
+
+test('WEB-07: descargar el lector pausa la sincronización y luego la reanuda', async ({page}) => {
+  await page.clock.install();
+  await page.reload();
+  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('.sync-text')).toHaveText('Sincronizado');
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  let downloading = false;
+  await page.route('**/lang/spa.traineddata.gz', async route => {
+    downloading = true;
+    await held;
+    await route.continue();
+  });
+  let stockRequests = 0;
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/stock') stockRequests++; });
+  try {
+    await page.locator('[data-tab="budget"]').click();
+    await page.locator('#receipt-photo').setInputFiles(require('path').join(__dirname,'../fixtures/ticket-sintetico.png'));
+    await page.locator('#receipt-scan').click();
+    await expect.poll(() => downloading).toBe(true);
+    const before = stockRequests;
+    await page.clock.fastForward(16000);
+    expect(stockRequests).toBe(before);
+    release();
+    await expect(page.locator('#receipt-lines tr')).toHaveCount(2,{timeout:30000});
+    await page.clock.fastForward(16000);
+    await expect.poll(() => stockRequests).toBeGreaterThan(before);
+  } finally { release(); }
+});
