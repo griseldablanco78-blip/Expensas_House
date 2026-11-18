@@ -8,6 +8,8 @@ En la web, `js/features/browser-ocr.js` ejecuta Tesseract.js con modelos LSTM es
 
 ## Conceptos básicos
 
+En Android 1.2.0, `data/ocr/DeviceReceiptOcr.kt` reconoce el ticket mediante ML Kit Text Recognition v2 con el modelo latino incluido. Limita el tamaño, corrige orientación y prepara un JPEG sin EXIF. `RemoteReceiptsRepository` envía ese texto y la imagen a `/api/receipts/draft`; la confirmación contable sigue requiriendo revisión del usuario. La URL predeterminada del cliente es el dominio fijo de Vercel. La [documentación oficial de ML Kit](https://developers.google.com/ml-kit/vision/text-recognition/v2/android) describe la variante con modelo incluido.
+
 - **Frontend:** pantallas y controles que utiliza la persona. Pide operaciones al servidor.
 - **Backend:** recibe esas solicitudes, comprueba quién tiene permiso, valida información y ejecuta operaciones.
 - **API:** contrato entre clientes y servidor. Un endpoint es una dirección para una operación, por ejemplo `POST /api/receipts/confirm`.

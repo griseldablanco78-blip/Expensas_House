@@ -10,6 +10,7 @@ import retrofit2.http.Query
 import retrofit2.http.Multipart
 import retrofit2.http.Part
 import okhttp3.MultipartBody
+import okhttp3.RequestBody
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 import com.expensahouse.app.core.auth.*
@@ -40,8 +41,8 @@ interface ExpensaApi {
     suspend fun chat(@Body request: ChatRequest): ChatAnswer
 
     @Multipart
-    @POST("api/receipts/scan")
-    suspend fun scanReceipt(@Part image: MultipartBody.Part): ReceiptDraft
+    @POST("api/receipts/draft")
+    suspend fun draftReceipt(@Part("text") text: RequestBody, @Part image: MultipartBody.Part): ReceiptDraft
 
     @POST("api/receipts/parse")
     suspend fun parseReceipt(@Body text: ReceiptText): ReceiptDraft

@@ -61,6 +61,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     }
     suspend fun interpretReceipt(photo: ByteArray? = null, captured: Boolean = false) {
             try {
+                if (photo != null) status = "Reconociendo el ticket en el teléfono…"
                 val draft = if (photo != null) repository.scanReceipt(MultipartBody.Part.createFormData("image", "ticket.jpg", RequestBody.create(MediaType.parse("image/jpeg"), photo)))
                             else repository.parseReceipt(ReceiptText(text))
                 if (photo != null) receiptImage = draft.receipt_image.orEmpty()

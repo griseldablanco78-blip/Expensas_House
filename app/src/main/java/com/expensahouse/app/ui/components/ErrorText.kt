@@ -16,9 +16,10 @@ internal fun errorText(error: Exception): String {
     return when (error) {
         is SocketTimeoutException -> "El servidor tardó demasiado en responder. Si estabas leyendo un ticket, tocá ‘Volver a leer la foto tomada’ para reintentar."
         is UnknownHostException ->
-            "No se encuentra la dirección del servidor. Verificá Internet; si usás un enlace temporal, puede haber vencido. Necesitás una dirección vigente y actualizar la app. La foto tomada se conserva para reintentar."
+            "No se encuentra la dirección del servidor. Revisá la conexión a Internet y reintentá. La foto tomada se conserva."
         is ConnectException, is NoRouteToHostException ->
-            "El servidor no está disponible. Verificá que la API y el enlace HTTPS estén activos. La foto tomada se conserva para reintentar."
+            "El servidor no está disponible. Reintentá en unos momentos. La foto tomada se conserva."
+        is IllegalArgumentException -> error.message ?: "La fotografía no es válida. Probá otra imagen."
         is java.io.IOException -> if (error.message == "HTTPS_REQUIRED")
             "El servidor necesita una dirección HTTPS válida antes de iniciar sesión desde el celular. HTTP no protege tus credenciales."
             else "Se interrumpió la comunicación con el servidor. Revisá la conexión y reintentá."

@@ -15,7 +15,7 @@ val localProperties = Properties().apply {
 }
 val expensaApiBaseUrl = localProperties.getProperty(
     "expensa.apiBaseUrl",
-    "http://10.0.2.2:8000/"
+    "https://expensas-house-griselda-blanco.vercel.app/"
 )
 
 android {
@@ -26,8 +26,8 @@ android {
         applicationId = "com.expensahouse.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0"
+        versionCode = 3
+        versionName = "1.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "API_BASE_URL", "\"$expensaApiBaseUrl\"")
     }
@@ -48,6 +48,9 @@ android {
 }
 
 dependencies {
+    // Modelo latino incluido: OCR en el teléfono, sin API de IA de pago.
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+    implementation("androidx.exifinterface:exifinterface:1.3.7")
     val composeBom = platform("androidx.compose:compose-bom:2024.12.01")
     implementation(composeBom)
     androidTestImplementation(composeBom)
