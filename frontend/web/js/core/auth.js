@@ -34,7 +34,7 @@ async function bootAuthentication(onReady) {
         const response = await fetch('/api/auth/accept-invitation', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token:invitation})});
         const contentType = response.headers.get('content-type') || '';
         if (!contentType.includes('application/json')) {
-          throw new Error('El servidor no está disponible. La API temporal puede haberse desconectado.');
+          throw new Error('El servidor no está disponible. Reintentá en unos momentos.');
         }
         const data = await response.json();
         if (response.ok) { user = data.user; window.currentUser = user; sessionStorage.removeItem('expensa_invitation'); }
