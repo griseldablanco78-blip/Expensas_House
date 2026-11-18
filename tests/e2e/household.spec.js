@@ -58,6 +58,9 @@ test('WEB-03: oferta creada en la web aparece en la búsqueda real', async ({pag
   await page.locator('#ai-search-input').fill('Arroz QA 1 kg');
   await page.locator('#btn-ai-search').click();
   await expect(page.locator('#supermarket-cards-container')).toContainText('Super QA');
+  const externalQuery = new URL(await page.locator('#ratoneando-search').getAttribute('href'));
+  expect(externalQuery.origin).toBe('https://ratoneando.ar');
+  expect(externalQuery.searchParams.get('q')).toBe('arroz qa 1000g');
 });
 
 test('WEB-04: foto legible pasa por Tesseract y permite revisar el detalle', async ({page}) => {

@@ -6,6 +6,8 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 
 [Presentación y ejecución del proyecto](docs/Presentacion_Expensas-House.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
 
+[Cuadernillo técnico: modelos, APIs, métricas y mejoras futuras](CUADERNILLO_TECNICO_IA.md). Incluye hogares colaborativos con permisos y prioridades para una versión comercial.
+
 ## Enlaces
 
 - [Repositorio](https://github.com/griseldablanco78-blip/Expensas_House)

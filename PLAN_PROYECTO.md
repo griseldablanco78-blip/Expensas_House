@@ -40,8 +40,14 @@ URL de pruebas: [Expensas House](https://expensas-house-griselda-blanco.vercel.a
 - Validar OCR con fotos reales de tickets completos y medir productos reconocidos, nombres e importes contra una transcripción manual.
 - Completar extracción de pantallas y servicios de inventario, compras y presupuesto; reducir `app.js` y `MainActivity`.
 - Migrar datos del hogar a almacenamiento relacional con migraciones y respaldos; aislar hogares antes de ofrecer uso multiusuario independiente.
-- Mantener backend con almacenamiento persistente y Tesseract; publicar frontend en Vercel mediante proxy de API, comprobar sesiones y HTTPS.
+- Mantener web y API en Vercel, PostgreSQL/Storage en Supabase y OCR en el dispositivo. El despliegue fijo y las sesiones ya se verificaron; controlar disponibilidad y límites gratuitos.
 - Registrar histórico antes de evaluar modelos predictivos. No presentar métricas de experimentos como precisión del producto.
+
+## Mejoras futuras: colaboración y producto comercial
+
+La administradora podrá crear un hogar privado, invitar familiares o amigas y asignar permisos por módulo. Una persona podrá agregar productos, otra asumir y confirmar una compra, actualizar stock y resolver faltantes sin duplicar operaciones. Las cuentas tendrán credenciales propias y compartirán únicamente el hogar y los datos autorizados. Esta separación completa de hogares todavía es una propuesta; las cuentas actuales operan sobre un hogar compartido.
+
+Prioridades: aislamiento de hogares y permisos; compra asignada y confirmación única; historial y recuperación de cambios; respaldo/restauración y seguimiento de fallos; reportes mensuales y precios por unidad; diseño accesible y web instalable PWA; avisos configurables y predicciones solo después de reunir historial validado. Las funcionalidades disponibles, modelos, APIs y métricas pendientes se explican en el [cuadernillo técnico](CUADERNILLO_TECNICO_IA.md).
 
 ## Criterios de aceptación
 
