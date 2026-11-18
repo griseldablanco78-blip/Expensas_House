@@ -28,6 +28,6 @@ Las pruebas no modifican gastos personales. Los resultados sobre imágenes sint�
 - El caso real comprueba mejora automática de sombras, producto legible, cantidad, precio, supermercado propuesto, IVA y total. La letra L de la presentación puede confundirse con 1: el caso corrige ese carácter durante la revisión antes de confirmar y verifica el gasto de $5.498 en el presupuesto.
 - Se evita un descuento ficticio por un precio unitario mal reconocido cuando el comprobante declara descuento cero y los netos coinciden con el total: se propone el unitario calculado y se informa para revisión.
 - Android 1.3.2: APK y pruebas compilados; instalada conservando datos. Supermercado y fecha recibidos del backend completan el borrador cuando están disponibles.
-- El paquete breve conserva código, TXT de enlaces e informe de seis puntos. APK y foto autorizada se agregan solo al ZIP. La documentación extensa queda en GitHub.
+- Por la indicación final de la autora, el ZIP conserva únicamente código y TXT de enlaces. Informes y documentación quedan en GitHub; la APK se distribuye como descarga independiente en GitHub Releases. La foto no se incluye en el ZIP.
 
 Estos resultados verifican el recorrido con revisión humana; no representan una exactitud del 100% del OCR ni eliminan la necesidad de confirmar datos dudosos.

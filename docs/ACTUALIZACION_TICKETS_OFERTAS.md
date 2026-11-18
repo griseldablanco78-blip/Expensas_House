@@ -24,7 +24,7 @@ El formulario utiliza la descripción del producto sin un campo adicional de det
 
 ## Archivo de presentación
 
-`python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde la revisión confirmada en Git. Incluye código, un informe breve de seis puntos, TXT de enlaces, APK y la foto de ejemplo si se indica `--ticket`. La documentación extensa se consulta en GitHub. Excluye archivos locales y verifica la integridad del ZIP. Para regenerarlo con cambios nuevos, deben confirmarse primero en Git.
+`python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde la revisión confirmada en Git. Incluye únicamente código y TXT con los enlaces de GitHub y Vercel. La APK se publica por separado en GitHub Releases; informes y fotos no se agregan al ZIP. La documentación extensa se consulta en GitHub. Excluye archivos locales y verifica la integridad del ZIP. Para regenerarlo con cambios nuevos, deben confirmarse primero en Git.
 
 ## Preparación de la imagen en la web
 

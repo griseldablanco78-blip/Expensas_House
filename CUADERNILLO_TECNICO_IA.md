@@ -11,7 +11,7 @@
 
 El procesamiento de la fotografía del ticket es un eje del trabajo: adquisición completa, preparación de una copia para OCR, reconocimiento de caracteres, interpretación de productos/precios y revisión antes de registrar el gasto. El total confirmado actualiza el presupuesto y queda disponible en el resumen por fecha. No se confunde la alícuota `(21,00)` ni la presentación `2,25L` con un importe. Los catálogos externos también aportan imágenes reales de productos a las tarjetas de ofertas; estas fotos se muestran desde las URLs de la fuente, sin generación de imágenes por IA.
 
-La [presentación principal](docs/Presentacion_Expensas-House.md) desarrolla el flujo de imágenes, la motivación, las dificultades y una tabla con la función de cada módulo. El ZIP incorpora también la APK de Android.
+La [presentación principal](docs/Presentacion_Expensas-House.md) desarrolla el flujo de imágenes, la motivación, las dificultades y una tabla con la función de cada módulo. El ZIP del aula contiene solo código y TXT de enlaces; la APK de Android se descarga por separado desde GitHub Releases.
 
 ## 1. Propósito y estado del proyecto
 

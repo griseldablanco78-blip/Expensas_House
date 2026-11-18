@@ -95,8 +95,6 @@ Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta publicada es compa
 
 ## Paquete de presentación
 
-Ejecutar `python scripts/crear_zip_presentacion.py` después de confirmar los cambios en Git. El archivo `output/Presentacion_Expensas-House.zip` contiene el código de esa revisión, el informe breve, las pruebas, la APK de Android 1.3.2 y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No incluye credenciales privadas ni bases locales. Solo se adjunta una foto de ejemplo cuando se indica expresamente mediante `--ticket`.
+`python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde el código confirmado en Git. Incluye únicamente el código con sus archivos de configuración y recursos necesarios, y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No contiene informes, cuadernillos, fotografías personales ni APK.
 
-El instalador está dentro del ZIP en `android/Expensas-House-1.3.2.apk`. Para regenerar el paquete, debe existir `output/apk/Expensas-House-1.3.2.apk` o indicarse su ubicación con `--apk`. La presentación destaca el procesamiento de imágenes del ticket y las fotografías reales de productos provenientes de catálogos externos.
-
-La entrega breve contiene código, TXT de enlaces, informe de seis puntos y los adicionales solicitados (APK y foto). Los documentos extensos se consultan en GitHub. Para adjuntar la foto autorizada únicamente al ZIP: `python scripts/crear_zip_presentacion.py --ticket "ruta/al/ticket.jpeg"`.
+La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.2 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.2).

@@ -81,7 +81,7 @@ El formato de supermercado revisado imprime `2,00 X 2749,00` encima de `CUNNING 
 
 ## Material incluido en el ZIP
 
-El ZIP contiene código, un informe breve con los seis puntos solicitados y `ENLACES_PROYECTO.txt`. Como adicionales pedidos por la autora, incluye la foto de ejemplo y Android 1.3.2 en `android/`. La explicación ampliada de módulos, arquitectura y modelos queda en GitHub para no sobrecargar la entrega. La APK se conecta a la API pública de Vercel. No se empaquetan credenciales privadas ni bases personales.
+El ZIP para el aula contiene únicamente el código y `ENLACES_PROYECTO.txt` con GitHub y Vercel. Esta presentación, el informe breve y los cuadernillos quedan disponibles en GitHub. La APK Android 1.3.2 se ofrece por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.2). La foto de ejemplo tampoco se incluye en la entrega.
 
 ## Tecnologías
 
