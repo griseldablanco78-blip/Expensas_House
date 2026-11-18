@@ -81,6 +81,12 @@ deploy/                Ejemplos de infraestructura y publicación
 
 Los archivos `__init__.py` identifican paquetes de Python; no representan módulos de negocio adicionales. El bloqueo de JSON no reemplaza una base transaccional para producción con múltiples procesos.
 
+## Lectura de imágenes y relación entre módulos
+
+La foto del ticket se prepara en `frontend/web/js/features/browser-ocr.js` (web) o `data/ocr/DeviceReceiptOcr.kt` (Android). `receipt_scanning.py` convierte el texto en productos revisables y distingue nombres, presentación, cantidades, precios y alícuotas. `receipt_registration.py` valida el total confirmado, evita duplicados y actualiza los gastos; `expense_reporting.py` calcula el presupuesto disponible y los resúmenes. `receipt_archive.py` conserva el comprobante completo.
+
+Las imágenes de ofertas siguen otro recorrido: `catalog_search.py` obtiene `imageUrl` del catálogo externo; `offers.py` entrega `image_url`; `offers.js` y `OfferImage.kt` la presentan con el precio y la fuente. Si no hay foto válida, se informa su ausencia. No se utiliza generación de imágenes para representar productos.
+
 ## Frontend web
 
 | Archivo | Qué hace |
@@ -92,6 +98,7 @@ Los archivos `__init__.py` identifican paquetes de Python; no representan módul
 | `js/core/dom.js` | Escapar textos y validar enlaces antes de insertarlos en la interfaz. |
 | `js/features/offers.js` | Buscar ofertas, renderizar resultados y crear/editar ofertas guardadas. |
 | `js/features/chat.js` | Abrir conversación, enviar mensajes y navegar a la sección indicada. |
+| `js/features/browser-ocr.js` | Prepara una copia completa desde la imagen original, mejora contraste y sombras y ejecuta OCR español con dos distribuciones de lectura. |
 | `js/features/receipts.js` | Seleccionar/ver foto, pedir lectura, editar borrador y conservar un envío pendiente para reintentar sin cambiar su ID. |
 | `js/features/expenses.js` | Mostrar gastos del mes y enlaces privados a texto e imagen del comprobante. |
 | `js/app.js` | Iniciar componentes, cargar datos, cambiar pestañas y gestionar formularios de inventario/compras/presupuesto que aún no se extrajeron. |
@@ -118,6 +125,7 @@ Se usa JavaScript del navegador, sin React ni compilación obligatoria. `fetch` 
 | `ui/features/receipts/` | Cámara/galería, revisión de líneas, fecha y confirmación del gasto. | Activity Result API, FileProvider, corrutinas |
 | `ui/components/` | Controles reutilizables de dictado, imagen de oferta y mensajes de error. | Compose, APIs Android |
 | `ui/viewmodel/ExpensaViewModel.kt` | Estado y eventos de los módulos actuales; coordina operaciones y sincronización. | ViewModel, Coroutines, StateFlow |
+| `ui/features/receipts/ReceiptHistory.kt` | Separa cargar ticket de gasto manual y permite consultar productos/precios por fecha. | Compose, repositorio de comprobantes |
 | `ui/theme/` | Colores y tema de la interfaz. | Material 3 |
 | `res/xml/ticket_photo_paths.xml` | Limita qué archivos temporales de cámara puede compartir la app mediante FileProvider. | Android XML |
 

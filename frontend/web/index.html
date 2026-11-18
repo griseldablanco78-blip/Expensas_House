@@ -368,7 +368,7 @@
         <p>Subí una foto o pegá el texto. Revisá los productos antes de registrar el gasto en tu presupuesto.</p>
         <label>Foto del ticket <input id="receipt-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label>
         <img id="receipt-preview" class="hidden" alt="Vista completa del ticket seleccionado" style="max-width:100%;max-height:420px;object-fit:contain">
-        <label>Lectura de la foto<select id="receipt-preprocessing"><option value="standard">Normal</option><option value="adaptive">Foto con sombras · umbral adaptativo</option></select></label>
+        <label>Lectura de la foto<select id="receipt-preprocessing"><option value="standard">Automática (recomendada)</option><option value="adaptive">Foto con sombras · umbral adaptativo</option></select></label>
         <button id="receipt-scan" class="btn-secondary" type="button">Cargar y leer ticket</button>
         <label>Texto del ticket <textarea id="receipt-text" rows="4" placeholder="2 x LECHE 1500,00 3000,00&#10;TOTAL 3000,00"></textarea></label>
         <button id="receipt-parse" class="btn-secondary" type="button">Interpretar texto</button>

@@ -6,6 +6,8 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 
 ## Documentación del proyecto
 
+[Informe breve para la entrega](docs/INFORME_PRESENTACION.md): los seis puntos solicitados por la cátedra.
+
 [Presentación y ejecución del proyecto](docs/Presentacion_Expensas-House.md) y la [explicación de módulos, tecnologías y librerías](docs/GUIA_CODIGO.md).
 
 [Cuadernillo técnico: modelos, APIs, métricas y mejoras futuras](CUADERNILLO_TECNICO_IA.md). Incluye hogares colaborativos con permisos y prioridades para una versión comercial.
@@ -42,7 +44,7 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 - **Tickets:** tabla de productos por supermercado con detalle, precio unitario, descuento e importe neto; foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
 - **Boti House:** consultas de ofertas, presupuesto y faltantes mediante reglas sobre datos del hogar. No se presenta como un modelo generativo entrenado.
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
-- **Android 1.3.1:** usa la dirección fija de Vercel. ML Kit Text Recognition v2 con modelo latino incluido lee la foto en el teléfono; el servidor interpreta el texto y conserva el comprobante revisado. No requiere una API de IA de pago.
+- **Android 1.3.2:** usa la dirección fija de Vercel. ML Kit Text Recognition v2 con modelo latino incluido lee la foto en el teléfono; el servidor interpreta el texto y conserva el comprobante revisado. No requiere una API de IA de pago.
 - **Acceso:** por defecto usuario y contraseña (`EXPENSA_AUTH_MODE=password`). El modo de correo verificado es opcional y requiere SMTP. Los permisos se comprueban en el servidor.
 
 En la nube, PostgreSQL conserva cuentas y sesiones en tablas propias y el estado del hogar en una fila JSONB con transacciones. Las fotos se guardan en un bucket privado de Supabase. En desarrollo local se mantienen JSON y SQLite. La separación entre múltiples hogares y la normalización de compras/productos en tablas propias siguen pendientes.
@@ -89,8 +91,12 @@ Ver [diagnóstico del escáner, modelo OCR, formatos y ofertas](docs/ESCANER_Y_O
 
 ## Acceso al entorno de pruebas
 
-Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta pertenece a una demostración aislada; usar únicamente comprobantes ficticios. Versión Android: 1.1.0.
+Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta publicada es compartida y conserva información cargada por sus usuarios. Las pruebas automatizadas que crean compras utilizan almacenamiento local separado. Versión Android: 1.3.2.
 
 ## Paquete de presentación
 
-Ejecutar `python scripts/crear_zip_presentacion.py` después de confirmar los cambios en Git. El archivo `output/Presentacion_Expensas-House.zip` contiene el código de esa revisión, la documentación, las pruebas y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No incluye credenciales privadas, bases locales ni imágenes personales.
+Ejecutar `python scripts/crear_zip_presentacion.py` después de confirmar los cambios en Git. El archivo `output/Presentacion_Expensas-House.zip` contiene el código de esa revisión, el informe breve, las pruebas, la APK de Android 1.3.2 y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No incluye credenciales privadas ni bases locales. Solo se adjunta una foto de ejemplo cuando se indica expresamente mediante `--ticket`.
+
+El instalador está dentro del ZIP en `android/Expensas-House-1.3.2.apk`. Para regenerar el paquete, debe existir `output/apk/Expensas-House-1.3.2.apk` o indicarse su ubicación con `--apk`. La presentación destaca el procesamiento de imágenes del ticket y las fotografías reales de productos provenientes de catálogos externos.
+
+La entrega breve contiene código, TXT de enlaces, informe de seis puntos y los adicionales solicitados (APK y foto). Los documentos extensos se consultan en GitHub. Para adjuntar la foto autorizada únicamente al ZIP: `python scripts/crear_zip_presentacion.py --ticket "ruta/al/ticket.jpeg"`.

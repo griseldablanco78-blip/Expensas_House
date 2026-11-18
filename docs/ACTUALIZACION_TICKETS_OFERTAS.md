@@ -24,10 +24,20 @@ El formulario utiliza la descripción del producto sin un campo adicional de det
 
 ## Archivo de presentación
 
-`python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde la revisión confirmada en Git. Incluye el código, documentación, pruebas y `ENLACES_PROYECTO.txt` con GitHub y Vercel. Excluye archivos locales y verifica la integridad del ZIP. Para regenerarlo con cambios nuevos, deben confirmarse primero en Git.
+`python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde la revisión confirmada en Git. Incluye código, un informe breve de seis puntos, TXT de enlaces, APK y la foto de ejemplo si se indica `--ticket`. La documentación extensa se consulta en GitHub. Excluye archivos locales y verifica la integridad del ZIP. Para regenerarlo con cambios nuevos, deben confirmarse primero en Git.
 
 ## Preparación de la imagen en la web
 
-La copia para lectura se amplía cuando el texto es pequeño (con límite de memoria), se convierte a grises, ajusta el contraste y agrega margen blanco sin recortar el ticket. El modo de sombras aplica un umbral local adaptativo en el navegador; no requiere OpenCV. Tesseract prueba distribución por columnas y, si la confianza es baja, una segunda distribución por bloque; se conserva la lectura con mejor indicador de legibilidad. La corrección automática de inclinación ayuda con fotos levemente torcidas. La foto archivada permanece en color. Estos indicadores no equivalen a un porcentaje de exactitud del proyecto ni garantizan recuperar texto borroso.
+La copia para lectura se amplía cuando el texto es pequeño (con límite de memoria), se convierte a grises, ajusta el contraste y agrega margen blanco sin recortar el ticket. El modo de sombras aplica un umbral local adaptativo en el navegador; no requiere OpenCV. Tesseract prueba distribución por columnas y por bloque; se conserva la lectura con mejor indicador de legibilidad. La foto archivada permanece en color. Estos indicadores no equivalen a un porcentaje de exactitud del proyecto ni garantizan recuperar texto borroso.
 
 El intérprete conserva las descripciones aunque el OCR agregue líneas vacías entre el nombre y sus precios. La regresión incluye un comprobante sintético con sombras, nombre partido y dos unidades.
+
+## Nombres y presentaciones decimales
+
+La web prepara la copia de OCR desde la imagen original, antes de comprimir el archivo de respaldo, y compara dos distribuciones de lectura en cada foto. El intérprete distingue presentaciones como «2.25L» y «0,50 kg» de los importes. Un fragmento de una sola letra acompañado de signos o cifras no se acepta como nombre de producto. Los nombres que el OCR no logra leer no se completan con marcas inventadas: deben revisarse contra la foto. La reproducción exacta de una falla requiere el ticket original.
+
+## Encabezado y revisión del ticket DIA
+
+El supermercado y la fecha se proponen desde el encabezado reconocido y permanecen editables. La lectura automática prueba corrección de sombras si la primera lectura tiene baja confianza. En el formato DIA, cantidad y precio unitario pueden estar encima del producto; los encabezados de columnas y la alícuota entre paréntesis se excluyen del nombre. Los espacios dentro del importe, como «5498 ,00», se normalizan.
+
+La foto proporcionada permitió reproducir una confusión entre L y 1 en «2,25L». Se advierte cuando la presentación es dudosa y se mantiene editable antes de confirmar. No se asegura exactitud total del OCR. El envío muestra los errores de validación junto al estado y desplaza la vista hasta el mensaje, evitando que un rechazo parezca un botón sin respuesta.

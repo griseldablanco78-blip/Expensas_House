@@ -37,3 +37,9 @@ Las rutas, los servicios y la persistencia se organizan en carpetas distintas. L
 La regresión incluye pruebas de API con pytest/TestClient, recorridos web con Playwright y pruebas Android con Compose/JUnit. Los datos sintéticos y los repositorios simulados permiten comprobar recorridos sin modificar datos reales. La precisión OCR y la cámara/galería físicas requieren además pruebas con fotografías y dispositivos reales.
 
 Documentación relacionada: [presentación general y ejecución](Presentacion_Expensas-House.md), [guía del código](GUIA_CODIGO.md), [arquitectura](ARQUITECTURA.md) y [regresión](REGRESION.md).
+
+## Actualización del flujo de imágenes y comprobantes · 18/11/2026
+
+La web reconoce texto desde una copia de la foto original, compara lecturas y mejora sombras automáticamente cuando hace falta. El archivo de respaldo conserva el ticket completo en color. Se proponen supermercado y fecha si se reconocen en el encabezado; el usuario revisa descripción, cantidad, precio unitario, descuento, neto, IVA y total. Confirmar registra el gasto por el total pagado y actualiza el presupuesto del mes, con protección contra reintentos duplicados. Una presentación ambigua requiere revisión manual. Los resúmenes por fecha conservan precios históricos.
+
+Las tarjetas de ofertas muestran las imágenes reales que devuelve el catálogo externo en `image_url`, junto con el supermercado, precio, condiciones y enlace cuando existen. No se utilizan imágenes generadas para simular productos de la fuente. Android 1.3.2 incorpora lectura ML Kit, detalle de ofertas y consulta de resúmenes; la API es compartida con la web.

@@ -85,6 +85,47 @@ class Workflows(unittest.TestCase):
         self.assertEqual(draft['items'][0]['quantity'], 2)
         self.assertEqual(draft['subtotal'], 4200)
 
+    def test_decimal_bottle_size_stays_in_product_description(self):
+        for name in ('Cunning Cola 2.25L', 'Cunning Cola 2,25 L', 'Harina 0,50 kg'):
+            with self.subTest(name=name):
+                draft = parse_receipt(name + ' 1500,00\nTOTAL 1500,00')
+                self.assertEqual(draft['items'][0]['description'], name)
+                self.assertEqual(draft['items'][0]['unit_price'], 1500)
+                self.assertEqual(draft['items'][0]['discount'], 0)
+
+    def test_price_fragment_is_not_a_product_name(self):
+        draft = parse_receipt('a ,00) 1500,00\nTOTAL 1500,00')
+        self.assertEqual(draft['items'], [])
+        self.assertTrue(draft['warnings'])
+
+    def test_receipt_header_proposes_store_and_purchase_date(self):
+        draft = parse_receipt('DIA ARGENTINA SA\nCUIT 30-00000000-0\nNUM. 12813-00000000 15-11-2026 20:18:42\nLECHE 1500,00\nTOTAL 1500,00\nCAE 000 F.vto: 2026-11-25')
+        self.assertEqual(draft['store'], 'DIA')
+        self.assertEqual(draft['purchase_date'], '2026-11-15')
+
+    def test_zero_discount_summary_does_not_invent_discount_from_ocr_unit_price(self):
+        draft = parse_receipt('DIA ARGENTINA SA\nCant./Precio Unit.\nDescripcion (XIVA) IMPORTE\n2,00 X 27149,00\nCUNNING COLA 2,251 (21,00) 5498 ,00\nDESCUENTOS: 0,00\nTOTAL $5498.00')
+        self.assertEqual(draft['items'][0]['description'], 'CUNNING COLA 2,251')
+        self.assertEqual(draft['items'][0]['unit_price'],2749)
+        self.assertEqual(draft['items'][0]['discount'],0)
+        self.assertTrue(any('precio unitario' in w for w in draft['warnings']))
+        self.assertTrue(any('presentación' in w for w in draft['warnings']))
+
+    def test_quantity_price_above_product_and_parenthesized_vat_rate(self):
+        draft = parse_receipt('DIA ARGENTINA SA\nCUIT:30-00000000-0\nAV A.T. ALVEAR 822\nDON TORCUATO\nIVA RESPONSABLE INSCRIPTO\nCant./Precio Unit.\nDescripcion (%IVA) [%BI] IMPORTE\n2,00 X 2749,00\nCUNNING COLA 2,25L (21,00) 5498,00\n7790000000000\nSUBTOTAL 5498,00\nDESCUENTOS 0,00\nTOTAL $5498.00\nIVA CONTENIDO 954,20\nOTROS TRIBUTOS NACIONALES INDIRECTOS 395,31\nEFECTIVO $6000,00\nSU VUELTO $502,00')
+        self.assertEqual(len(draft['items']), 1)
+        item = draft['items'][0]
+        self.assertEqual(item['description'], 'CUNNING COLA 2,25L')
+        self.assertEqual(item['quantity'], 2)
+        self.assertEqual(item['unit_price'], 2749)
+        self.assertEqual(item['line_total'], 5498)
+        self.assertEqual(item['discount'], 0)
+        self.assertEqual(draft['vat_amount'], 954.20)
+        self.assertEqual(draft['total'], 5498)
+        response = self.client.post('/api/receipts/confirm', json={**draft,'id':'cola-layout','store':'DIA QA'})
+        self.assertEqual(response.status_code, 200, response.text)
+        self.assertEqual(db.load_db()['user_prefs']['totalSpent'],5498)
+
     def test_wrapped_receipt_description_survives_confirmation(self):
         draft = parse_receipt('SUPERMERCADO\nLECHE ENTERA\nLARGA VIDA 1 LITRO\n1.500,00\nTOTAL 1.500,00')
         self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA LARGA VIDA 1 LITRO')

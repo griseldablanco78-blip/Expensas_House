@@ -68,6 +68,8 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
                             else repository.parseReceipt(ReceiptText(text))
                 if (photo != null) receiptImage = draft.receipt_image.orEmpty()
                 items = draft.items; total = draft.total.toString(); text = draft.raw_text
+                if (!draft.store.isNullOrBlank() && (photo != null || store.isBlank())) store = draft.store
+                draft.purchase_date?.let { purchaseDate = it }
                 vat = draft.vat_amount?.toString().orEmpty(); vatIncluded = draft.vat_included
                 draftId = UUID.randomUUID().toString(); status = draft.warnings.joinToString("\n")
                 if (captured && draft.items.isNotEmpty()) clearCapture()

@@ -43,11 +43,12 @@ function setupReceiptScanner() {
     window.receiptProcessing = true;
     status.textContent = 'Leyendo ticket…';
     try {
-      let body, headers = {};
+      let body, headers = {}, ocrWarnings = [];
       if (photo) {
         const file = byId('receipt-photo').files[0];
         if (!file) throw new Error('Elegí una foto del ticket.');
         const recognized = await browserReceiptOcr(file, byId('receipt-preprocessing').value, message => { status.textContent = message; });
+        ocrWarnings = recognized.warnings || [];
         body = new FormData(); body.append('image', recognized.image, 'ticket.jpg'); body.append('text',recognized.text);
       } else {
         body = JSON.stringify({text: byId('receipt-text').value});
@@ -60,12 +61,14 @@ function setupReceiptScanner() {
       if (photo) receiptImage = data.receipt_image || '';
       rows.replaceChildren(); data.items.forEach(addLine);
       byId('receipt-text').value = data.raw_text;
+      if (data.store && (photo || !byId('receipt-store').value.trim())) byId('receipt-store').value = data.store;
+      if (data.purchase_date) byId('receipt-date').value = data.purchase_date;
       byId('receipt-total').value = data.total;
       byId('receipt-vat').value = data.vat_amount ?? '';
       byId('receipt-vat-included').checked = data.vat_included !== false;
       byId('receipt-adjustment').value = '';
       byId('receipt-review').classList.remove('hidden');
-      status.textContent = ['Revisá descripción, cantidad, precio y total.', ...data.warnings].join(' ');
+      status.textContent = ['Revisá descripción, cantidad, precio y total.', ...ocrWarnings, ...data.warnings].join(' ');
     } catch (error) { status.textContent = error.message; }
     finally { busy = false; window.receiptProcessing = false; }
   }
@@ -93,7 +96,9 @@ function setupReceiptScanner() {
           [input.dataset.field, input.type === 'number' ? Number(input.value) : input.value.trim()])));
         const store = byId('receipt-store').value.trim();
         const total = Number(byId('receipt-total').value);
-        if (!store || !items.length || !total || items.some(i => !i.description || !Number.isFinite(i.quantity) || !Number.isFinite(i.unit_price) || !Number.isFinite(i.line_total) || !Number.isFinite(i.discount) || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0 || i.discount < 0))
+        if (!items.length) throw new Error('No se reconocieron productos. Volvé a leer la foto con el modo de sombras o agregá el producto antes de confirmar.');
+        if (!store) { byId('receipt-store').focus(); throw new Error('Completá el supermercado: no se pudo leer el encabezado del ticket.'); }
+        if (!total || items.some(i => !i.description || !Number.isFinite(i.quantity) || !Number.isFinite(i.unit_price) || !Number.isFinite(i.line_total) || !Number.isFinite(i.discount) || i.quantity <= 0 || i.unit_price <= 0 || i.line_total <= 0 || i.discount < 0))
           throw new Error('Completá el supermercado, los productos y todos los importes positivos.');
         if (!byId('receipt-date').value) throw new Error('Elegí la fecha de compra.');
         pending = {id: draftId, store, total, items, vat_amount:byId('receipt-vat').value === '' ? null : Number(byId('receipt-vat').value), vat_included:byId('receipt-vat-included').checked, purchase_date:byId('receipt-date').value, raw_text:byId('receipt-text').value, receipt_image:receiptImage, adjustment_note: byId('receipt-adjustment').value.trim()};
@@ -117,6 +122,7 @@ function setupReceiptScanner() {
       await loadAllData();
     } catch (error) {
       status.textContent = error.message + (pending ? ' Reintentá: se enviará el mismo ticket sin duplicar el gasto.' : '');
+      status.scrollIntoView({block:'center',behavior:'smooth'});
     } finally { busy = false; byId('receipt-confirm').disabled = false; }
   });
   if (pending) {

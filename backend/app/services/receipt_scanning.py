@@ -3,6 +3,7 @@ import io
 import os
 import re
 from decimal import Decimal, ROUND_HALF_UP
+from datetime import date
 
 from backend.app.services.offers import normalize, money
 
@@ -11,26 +12,60 @@ def cents(value):
     return float(Decimal(str(value)).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP))
 
 
+def receipt_header(text):
+    """Only propose store/date from the header, never from payment or footer text."""
+    header = '\n'.join(text.splitlines()[:18])
+    normalized = normalize(header)
+    store = ''
+    for name, pattern in [('DIA', r'\bdia(?:\s+argentina)?\b'), ('Carrefour', r'\bcarrefour\b'),
+                          ('Jumbo', r'\bjumbo\b'), ('Coto', r'\bcoto\b'), ('Disco', r'\bdisco\b'),
+                          ('ChangoMás', r'\bchangomas\b')]:
+        if re.search(pattern, normalized):
+            store = name
+            break
+    if not store:
+        for line in header.splitlines()[:5]:
+            if re.search(r'\b(?:s\.?a\.?|s\.?r\.?l\.?)$', normalize(line)) and not re.search(r'cuit|iva|domicilio', normalize(line)):
+                store = line.strip()[:150]
+                break
+    purchased = None
+    found = re.search(r'\b(\d{2})[-/](\d{2})[-/](20\d{2})\b', header)
+    if found:
+        try:
+            purchased = date(int(found[3]), int(found[2]), int(found[1])).isoformat()
+        except ValueError:
+            pass
+    return {'store': store, 'purchase_date': purchased}
+
+
 def parse_receipt(text):
     items, warnings = [], []
     total = None
     vat_amount = None
     vat_parts = []
     vat_summary = False
+    stated_discount_total = None
     finished = False
-    amount = r'(?<![\d.,])\$?\s*(\d[\d.,]*[.,]\d{2})(?![\d.,])'
+    # A decimal followed by a measurement (2.25L, 0,50 kg) is part of the name.
+    amount = r'(?<![\w.,])\$?\s*(\d[\d.,]*[.,]\d{2})(?![\d.,]|\s*(?i:ml|cl|l|lt|lts|litros?|kg|g|gr|gramos?)\b)'
+    meaningful_name = lambda value: len(re.findall(r'[a-záéíóúñ]', value, re.I)) >= 2
     pending_description = []
+    pending_quantity_price = None
     for line in text.splitlines():
         line = line.strip()
+        line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', line)
         # OCR inserts blank lines between the name block and its price block.
         if not line:
             continue
         norm = normalize(line)
+        if re.match(r'^(?:cant(?:idad)?\b|descripcion\b|precio unit)', norm):
+            pending_description = []
+            continue
         if re.match(r'^total productos\b', norm):
             pending_description = []
             continue
         # Fiscal and payment data are never product descriptions.
-        fiscal = re.search(r'\b(cuit|c\.u\.i\.t|iibb|domicilio|direccion|telefono|fecha|hora|cajero|caja|sucursal|factura|comprobante|consumidor final|inicio actividades|cae|cai|subtotal|efectivo|tarjeta|debito|credito|vuelto|cambio|pago)\b', norm)
+        fiscal = re.search(r'\b(cuit|c\.u\.i\.t|iibb|domicilio|direccion|telefono|fecha|hora|cajero|caja|sucursal|factura|comprobante|consumidor final|inicio actividades|cae|cai|subtotal|efectivo|tarjeta|debito|credito|vuelto|cambio|pagos?)\b', norm)
         if re.search(r'\biva\b', norm):
             tax_values = [m for m in re.finditer(amount, line) if not line[m.end():].lstrip().startswith('%')]
             if tax_values:
@@ -47,22 +82,28 @@ def parse_receipt(text):
         if fiscal or re.search(r'\b(?:s\.?a\.?|s\.?r\.?l\.?)$', norm) or re.match(r'^(av[ .]|avenida |calle |ruta |codigo postal|razon social|s\.?a\.?$|s\.?r\.?l\.?$)', norm):
             pending_description = []
             continue
+        # This receipt layout prints quantity × unit price ABOVE the product name.
+        line = re.sub(r'\(\s*(?:21[.,]00|10[.,]50|27[.,]00|0[.,]00)\s*%?\s*\)', '', line)
         quantity = 1.0
         qty = re.match(r'^(\d+(?:[.,]\d+)?)\s*[xX×]\s*', line)
         if qty:
             quantity = float(qty[1].replace(',', '.'))
             line = line[qty.end():].strip()
         values = list(re.finditer(amount, line))
+        if qty and quantity > 0 and len(values) == 1 and money(values[0][1]) and not meaningful_name(line[:values[0].start()]):
+            pending_quantity_price = (quantity, money(values[0][1]))
+            continue
         if not values:
             # Preserve wrapped names, but do not attach fiscal/header lines to products.
             if not line or re.search(r'\b(cuit|iva|fecha|hora|ticket|factura|domicilio|supermercado|cajero|subtotal|total)\b', norm):
                 pending_description = []
-            elif re.search(r'[a-zA-ZáéíóúñÁÉÍÓÚÑ]', line):
+            elif meaningful_name(line):
                 pending_description.append(line)
             continue
         if re.match(r'^(?:importe\s+)?total\b', norm) and not norm.startswith('total productos'):
             pending_description = []
             total = money(values[-1][1])
+            pending_quantity_price = None
             finished = True
             continue
         if finished:
@@ -78,7 +119,9 @@ def parse_receipt(text):
                 warnings.append('Descuento de producto ambiguo: revisalo manualmente.')
             pending_description = []
             continue
-        if re.search(r'\b(subtotal|cuit|iva|cambio|vuelto|efectivo|tarjeta|debito|credito|pago|ahorro|descuento|bonificacion)\b', norm):
+        if re.match(r'^descuentos?\s*:', norm):
+            stated_discount_total = money(values[-1][1]) or 0
+        if re.search(r'\b(subtotal|cuit|iva|cambio|vuelto|efectivo|tarjeta|debito|credito|pago|ahorro|descuentos?|bonificaciones?)\b', norm):
             pending_description = []
             if re.search(r'descuento|bonificacion', norm):
                 warnings.append('Hay descuentos en el ticket: verificá el total final.')
@@ -89,12 +132,17 @@ def parse_receipt(text):
         description = line[:values[0].start()].strip(' $:-')
         description = ' '.join([*pending_description, description]).strip()
         pending_description = []
-        if quantity <= 0 or not re.search(r'[a-zA-ZáéíóúñÁÉÍÓÚÑ]', description):
+        if quantity <= 0 or not meaningful_name(description):
+            warnings.append('Se omitió una línea sin nombre de producto legible. Revisá el texto y la foto.')
             continue
         line_total = money(last[1])
         if not line_total:
             continue
-        unit_price = money(values[0][1]) if len(values) > 1 else cents(line_total / quantity)
+        if pending_quantity_price is not None and not qty:
+            quantity, unit_price = pending_quantity_price
+            pending_quantity_price = None
+        else:
+            unit_price = money(values[0][1]) if len(values) > 1 else cents(line_total / quantity)
         discount = cents(quantity * unit_price - line_total)
         if discount < 0:
             warnings.append('Revisá el precio unitario y el importe de ' + description)
@@ -102,6 +150,16 @@ def parse_receipt(text):
             discount = 0
         items.append({'description': description, 'detail': '', 'discount': discount, 'quantity': quantity,
                       'unit_price': unit_price, 'line_total': line_total})
+    # Explicit zero discount + matching line totals permits arithmetic recovery of an OCR unit price.
+    if stated_discount_total == 0 and total is not None and abs(sum(i['line_total'] for i in items) - total) < .02:
+        for item in items:
+            if item['discount'] != 0:
+                item['unit_price'] = cents(item['line_total'] / item['quantity'])
+                item['discount'] = 0
+                warnings.append('El ticket indica descuento cero: se calculó el precio unitario a partir del neto y la cantidad. Revisalo contra la foto.')
+    for item in items:
+        if re.search(r'\d+[.,]\d{3}\b', item['description']):
+            warnings.append('La presentación del producto puede confundir una letra con un dígito. Revisá el nombre contra la imagen.')
     subtotal = cents(sum(i['line_total'] for i in items))
     if total is None:
         total = subtotal
@@ -111,7 +169,7 @@ def parse_receipt(text):
     if not items:
         warnings.append('No se reconocieron productos. Podés agregarlos manualmente.')
     return {'items': items, 'total': total, 'subtotal': subtotal, 'warnings': warnings,
-            'raw_text': text, 'vat_amount': vat_amount, 'vat_included': True}
+            'raw_text': text, 'vat_amount': vat_amount, 'vat_included': True, **receipt_header(text)}
 
 
 def scan_receipt(content, preprocessing="standard"):

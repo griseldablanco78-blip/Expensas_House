@@ -8,7 +8,12 @@ function receiptOcrScore(data) {
   const words = text.match(/[a-záéíóúñ]+/gi) || [];
   const fragments = words.filter(word => word.length === 1).length;
   const prices = (text.match(/\d[\d.,]*[.,]\d{2}(?!\d)/g) || []).length;
-  return Number(data.confidence || 0) + Math.min(prices, 30) - 30 * fragments / Math.max(words.length, 1);
+  const lines = text.split(/\r?\n/);
+  const metadata = /cuit|iva|subtotal|total|descuento|factura|consumidor|efectivo|pagos?|vuelto|tributos|cajera|cae|telefono|fecha|importe|regimen/i;
+  const namedPrices = lines.filter(line => /[a-záéíóúñ]{3}/i.test(line) && /\d[.,]\d{2}/.test(line) && !metadata.test(line)).length;
+  const quantities = lines.filter(line => /^\s*\d+(?:[.,]\d+)?\s*[x×]\s*\d/i.test(line)).length;
+  // A confident footer without any product is less useful than a legible product row.
+  return Number(data.confidence || 0) + namedPrices * 40 + quantities * 15 + Math.min(prices, 15) - 30 * fragments / Math.max(words.length, 1);
 }
 
 function prepareReceiptPixels(context, width, height, adaptive) {
@@ -16,7 +21,10 @@ function prepareReceiptPixels(context, width, height, adaptive) {
   const gray = new Uint8Array(width * height);
   const histogram = new Uint32Array(256);
   for (let i = 0; i < gray.length; i++) {
-    gray[i] = Math.round(.299 * pixels.data[i*4] + .587 * pixels.data[i*4+1] + .114 * pixels.data[i*4+2]);
+    const x = i % width, r = pixels.data[i*4], g = pixels.data[i*4+1], b = pixels.data[i*4+2];
+    // Colored table edges are background, not monochrome receipt print.
+    const coloredEdge = (x < width*.1 || x > width*.9) && r-g > 12 && r-b > 18;
+    gray[i] = coloredEdge ? 255 : Math.round(.299*r + .587*g + .114*b);
     histogram[gray[i]]++;
   }
   let low = 0, high = 255, count = 0;
@@ -39,10 +47,10 @@ function prepareReceiptPixels(context, width, height, adaptive) {
     const i = y * width + x;
     let value = Math.max(0, Math.min(255, (gray[i] - low) * 255 / Math.max(1, high-low)));
     if (adaptive) {
-      const x0 = Math.max(0, x-20), x1 = Math.min(width, x+21);
-      const y0 = Math.max(0, y-20), y1 = Math.min(height, y+21), stride = width+1;
+      const x0 = Math.max(0, x-55), x1 = Math.min(width, x+56);
+      const y0 = Math.max(0, y-55), y1 = Math.min(height, y+56), stride = width+1;
       const mean = (integral[y1*stride+x1]-integral[y0*stride+x1]-integral[y1*stride+x0]+integral[y0*stride+x0]) / ((x1-x0)*(y1-y0));
-      value = gray[i] < mean - 12 ? 0 : 255;
+      value = gray[i] < mean - 6 ? 0 : 255;
     }
     pixels.data[i*4] = pixels.data[i*4+1] = pixels.data[i*4+2] = value;
   }
@@ -58,19 +66,21 @@ async function browserReceiptOcr(file, mode, progress) {
   canvas.width = Math.round(bitmap.width * factor); canvas.height = Math.round(bitmap.height * factor);
   const context = canvas.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(0,0,canvas.width,canvas.height);
-  context.drawImage(bitmap,0,0,canvas.width,canvas.height); bitmap.close();
+  context.drawImage(bitmap,0,0,canvas.width,canvas.height);
   const image = await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));
-  if (!image || image.size > 3500000) throw new Error('La imagen preparada supera 3,5 MB. Elegí una foto más pequeña.');
+  if (!image || image.size > 3500000) { bitmap.close(); throw new Error('La imagen preparada supera 3,5 MB. Elegí una foto más pequeña.'); }
   // Read a separate, enlarged copy; the complete color archive remains unchanged.
-  const ocrScale = Math.min(3, Math.max(1, 1600 / canvas.width), Math.sqrt(8000000 / (canvas.width * canvas.height)));
+  const ocrScale = Math.min(3, Math.max(1, 1800 / bitmap.width), Math.sqrt(8000000 / (bitmap.width * bitmap.height)));
   const reading = document.createElement('canvas');
   const border = 32;
-  reading.width = Math.round(canvas.width * ocrScale) + border * 2;
-  reading.height = Math.round(canvas.height * ocrScale) + border * 2;
+  reading.width = Math.round(bitmap.width * ocrScale) + border * 2;
+  reading.height = Math.round(bitmap.height * ocrScale) + border * 2;
   const readingContext = reading.getContext('2d', {willReadFrequently:true});
   readingContext.fillStyle = '#fff'; readingContext.fillRect(0,0,reading.width,reading.height);
   readingContext.imageSmoothingEnabled = true; readingContext.imageSmoothingQuality = 'high';
-  readingContext.drawImage(canvas,border,border,reading.width-border*2,reading.height-border*2);
+  readingContext.drawImage(bitmap,border,border,reading.width-border*2,reading.height-border*2);
+  bitmap.close();
+  const originalPixels = mode === 'standard' ? readingContext.getImageData(0,0,reading.width,reading.height) : null;
   prepareReceiptPixels(readingContext, reading.width, reading.height, mode === 'adaptive');
   receiptOcrProgress = progress;
   if (!window.Tesseract) {
@@ -91,14 +101,29 @@ async function browserReceiptOcr(file, mode, progress) {
   progress('Preparando el lector en español…');
   const worker=await receiptWorkerPromise;
   await worker.setParameters({tessedit_pageseg_mode:'4',preserve_interword_spaces:'1',user_defined_dpi:'300'});
-  let result=await worker.recognize(reading, {rotateAuto:true});
-  if (result.data.confidence < 85 || !(result.data.text || '').match(/\d[.,]\d{2}/)) {
-    progress('Revisando la distribución de las líneas…');
-    await worker.setParameters({tessedit_pageseg_mode:'6'});
-    const alternative=await worker.recognize(reading, {rotateAuto:true});
-    if (receiptOcrScore(alternative.data) > receiptOcrScore(result.data)) result=alternative;
+  let result=await worker.recognize(reading, {});
+  // Compare both layouts even when the page average hides a badly read product line.
+  progress('Revisando nombres y distribución de las líneas…');
+  await worker.setParameters({tessedit_pageseg_mode:'6'});
+  const alternative=await worker.recognize(reading, {});
+  if (receiptOcrScore(alternative.data) > receiptOcrScore(result.data)) result=alternative;
+  if (originalPixels && result.data.confidence < 85) {
+    progress('Mejorando sombras y revisando los productos…');
+    readingContext.putImageData(originalPixels,0,0);
+    prepareReceiptPixels(readingContext,reading.width,reading.height,true);
+    const shadowAlternative = await worker.recognize(reading, {});
+    if (receiptOcrScore(shadowAlternative.data) > receiptOcrScore(result.data)) result=shadowAlternative;
   }
-  const text=result.data.text.trim();
+  let text=result.data.text.trim();
+  const storePattern = /\b(?:dia|carrefour|jumbo|coto|disco|changomas)\b/i;
+  if (!storePattern.test(text.split(/\r?\n/).slice(0,18).join(' ')) && canvas.height > 500) {
+    progress('Revisando el nombre del supermercado…');
+    const header = await worker.recognize(canvas, {rectangle:{
+      left:Math.round(canvas.width*.06), top:Math.round(canvas.height*.04),
+      width:Math.round(canvas.width*.87), height:Math.round(canvas.height*.13)
+    }});
+    if (storePattern.test(header.data.text)) text = header.data.text.trim() + '\n' + text;
+  }
   if (!text) throw new Error('No se reconoció texto. Probá una foto completa y más nítida o pegá el texto manualmente.');
-  return {text,image};
+  return {text,image,warnings:Number(result.data.confidence || 0) < 75 ? ['Lectura de baja confianza: revisá los nombres y precios antes de confirmar.'] : []};
 }

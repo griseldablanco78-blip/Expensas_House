@@ -38,6 +38,51 @@ Expensa House surgió para reunir información del hogar que suele quedar distri
 
 Las pruebas se ejecutan con datos ficticios y almacenamiento temporal para verificar tickets, presupuesto, reintentos, ofertas y resúmenes sin modificar las compras personales.
 
+## Eje de procesamiento digital de imágenes: del ticket al presupuesto
+
+**La fotografía del ticket se transforma en un registro de compra revisable que conserva los productos, sus precios y la fecha, y actualiza el presupuesto al confirmar el gasto.**
+
+1. **Adquisición de imagen:** se toma una foto o se elige desde la galería. Se conserva el comprobante completo en color, sin recortar sus bordes.
+2. **Preparación para lectura:** la web utiliza una copia de la imagen original con resolución acotada, ampliación de letras pequeñas, escala de grises, contraste y margen blanco. Puede aplicar umbral adaptativo para sombras. Esta copia se procesa por separado de la fotografía archivada.
+3. **Reconocimiento óptico de caracteres:** Tesseract.js con modelo LSTM español en la web, y ML Kit en Android, convierten la imagen en texto. En la web se comparan dos distribuciones de lectura para reducir errores al separar nombres y precios. No se entrenó un modelo propio ni se garantiza exactitud sobre cualquier fotografía.
+4. **Interpretación y revisión:** el backend separa descripción, cantidad, precio unitario, descuento e importe neto. Una presentación como «2.25L» pertenece al nombre del producto y no es un precio. Los datos fiscales y los fragmentos sin nombre legible no se cargan como productos. El usuario revisa y corrige lo reconocido antes de confirmar.
+5. **Registro del comprobante:** al confirmar se guardan fecha, supermercado, productos, precios, descuentos, IVA cuando está informado, total pagado, texto y referencia a la fotografía privada.
+6. **Actualización del presupuesto:** se registra un gasto por el **total efectivamente pagado del ticket**. El disponible se calcula como **presupuesto mensual − gastos registrados del mes**. El IVA incluido no se suma de nuevo y reenviar el mismo ticket no duplica el gasto. Una lectura o una foto sin confirmar no modifica el presupuesto.
+7. **Consulta posterior:** los resúmenes por fecha permiten recordar qué se compró, dónde y a qué precio, conservando los importes históricos de cada compra.
+
+Este recorrido conecta adquisición y mejora de imágenes, OCR, validación de datos y una aplicación concreta de gestión del hogar. Las pruebas con fotos sintéticas verifican nombres completos, presentaciones decimales y precios; medir la exactitud en tickets reales requiere una muestra específica.
+
+## Imágenes reales de productos en las ofertas
+
+**El buscador muestra la fotografía del producto proporcionada por la fuente externa, junto con su nombre, supermercado, precio y condiciones.** El backend consulta catálogos públicos de Carrefour y Jumbo mediante sus endpoints de catálogo, extrae `imageUrl` del SKU y devuelve `image_url` a los clientes. La web y Android utilizan esa dirección para mostrar la imagen real del catálogo. No se generan fotografías mediante IA ni se inventan precios. Las ofertas manuales pueden incorporar una foto suministrada por el usuario.
+
+Las imágenes ayudan a reconocer marca y presentación, pero no sustituyen la comparación de tamaño, precio y condiciones. Si la API no aporta una foto o el recurso deja de estar disponible, la interfaz informa que no hay imagen. La consulta externa depende de la disponibilidad y permisos de la fuente. Ratoneando permanece como consulta enlazada y proveedor opcional, no como integración garantizada.
+
+## Funcionalidades y responsabilidades de cada módulo
+
+| Módulo | Qué puede hacer el usuario | Cómo funciona |
+| --- | --- | --- |
+| Acceso y sesión | Iniciar sesión y acceder según sus permisos. | La API verifica credenciales y permisos; los clientes mantienen la sesión. Actualmente la cuenta publicada corresponde a un hogar compartido. |
+| Inicio y navegación | Consultar el estado general y abrir cada sección. | Reúne accesos a stock, compras, ofertas y presupuesto. |
+| Despensa o stock | Registrar productos, cantidades cerradas y en uso; actualizar faltantes. | Android conserva una copia Room y sincroniza los cambios con la API compartida. |
+| Lista de compras | Agregar productos pendientes y llevarlos desde una oferta a la lista. | Conserva la información del producto y su estado; no registra automáticamente un gasto al buscar. |
+| Ofertas e imágenes externas | Buscar por nombre, comparar precios y abrir el detalle o la página del supermercado. | Normaliza palabras y presentaciones, combina ofertas guardadas y catálogos habilitados, y muestra su imagen, fuente y condiciones cuando existen. |
+| Imagen del ticket y OCR | Fotografiar o elegir un comprobante, leerlo y revisar los productos reconocidos. | Separa la imagen archivada de la copia de lectura; Tesseract.js o ML Kit extraen texto y Python lo transforma en líneas revisables. |
+| Registro contable | Confirmar supermercado, fecha, precios, descuentos, IVA y total pagado. | Valida los cálculos y registra el comprobante una sola vez. La fotografía sin confirmar no descuenta dinero. |
+| Presupuesto | Consultar presupuesto, gasto registrado y saldo disponible. | El total confirmado del ticket se suma a los gastos del mes y se resta del presupuesto disponible. |
+| Resúmenes y precios históricos | Elegir una fecha y recordar productos, supermercado y precios de esa compra. | Consulta los importes guardados en esa fecha sin reemplazarlos por precios actuales. Permite descargar texto y consultar la foto del comprobante desde la web. |
+| Boti House | Consultar ofertas, faltantes y presupuesto mediante mensajes. | Usa reglas y palabras clave sobre la información disponible; no es un modelo generativo entrenado por el proyecto. |
+| Voz a texto | Dictar búsquedas o consultas. | El servicio de reconocimiento del dispositivo convierte el audio en texto y lo entrega al módulo correspondiente. |
+| Sincronización y persistencia | Consultar los mismos datos desde Android y la web cuando hay conexión. | FastAPI comparte las reglas; PostgreSQL conserva los registros, Storage privado guarda fotos y Room mantiene la copia local Android. |
+
+## Ejemplo de interpretación de un ticket
+
+El formato de supermercado revisado imprime `2,00 X 2749,00` encima de `CUNNING COLA 2,25L (21,00) 5498,00`. La interpretación correcta conserva el nombre y la presentación, asigna dos unidades a $2.749 y registra $5.498 como total pagado. `(21,00)` es una alícuota, no el precio unitario. El IVA contenido de $954,20 ya forma parte del total y no se agrega nuevamente. El importe entregado en efectivo y el vuelto no se convierten en gastos ni productos.
+
+## Material incluido en el ZIP
+
+El ZIP contiene código, un informe breve con los seis puntos solicitados y `ENLACES_PROYECTO.txt`. Como adicionales pedidos por la autora, incluye la foto de ejemplo y Android 1.3.2 en `android/`. La explicación ampliada de módulos, arquitectura y modelos queda en GitHub para no sobrecargar la entrega. La APK se conecta a la API pública de Vercel. No se empaquetan credenciales privadas ni bases personales.
+
 ## Tecnologías
 
 El proyecto utiliza Kotlin y Jetpack Compose en Android; Room/SQLite para la copia local; Retrofit para llamadas HTTP; FastAPI y Python en Vercel; HTML, CSS y JavaScript en la web; PostgreSQL y Storage privado de Supabase para persistencia; Tesseract.js y modelos LSTM español para OCR en el navegador; y scikit-learn para un experimento predictivo. El desarrollo local conserva adaptadores JSON y SQLite.

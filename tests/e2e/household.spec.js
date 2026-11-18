@@ -202,3 +202,23 @@ test('WEB-11: foto con letra pequeña y sombras conserva nombres completos y pre
   await expect(page.locator('[data-field="description"]').last()).toHaveValue('ARROZ INTEGRAL QA');
   await expect(page.locator('#receipt-total')).toHaveValue('4200');
 });
+
+
+test('WEB-12: ticket local DIA permite revisar la presentación y confirmar el presupuesto', async ({page}) => {
+  test.skip(!process.env.E2E_RECEIPT_FIXTURE, 'Requiere foto local autorizada; no se incluye en Git.');
+  await page.locator('[data-tab="budget"]').click();
+  await page.locator('#receipt-photo').setInputFiles(process.env.E2E_RECEIPT_FIXTURE);
+  await expect(page.locator('#receipt-review')).toBeVisible({timeout:60000});
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(1);
+  await expect(page.locator('[data-field="description"]')).toHaveValue(/^CUNNING\s+COLA\s+2[.,]25\s*[L1]$/i);
+  await expect(page.locator('[data-field="quantity"]')).toHaveValue('2');
+  await expect(page.locator('[data-field="unit_price"]')).toHaveValue('2749');
+  await expect(page.locator('[data-field="line_total"]')).toHaveValue('5498');
+  await expect(page.locator('#receipt-total')).toHaveValue('5498');
+  await expect(page.locator('#receipt-vat')).toHaveValue('954.2');
+  await expect(page.locator('#receipt-store')).toHaveValue('DIA');
+  await page.locator('[data-field="description"]').fill('CUNNING COLA 2,25L');
+  await page.locator('#receipt-confirm').click();
+  await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
+  await expect(page.locator('#budget-spent-text')).toContainText('5.498');
+});
