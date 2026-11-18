@@ -39,6 +39,7 @@ function setupReceiptScanner() {
   async function readReceipt(photo) {
     if (busy || pending) { status.textContent = 'Primero reintentá guardar el ticket pendiente.'; return; }
     busy = true;
+    window.receiptProcessing = true;
     status.textContent = 'Leyendo ticket…';
     try {
       let body, headers = {};
@@ -63,7 +64,7 @@ function setupReceiptScanner() {
       byId('receipt-review').classList.remove('hidden');
       status.textContent = ['Revisá descripción, cantidad, precio y total.', ...data.warnings].join(' ');
     } catch (error) { status.textContent = error.message; }
-    finally { busy = false; }
+    finally { busy = false; window.receiptProcessing = false; }
   }
 
   let previewUrl = null;

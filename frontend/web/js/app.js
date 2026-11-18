@@ -81,19 +81,21 @@ function switchTab(tabId) {
 // ==========================================================================
 let dataLoadSerial = 0;
 let dataRefreshTimer = null;
+let activeDataLoads = 0;
 
 function startDataAutoRefresh() {
   if (dataRefreshTimer) window.clearInterval(dataRefreshTimer);
   dataRefreshTimer = window.setInterval(() => {
-    if (!document.hidden) loadAllData();
+    if (!document.hidden && !window.receiptProcessing && !activeDataLoads) loadAllData();
   }, 15000);
 
   document.addEventListener('visibilitychange', () => {
-    if (!document.hidden) loadAllData();
+    if (!document.hidden && !window.receiptProcessing && !activeDataLoads) loadAllData();
   });
 }
 
 async function loadAllData() {
+  activeDataLoads++;
   const serial = ++dataLoadSerial;
   try {
     const [stockRes, shopRes, budgetRes, expRes] = await Promise.all([
@@ -119,6 +121,8 @@ async function loadAllData() {
     console.error('Error cargando datos del servidor:', error);
     showToast('⚠️ Error al sincronizar con el servidor.');
     showSyncIndicator(false);
+  } finally {
+    activeDataLoads--;
   }
 }
 
