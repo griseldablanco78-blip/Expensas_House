@@ -3,8 +3,9 @@ from typing import Literal
 from fastapi import APIRouter
 from fastapi.responses import FileResponse, Response
 from backend.app.infrastructure.json_store import get_expenses
-from backend.app.services.receipt_archive import archive_image, image_path
-from fastapi import HTTPException, UploadFile, File
+from backend.app.services.receipt_archive import archive_image, image_path, image_exists, read_image
+from backend.app.infrastructure import cloud_storage
+from fastapi import HTTPException, UploadFile, File, Form
 from backend.app.api.schemas import ReceiptText, ReceiptCommit
 from backend.app.services.receipt_scanning import parse_receipt, scan_receipt
 from backend.app.services.receipt_registration import register_receipt, ReceiptValidationError
@@ -20,6 +21,8 @@ def api_parse_receipt(payload: ReceiptText):
 
 @router.post("/api/receipts/scan")
 async def api_scan_receipt(image: UploadFile = File(...), preprocessing: Literal["standard", "adaptive"] = "standard"):
+    if cloud_storage.enabled():
+        raise HTTPException(409, 'Esta versión requiere leer la foto en el dispositivo. Usá el escáner web actualizado o pegá el texto del ticket.')
     from starlette.concurrency import run_in_threadpool
     content = await image.read(10 * 1024 * 1024 + 1)
     if len(content) > 10 * 1024 * 1024:
@@ -35,6 +38,24 @@ async def api_scan_receipt(image: UploadFile = File(...), preprocessing: Literal
     except OSError as exc:
         raise HTTPException(503, "No se pudo archivar el comprobante. Revisá el almacenamiento del servidor.") from exc
 
+
+
+@router.post('/api/receipts/draft')
+async def api_receipt_draft(text: str = Form(...), image: UploadFile | None = File(default=None)):
+    from starlette.concurrency import run_in_threadpool
+    if len(text) > 100000:
+        raise HTTPException(413, 'Texto demasiado largo.')
+    result = parse_receipt(text)
+    if image:
+        raw = await image.read(3_500_001)
+        if len(raw) > 3_500_000:
+            raise HTTPException(413, 'La imagen preparada supera 3,5 MB.')
+        try:
+            result['receipt_image'] = await run_in_threadpool(archive_image,raw)
+        except (ValueError,OSError) as error:
+            raise HTTPException(400,'La fotografía no es válida.') from error
+    result['ocr'] = {'location':'device','review_required':True}
+    return result
 
 
 @router.post("/api/receipts/confirm")
@@ -69,6 +90,6 @@ def download_receipt_text(expense_id: str):
 def download_receipt_image(expense_id: str):
     expense = registered_receipt(expense_id)
     identity = expense.get('receipt_image')
-    if not identity or not image_path(identity).is_file():
+    if not identity or not image_exists(identity):
         raise HTTPException(404, 'Este gasto no tiene imagen archivada.')
-    return FileResponse(image_path(identity), media_type='image/jpeg', filename='comprobante.jpg')
+    return Response(read_image(identity), media_type='image/jpeg', headers={'Content-Disposition':'attachment; filename="comprobante.jpg"'})

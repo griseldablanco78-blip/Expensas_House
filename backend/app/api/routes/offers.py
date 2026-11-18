@@ -1,6 +1,7 @@
 """Offers HTTP routes."""
 from fastapi import APIRouter, UploadFile, File, HTTPException
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, Response
+from backend.app.infrastructure import cloud_storage
 from pydantic import BaseModel, Field
 from backend.app.infrastructure import json_store as store
 from backend.app.core.paths import PROJECT_ROOT
@@ -71,9 +72,12 @@ async def upload_offer_image(offer_id: str, image: UploadFile = File(...)):
         item = next((o for o in data['offers'] if o.get('id') == offer_id), None)
         if item is None:
             raise HTTPException(404, 'La oferta ya no está disponible.')
-        IMAGE_DIR.mkdir(parents=True, exist_ok=True)
         filename = secrets.token_hex(16) + '.jpg'
-        (IMAGE_DIR / filename).write_bytes(content.getvalue())
+        if cloud_storage.enabled():
+            cloud_storage.put('products/'+filename,content.getvalue())
+        else:
+            IMAGE_DIR.mkdir(parents=True, exist_ok=True)
+            (IMAGE_DIR / filename).write_bytes(content.getvalue())
         item['image_url'] = '/api/offers/images/' + filename
         store.save_db(data)
     return {'message': 'Fotografía guardada.', 'image_url': item['image_url']}
@@ -81,8 +85,15 @@ async def upload_offer_image(offer_id: str, image: UploadFile = File(...)):
 
 @router.get('/api/offers/images/{filename}')
 def offer_image(filename: str):
-    if not re.fullmatch(r'[a-f0-9]{32}\.jpg', filename) or not (IMAGE_DIR / filename).is_file():
+    if not re.fullmatch(r'[a-f0-9]{32}\.jpg', filename):
         raise HTTPException(404, 'Imagen no disponible.')
+    if cloud_storage.enabled():
+        try:
+            return Response(cloud_storage.get('products/'+filename), media_type='image/jpeg')
+        except FileNotFoundError:
+            raise HTTPException(404,'Imagen no disponible.')
+    if not (IMAGE_DIR / filename).is_file():
+        raise HTTPException(404,'Imagen no disponible.')
     return FileResponse(IMAGE_DIR / filename, media_type='image/jpeg')
 
 

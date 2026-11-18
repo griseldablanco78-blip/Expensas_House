@@ -11,7 +11,10 @@ class HttpSecurityMiddleware(BaseHTTPMiddleware):
         loopback = host in ('localhost', '127.0.0.1', '::1', 'testserver') and (
             request.client is None or request.client.host in ('127.0.0.1', '::1', 'testclient'))
         configured = os.getenv('EXPENSA_PUBLIC_URL', '').rstrip('/')
+        deployment_host = os.getenv('VERCEL_URL', '')
         allowed = {value.strip().rstrip('/') for value in os.getenv('EXPENSA_ALLOWED_ORIGINS', configured).split(',') if value.strip()}
+        if deployment_host:
+            allowed.add('https://'+deployment_host)
         if loopback:
             allowed.add(str(request.base_url).rstrip('/'))
         origin = request.headers.get('origin')
@@ -19,7 +22,7 @@ class HttpSecurityMiddleware(BaseHTTPMiddleware):
             return JSONResponse({'detail': 'Usá HTTPS para proteger el correo, la contraseña y los tickets. El acceso HTTP por Wi-Fi está deshabilitado.'}, status_code=426)
         if origin and origin.rstrip('/') not in allowed:
             return JSONResponse({'detail': 'Origen no autorizado.'}, status_code=403)
-        if configured and host != urlsplit(configured).hostname and not loopback:
+        if configured and host not in (urlsplit(configured).hostname, deployment_host) and not loopback:
             return JSONResponse({'detail': 'Nombre de servidor no autorizado.'}, status_code=400)
         size = request.headers.get('content-length')
         if size:
@@ -34,7 +37,7 @@ class HttpSecurityMiddleware(BaseHTTPMiddleware):
         response.headers['Referrer-Policy'] = 'no-referrer'
         response.headers['Permissions-Policy'] = 'camera=(self), microphone=(self), geolocation=()'
         response.headers['Content-Security-Policy'] = (
-            "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
+            "default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; worker-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; "
             "font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob: https:; "
             "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'")
         if request.url.path.startswith('/api/') or request.url.path in ('/stock', '/offers', '/productos_criticos', '/'):

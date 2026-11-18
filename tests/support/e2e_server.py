@@ -6,7 +6,7 @@ from pathlib import Path
 if os.getenv('EXPENSA_E2E') != '1':
     raise SystemExit('Only run through the isolated Playwright configuration.')
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-os.environ.update(EXPENSA_AUTH_MODE='password', EXPENSA_PUBLIC_URL='http://127.0.0.1:18765',
+os.environ.update(EXPENSA_AUTH_MODE='password', EXPENSA_STORAGE='local', EXPENSA_PUBLIC_URL='http://127.0.0.1:18765',
                   EXPENSA_ALLOWED_ORIGINS='http://127.0.0.1:18765', RATONEANDO_API_URL='', EXPENSA_LIVE_OFFERS='0')
 from backend.app.infrastructure import json_store as store
 from backend.app.core import security

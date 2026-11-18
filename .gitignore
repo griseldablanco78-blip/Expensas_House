@@ -41,3 +41,9 @@ data/product_images/
 node_modules/
 playwright-report/
 test-results/
+
+# Credenciales privadas y recursos generados
+.env.*
+!.env.example
+/frontend/web/vendor/
+/public/

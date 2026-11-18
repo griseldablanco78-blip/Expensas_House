@@ -1,3 +1,5 @@
 # Optional advanced photo preprocessing
 -r requirements.txt
 opencv-python-headless>=4.10,<5
+
+pytesseract>=0.3.13

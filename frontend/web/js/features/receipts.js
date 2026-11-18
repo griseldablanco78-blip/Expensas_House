@@ -45,12 +45,13 @@ function setupReceiptScanner() {
       if (photo) {
         const file = byId('receipt-photo').files[0];
         if (!file) throw new Error('Elegí una foto del ticket.');
-        body = new FormData(); body.append('image', file);
+        const recognized = await browserReceiptOcr(file, byId('receipt-preprocessing').value, message => { status.textContent = message; });
+        body = new FormData(); body.append('image', recognized.image, 'ticket.jpg'); body.append('text',recognized.text);
       } else {
         body = JSON.stringify({text: byId('receipt-text').value});
         headers['Content-Type'] = 'application/json';
       }
-      const response = await fetch(`/api/receipts/${photo ? 'scan?preprocessing=' + encodeURIComponent(byId('receipt-preprocessing').value) : 'parse'}`, {method:'POST', headers, body});
+      const response = await fetch(`/api/receipts/${photo ? 'draft' : 'parse'}`, {method:'POST', headers, body});
       const data = await readApiJson(response);
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'No se pudo leer el ticket.');
       draftId = crypto.randomUUID ? crypto.randomUUID() : `receipt-${Date.now()}-${Math.random().toString(36).slice(2)}`;

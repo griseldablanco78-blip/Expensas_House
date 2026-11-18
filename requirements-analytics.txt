@@ -1,0 +1,6 @@
+-r requirements.txt
+streamlit
+pandas
+plotly
+scikit-learn
+SpeechRecognition>=3.10,<4

@@ -1,13 +1,7 @@
-fastapi
-uvicorn[standard]
-streamlit
-pandas
-plotly
-scikit-learn
-python-multipart
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+python-multipart>=0.0.18
 Pillow>=11
-pytesseract>=0.3.13
-SpeechRecognition>=3.10,<4
-
 argon2-cffi>=23.1,<26
 python-dotenv>=1,<2
+psycopg[binary]>=3.2,<4

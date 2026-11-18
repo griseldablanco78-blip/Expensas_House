@@ -1,3 +1,4 @@
 -r requirements.txt
+-r requirements-ocr.txt
 pytest>=8,<10
 httpx>=0.27,<1

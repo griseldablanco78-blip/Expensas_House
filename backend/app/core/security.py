@@ -16,6 +16,7 @@ from argon2 import PasswordHasher
 from argon2.exceptions import VerificationError, InvalidHashError
 from fastapi import HTTPException, Request
 from dotenv import load_dotenv
+from backend.app.infrastructure import postgres
 
 from backend.app.core.paths import PROJECT_ROOT
 
@@ -56,6 +57,10 @@ def email_address(value):
 
 @contextmanager
 def database():
+    if postgres.enabled():
+        with postgres.connection() as conn:
+            yield postgres.AuthConnection(conn)
+        return
     Path(AUTH_DB).parent.mkdir(parents=True, exist_ok=True)
     connection = sqlite3.connect(AUTH_DB, timeout=10)
     connection.row_factory = sqlite3.Row

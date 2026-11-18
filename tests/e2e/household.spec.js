@@ -38,7 +38,7 @@ test('WEB-02: falla de red al subir una foto no registra gastos y permite reinte
   // Minimal PNG fixture; network is intentionally unavailable before OCR.
   await page.locator('#receipt-photo').setInputFiles({name:'ticket.png', mimeType:'image/png',
     buffer:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jf1sAAAAASUVORK5CYII=', 'base64')});
-  await page.route('**/api/receipts/scan*', route => route.abort('connectionfailed'));
+  await page.route('**/api/receipts/draft*', route => route.abort('connectionfailed'));
   await page.locator('#receipt-scan').click();
   await expect(page.locator('#receipt-status')).not.toHaveText('Leyendo ticket…');
   await expect(page.locator('#receipt-status')).not.toBeEmpty();

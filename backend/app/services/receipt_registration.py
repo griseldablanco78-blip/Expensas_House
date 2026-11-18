@@ -21,8 +21,8 @@ def register_receipt(payload):
         raise ReceiptValidationError("El total difiere de los productos. Indicá el descuento, impuesto o ajuste del ticket.")
     image = payload.get('receipt_image', '')
     if image:
-        from backend.app.services.receipt_archive import image_path
-        if not image_path(image).is_file():
+        from backend.app.services.receipt_archive import image_exists
+        if not image_exists(image):
             raise ReceiptValidationError('No se encontró la imagen del comprobante. Volvé a subirla.')
     expense = add_expense({"id": payload["id"], "amount": cents(payload["total"]),
         "category": payload["category"], "note": payload["store"],

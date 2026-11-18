@@ -11,10 +11,12 @@ import threading
 from functools import wraps
 from copy import deepcopy
 from pathlib import Path
-import pandas as pd
+import csv
+from backend.app.infrastructure import postgres
+from backend.app.infrastructure.state_lock import StateLock
 from typing import List, Dict, Any, Optional
 
-DB_LOCK = threading.RLock()
+DB_LOCK = StateLock()
 
 
 def locked(function):
@@ -71,6 +73,11 @@ INITIAL_DATA = {
 
 @locked
 def load_db() -> Dict[str, Any]:
+    if postgres.enabled():
+        row = DB_LOCK.connection.execute('SELECT payload FROM app_state WHERE id=%s', ('demo',)).fetchone()
+        if row is None:
+            raise RuntimeError('La base persistente todavía no tiene datos migrados.')
+        return row['payload']
     if not os.path.exists(DB_FILE):
         save_db(deepcopy(INITIAL_DATA))
         return deepcopy(INITIAL_DATA)
@@ -88,6 +95,12 @@ def load_db() -> Dict[str, Any]:
 @locked
 def save_db(data: Dict[str, Any]):
     data["last_sync"] = int(time.time() * 1000)
+    if postgres.enabled():
+        from psycopg.types.json import Jsonb
+        result = DB_LOCK.connection.execute('UPDATE app_state SET payload=%s,updated_at=now() WHERE id=%s', (Jsonb(data),'demo'))
+        if result.rowcount != 1:
+            raise RuntimeError('No existe el hogar de la aplicación.')
+        return
     temporary = DB_FILE + ".tmp"
     with open(temporary, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=2)
@@ -113,8 +126,11 @@ def export_to_legacy_formats(data: Dict[str, Any]):
         with open(STOCK_JSON, "w", encoding="utf-8") as f:
             json.dump(legacy_list, f, ensure_ascii=False, indent=2)
             
-        df = pd.DataFrame(legacy_list)
-        df.to_csv(STOCK_CSV, index=False)
+        if legacy_list:
+            with open(STOCK_CSV, 'w', newline='', encoding='utf-8') as target:
+                writer = csv.DictWriter(target, fieldnames=list(legacy_list[0]))
+                writer.writeheader()
+                writer.writerows(legacy_list)
     except Exception as e:
         print(f"Error exportando formatos legacy: {e}")
 
@@ -312,4 +328,5 @@ def add_offer(offer: Dict[str, Any]) -> Dict[str, Any]:
     return offer
 
 # Inicializar exportación al importar
-load_db()
+if not postgres.enabled():
+    load_db()
