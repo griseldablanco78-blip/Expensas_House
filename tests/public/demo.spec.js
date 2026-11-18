@@ -6,7 +6,7 @@ test('PUBLIC-01: login, ofertas reales, OCR, descuento, gasto y comprobante desd
   await page.locator('#auth-email').fill('test123');
   await page.locator('#auth-password').fill('PruebasTest1234');
   await page.locator('#auth-submit').click();
-  await expect(page.locator('#app-shell')).toBeVisible();
+  await expect(page.locator('#app-shell')).toBeVisible({timeout:30000});
   await expect(page.locator('#environment-notice')).toBeVisible();
   await page.locator('#ai-search-input').fill('leche entera');
   await page.locator('#btn-ai-search').click();

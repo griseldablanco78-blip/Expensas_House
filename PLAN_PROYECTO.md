@@ -32,7 +32,7 @@ Selector mensual en la web, gastos por supermercado, fecha de compra, saldo, arc
 
 Repositorio: https://github.com/griseldablanco78-blip/Expensas_House
 
-URL de pruebas verificada: [Expensas House](https://expensas-house-griselda-blanco.vercel.app). El frontend está desplegado en Vercel y el backend de demostración permanece en la PC mediante un túnel temporal. Consultar [guía de Vercel](deploy/VERCEL.md). No reemplazar este estado por una dirección supuesta.
+URL de pruebas: [Expensas House](https://expensas-house-griselda-blanco.vercel.app). Web y FastAPI se publican en Vercel desde la raíz del repositorio; PostgreSQL y fotos privadas se conservan en Supabase. La versión en la nube utiliza OCR en el navegador y no requiere túnel ni PC encendida. Consultar [despliegue y límites gratuitos](docs/DESPLIEGUE_NUBE.md).
 
 ## Próximas etapas
 

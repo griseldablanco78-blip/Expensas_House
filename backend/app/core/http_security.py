@@ -42,6 +42,11 @@ class HttpSecurityMiddleware(BaseHTTPMiddleware):
             "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'")
         if request.url.path.startswith('/api/') or request.url.path in ('/stock', '/offers', '/productos_criticos', '/'):
             response.headers['Cache-Control'] = 'no-store'
+        if request.url.path in ('/docs','/redoc'):
+            response.headers['Content-Security-Policy'] = (
+                "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+                "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' https: data:; "
+                "connect-src 'self'; object-src 'none'; base-uri 'self'; frame-ancestors 'none'")
         if request.url.scheme == 'https':
             response.headers['Strict-Transport-Security'] = 'max-age=31536000'
         return response

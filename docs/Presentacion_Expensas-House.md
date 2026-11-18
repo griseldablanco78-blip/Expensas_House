@@ -12,7 +12,7 @@ Desarrollé Expensa House para administrar despensa, compras, presupuesto y comp
 
 ## Tecnologías
 
-Utilicé Kotlin y Jetpack Compose en Android; Room/SQLite para datos locales; Retrofit para las llamadas HTTP; FastAPI y Python en el backend; HTML, CSS y JavaScript en la web; JSON y SQLite en el almacenamiento actual; Tesseract y Pillow para OCR; y scikit-learn para un experimento predictivo.
+El proyecto utiliza Kotlin y Jetpack Compose en Android; Room/SQLite para la copia local; Retrofit para llamadas HTTP; FastAPI y Python en Vercel; HTML, CSS y JavaScript en la web; PostgreSQL y Storage privado de Supabase para persistencia; Tesseract.js y modelos LSTM español/inglés para OCR en el navegador; y scikit-learn para un experimento predictivo. El desarrollo local conserva adaptadores JSON y SQLite.
 
 ## Tres módulos principales de asistencia
 
@@ -32,7 +32,7 @@ Todavía no incorporé ese modelo a la operación principal. Android identifica 
 
 Android guarda una copia en Room. Al iniciar o modificar datos, intenta sincronizar una instantánea con FastAPI. La web desplegada obtiene el estado central desde la API y actualiza sus módulos cada quince segundos.
 
-La sincronización depende de que el backend esté disponible. El backend de demostración está temporalmente alojado en mi computadora mediante un túnel HTTPS, por lo que puede dejar de responder si apago la PC o cambia el túnel.
+La web y la API están alojadas en Vercel y guardan datos en Supabase. No dependen de una computadora encendida ni de un túnel. La sincronización requiere conexión. El plan gratuito de Supabase puede pausar el proyecto por baja actividad y permite reactivarlo desde el panel.
 
 ## Enlaces de documentación
 
@@ -44,4 +44,4 @@ La sincronización depende de que el backend esté disponible. El backend de dem
 
 ## Alcance y próximos pasos
 
-La versión actual es un proyecto académico demostrable, no un sistema de producción. El próximo paso será reemplazar JSON por una base relacional persistente, guardar imágenes en almacenamiento externo y mantener un histórico suficiente para entrenar y validar modelos predictivos.
+La versión actual es un proyecto académico de demostración con datos ficticios y almacenamiento persistente en la nube. Las cuentas y sesiones tienen tablas propias; el estado del hogar usa temporalmente una fila JSONB. Quedan pendientes la normalización de compras/productos en tablas independientes, la separación de hogares, la adaptación del escáner Android al flujo de OCR del dispositivo y un histórico suficiente para validar modelos predictivos. Ver [despliegue y límites](DESPLIEGUE_NUBE.md).

@@ -83,7 +83,7 @@ async function bootAuthentication(onReady) {
       const response = await fetch(`/api/auth/${changing ? 'change-password-at-login' : mode.value}`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
       const contentType = response.headers.get('content-type') || '';
       if (!contentType.includes('application/json')) {
-        throw new Error('El servidor no está disponible. La API temporal puede haberse desconectado.');
+        throw new Error('El servidor no está disponible. Reintentá en unos momentos.');
       }
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Revisá los datos del formulario.');

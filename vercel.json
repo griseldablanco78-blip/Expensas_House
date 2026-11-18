@@ -5,7 +5,7 @@
   "functions": {
     "backend/app/main.py": {
       "maxDuration": 60,
-      "excludeFiles": "{frontend/web/vendor/**,tests/**,docs/**,scripts/**,output/**,TP_Integrador/**,.runtime/**}"
+      "excludeFiles": "{tests/**,docs/**,scripts/**,output/**,TP_Integrador/**,.runtime/**}"
     }
   },
   "headers": [

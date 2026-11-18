@@ -10,7 +10,8 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 
 - [Repositorio](https://github.com/griseldablanco78-blip/Expensas_House)
 - [Plan y estado del proyecto](PLAN_PROYECTO.md)
-- [Aplicación pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) · datos ficticios. Backend temporal en la PC; requiere API y túnel activos.
+- [Aplicación pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) · datos ficticios. Web y API en Vercel; base e imágenes privadas en Supabase.
+- [Documentación OpenAPI](https://expensas-house-griselda-blanco.vercel.app/docs) y [arquitectura de despliegue](docs/DESPLIEGUE_NUBE.md).
 - Desarrollo local: http://localhost:8000 · API interactiva: http://localhost:8000/docs
 
 ## Organización y responsabilidades
@@ -20,7 +21,7 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 | `frontend/web/` | HTML, CSS y JavaScript del navegador. Presenta datos y llama a `/api`; no almacena secretos ni decide permisos. |
 | `backend/app/api/` | Rutas HTTP y validación de los contratos de entrada. |
 | `backend/app/services/` | Reglas de ofertas, lectura y registro de tickets, sincronización. |
-| `backend/app/infrastructure/` | Persistencia JSON actual del hogar. |
+| `backend/app/infrastructure/` | Adaptadores locales y PostgreSQL/Storage para Vercel y Supabase. |
 | `backend/app/core/` | Rutas, autenticación, sesiones, permisos y protección HTTP. |
 | `app/` | Cliente Android Kotlin, Compose, Room y repositorios de red. |
 | `web/`, `data/db.py` | Compatibilidad con importaciones anteriores y dashboard Streamlit opcional. |
@@ -39,15 +40,17 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
 - **Acceso:** por defecto usuario y contraseña (`EXPENSA_AUTH_MODE=password`). El modo de correo verificado es opcional y requiere SMTP. Los permisos se comprueban en el servidor.
 
-Los datos del hogar se guardan en JSON y las cuentas en SQLite locales. La separación entre múltiples hogares y una base central de producción siguen pendientes.
+En la nube, PostgreSQL conserva cuentas y sesiones en tablas propias y el estado del hogar en una fila JSONB con transacciones. Las fotos se guardan en un bucket privado de Supabase. En desarrollo local se mantienen JSON y SQLite. La separación entre múltiples hogares y la normalización de compras/productos en tablas propias siguen pendientes.
 
 ## Ejecución local
 
-Requisitos: Python compatible con las dependencias, Tesseract OCR para fotos y, para Android, Android Studio/JDK/SDK.
+Requisitos: Python 3.12, Node.js para preparar el OCR web y, para Android, Android Studio/JDK/SDK. Tesseract nativo y OpenCV son opcionales para el endpoint de escaneo local.
 
 ```powershell
 python -m venv .venv
 .venv/Scripts/python.exe -m pip install -r requirements.txt
+npm ci
+npm run build:web
 Copy-Item .env.example .env
 .venv/Scripts/python.exe scripts/crear_administradora.py
 .venv/Scripts/python.exe -m uvicorn backend.app.main:app --host 127.0.0.1 --port 8000
