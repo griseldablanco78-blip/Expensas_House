@@ -15,6 +15,14 @@ Estas pruebas mutantes se realizaron antes de recuperar los datos manuales del t
 
 Los resultados de ofertas dependen de los catálogos consultados y pueden variar. La primera lectura descarga el motor y el modelo español; las siguientes aprovechan la caché. La sincronización periódica se pausa durante la lectura y evita superponer consultas.
 
+## Android y recuperación de datos manuales
+
+Android 1.2.0 se compiló con las versiones del repositorio en una copia aislada y se instaló mediante actualización, sin desinstalar ni borrar datos. Pasaron dos pruebas instrumentadas en el teléfono: OCR real con texto al principio y al final de una imagen completa, y recuperación del formulario tras un fallo de red. Una tercera prueba explícita, de solo lectura, inició sesión desde Retrofit contra Vercel y comparó las identidades de los registros Room con la API.
+
+Se recuperó la base antigua `expensa_db`, incluidos sus cambios WAL, y se preservó una copia consistente privada. La base por cuenta y la web recibieron los datos del teléfono; los ejemplos anteriores se respaldaron aparte. No se incluyeron esas bases, sus contenidos ni credenciales privadas en GitHub. Los gastos conservan sus fechas originales: el selector mensual web muestra cada gasto en el mes correspondiente.
+
+`LiveCloudConnectionTest` se omite por defecto en CI. Para ejecutarlo explícitamente en el teléfono migrado, el runner recibe `-e liveCloud true -e class com.expensahouse.app.LiveCloudConnectionTest`. Verifica sesión y lectura sin registrar compras ni gastos.
+
 ## Reproducción
 
 ```powershell

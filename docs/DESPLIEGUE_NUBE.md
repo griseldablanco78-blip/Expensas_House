@@ -36,7 +36,7 @@ Cuentas y sesiones tienen tablas independientes. El estado del hogar se conserva
 4. La persona revisa supermercado, fecha, productos, cantidades, precios unitarios, descuentos y netos.
 5. `POST /api/receipts/confirm` valida y registra el gasto que descuenta el presupuesto. El identificador evita duplicar un mismo ticket al reintentar.
 
-El OCR puede cometer errores. El texto interpretado y la foto se conservan para revisión. La API local `/scan` utiliza Tesseract nativo opcional; en la nube los clientes deben enviar texto e imagen a `/draft`. La versión Android instalada anteriormente requiere actualizar su URL y su lector para usar ese flujo.
+El OCR puede cometer errores. El texto interpretado y la foto se conservan para revisión. La API local `/scan` utiliza Tesseract nativo opcional. Android 1.2.0 usa ML Kit Text Recognition v2, modelo latino incluido en la app, y envía el texto y la copia JPEG a `/draft`. Corrige la orientación EXIF, mantiene la fotografía completa y no requiere una API de IA de pago. Las versiones Android anteriores necesitan actualizarse para usar la URL fija.
 
 ## Configuración de Vercel
 
