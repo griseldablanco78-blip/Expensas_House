@@ -143,7 +143,6 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             OutlinedTextField(value = store, onValueChange = { store = it }, label = { Text("Supermercado") }, enabled = !busy && pending == null)
             items.forEachIndexed { index, item ->
                 OutlinedTextField(value = item.description, onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(description = value) } }, label = { Text("Producto ${index + 1}") }, enabled = !busy && pending == null)
-                OutlinedTextField(value = item.detail.orEmpty(), onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(detail = value) } }, label = { Text("Detalle del producto") }, enabled = !busy && pending == null)
                 Text("${item.quantity} × $${item.unit_price} − $${item.discount} = neto $${item.line_total}")
                 Row {
                     ReceiptNumber(item.quantity, "Cantidad", Modifier.weight(1f), !busy && pending == null) { quantity -> items = items.toMutableList().also { it[index] = item.copy(quantity = quantity, line_total = kotlin.math.round((quantity * item.unit_price - item.discount) * 100) / 100) } }

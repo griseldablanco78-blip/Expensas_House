@@ -368,15 +368,15 @@
         <p>Subí una foto o pegá el texto. Revisá los productos antes de registrar el gasto en tu presupuesto.</p>
         <label>Foto del ticket <input id="receipt-photo" type="file" accept="image/jpeg,image/png,image/webp" capture="environment"></label>
         <img id="receipt-preview" class="hidden" alt="Vista completa del ticket seleccionado" style="max-width:100%;max-height:420px;object-fit:contain">
-        <label>Lectura de la foto<select id="receipt-preprocessing"><option value="standard">Normal</option><option value="adaptive">Foto con sombras · OpenCV</option></select></label>
-        <button id="receipt-scan" class="btn-secondary" type="button">Leer foto</button>
+        <label>Lectura de la foto<select id="receipt-preprocessing"><option value="standard">Normal</option><option value="adaptive">Foto con sombras · umbral adaptativo</option></select></label>
+        <button id="receipt-scan" class="btn-secondary" type="button">Cargar y leer ticket</button>
         <label>Texto del ticket <textarea id="receipt-text" rows="4" placeholder="2 x LECHE 1500,00 3000,00&#10;TOTAL 3000,00"></textarea></label>
         <button id="receipt-parse" class="btn-secondary" type="button">Interpretar texto</button>
         <p id="receipt-status" role="status" aria-live="polite"></p>
         <div id="receipt-review" class="hidden">
           <label>Fecha de compra <input id="receipt-date" type="date" required></label>
           <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
-          <div class="table-container"><table class="data-table"><thead><tr><th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario ($)</th><th>Descuento de la línea ($)</th><th>Importe neto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
+          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario ($)</th><th>Descuento de la línea ($)</th><th>Importe neto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
           <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
           <label>IVA informado ($; vacío si no figura) <input id="receipt-vat" type="number" min="0" step="0.01"></label>
           <label><input id="receipt-vat-included" type="checkbox" checked> El IVA está incluido en los precios</label>
@@ -409,9 +409,10 @@
       </div>
 
       <div class="card-panel mt-4">
-        <h3>Productos comprados · mes seleccionado</h3>
+        <h3>Resumen de compras y precios históricos</h3>
+        <label>Fecha del resumen <select id="expense-receipt-date"><option value="">Todas las compras del mes</option></select></label>
         <p>Importe neto = cantidad × precio unitario − descuento de la línea. Los ajustes generales del ticket se muestran en su comprobante.</p>
-        <div class="table-container"><table class="data-table"><thead><tr><th>Supermercado</th><th>Producto</th><th>Detalle</th><th>Cantidad</th><th>Precio unitario</th><th>Descuento</th><th>Importe neto</th></tr></thead><tbody id="expense-products-body"></tbody></table></div>
+        <div class="table-container"><table class="data-table"><thead><tr><th>Fecha de compra</th><th>Supermercado</th><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Descuento</th><th>Importe neto</th></tr></thead><tbody id="expense-products-body"></tbody></table></div>
       </div>
       <!-- Historial de Gastos / Tickets -->
       <div class="card-panel mt-4">

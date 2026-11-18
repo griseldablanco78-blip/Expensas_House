@@ -50,6 +50,9 @@ interface ExpensaApi {
     @POST("api/receipts/confirm")
     suspend fun confirmReceipt(@Body receipt: ReceiptCommit): Map<String, Any>
 
+    @GET("api/expenses")
+    suspend fun receiptHistory(): List<ReceiptSummary>
+
     @GET("api/sync")
     suspend fun getSyncSnapshot(): SyncResponse
 

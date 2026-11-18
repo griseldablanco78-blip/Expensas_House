@@ -1,14 +1,42 @@
 # Presentación académica de Expensa House
 
-**Autora:** Griselda Blanco  
-**Repositorio:** https://github.com/griseldablanco78-blip/Expensas_House  
-**Web:** https://expensas-house-griselda-blanco.vercel.app  
-**Usuario de prueba:** `test123`  
+**Materia:** Técnicas de Procesamiento Digital de Imágenes
+
+**Año y cuatrimestre de cursada:** 2026 · Segundo cuatrimestre
+
+**Nombre y apellido:** Griselda Blanco
+
+**Docente:** Juan Ignacio Bonini
+
+**Repositorio:** https://github.com/griseldablanco78-blip/Expensas_House
+**Web:** https://expensas-house-griselda-blanco.vercel.app
+**Usuario de prueba:** `test123`
 **Contraseña de prueba:** `PruebasTest1234`
 
 ## Resumen
 
 Desarrollé Expensa House para administrar despensa, compras, presupuesto y comprobantes desde Android y desde una web. Ambos clientes consultan una API Python compartida.
+
+## Motivación del proyecto
+
+Expensa House surgió para reunir información del hogar que suele quedar distribuida entre anotaciones, tickets impresos y mensajes: qué productos hay, cuáles faltan, cuánto se gastó y dónde conviene consultar una oferta. La posibilidad de registrar una compra desde el celular y revisarla desde la web busca facilitar la organización cotidiana y el seguimiento del presupuesto. Conservar la fecha y los precios de cada compra permite consultar cuánto costaba un producto en un momento anterior.
+
+## Problemáticas encontradas y soluciones aplicadas
+
+| Problemática | Solución aplicada y alcance |
+| --- | --- |
+| El teléfono y la web dependían de una dirección local o de un túnel que dejaba de responder. | Se configuró una dirección HTTPS fija con web y API en Vercel, persistencia PostgreSQL e imágenes privadas en Supabase. El servicio depende de la disponibilidad y límites de los planes gratuitos. |
+| Los datos de la app y la web podían no coincidir al cambiar de almacenamiento o cuenta. | Se revisó la sincronización, se respaldaron los datos y se conservó la información cargada en el hogar compartido. La separación de hogares independientes sigue como mejora futura. |
+| El OCR reconocía texto, pero podía mezclar encabezados fiscales con productos o perder nombres partidos entre líneas. | Se separó el reconocimiento de la interpretación, se excluyeron datos fiscales y medios de pago del listado de productos, y se conservaron nombres distribuidos en varias líneas, incluso con espacios vacíos entre nombre y precio. La revisión de importes sigue siendo necesaria. |
+| La calidad de lectura variaba entre Android y la web. | Android utiliza ML Kit; la web utiliza Tesseract.js con español, ampliación de texto pequeño, contraste, margen y procesamiento opcional de sombras. No se afirma una precisión equivalente ni un porcentaje sin evaluar tickets reales. |
+| Descuentos e IVA podían interpretarse de forma incompleta o sumarse incorrectamente. | Se registran precio unitario, descuento e importe neto; el IVA se conserva por separado. El presupuesto descuenta el total pagado y no suma de nuevo el IVA incluido. Los descuentos generales ambiguos requieren revisión. |
+| Reintentar un envío por una falla de conexión podía duplicar un gasto. | Cada ticket tiene un identificador estable y el backend comprueba si ya fue registrado antes de modificar el presupuesto. |
+| «Cargar ticket» en Android conducía a un gasto manual y no al flujo de fotografía. | Se diferenciaron las acciones de cargar foto o galería y registrar un gasto manual. Las pruebas instrumentadas comprueban la acción asociada al botón. |
+| Android no mostraba el resumen y el detalle de ofertas disponibles en la web. | Se incorporaron los campos de comparación de la API, detalles desplegables y acceso a resultados posteriores a los diez iniciales. La vigencia se confirma en el supermercado. |
+| Era difícil consultar precios de compras anteriores. | Se conservan productos e importes con fecha de compra y se ofrece consulta de resúmenes por fecha. Un gasto antiguo sin productos guardados no se reconstruye automáticamente. |
+| No había evidencia suficiente para declarar exactitud predictiva. | Se distinguieron las reglas de la aplicación, los modelos OCR preentrenados y el experimento Random Forest. Las métricas no reproducibles se identifican como pendientes; no se inventan porcentajes. |
+
+Las pruebas se ejecutan con datos ficticios y almacenamiento temporal para verificar tickets, presupuesto, reintentos, ofertas y resúmenes sin modificar las compras personales.
 
 ## Tecnologías
 
@@ -24,7 +52,7 @@ También utilizo OCR para leer tickets. El motor reconoce texto, mientras que la
 
 ## Predicción
 
-Entrené experimentalmente un Random Forest para clasificar si un producto necesita reposición. Las variables fueron categoría, frecuencia de consumo y gasto acumulado. El objetivo fue predecir stock crítico.
+El repositorio contiene un experimento con Random Forest para clasificar si un producto necesita reposición. El script utiliza categoría, frecuencia de consumo y gasto acumulado; el dataset limpio requerido no está incluido, por lo que no se informa una exactitud reproducible. El objetivo fue predecir stock crítico.
 
 Todavía no incorporé ese modelo a la operación principal. Android identifica faltantes con una regla simple basada en el stock disponible.
 

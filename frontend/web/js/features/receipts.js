@@ -12,7 +12,7 @@ function setupReceiptScanner() {
 
   function addLine(item = {}) {
     const row = document.createElement('tr');
-    ['description', 'detail', 'quantity', 'unit_price', 'discount', 'line_total'].forEach(field => {
+    ['description', 'quantity', 'unit_price', 'discount', 'line_total'].forEach(field => {
       const cell = row.insertCell();
       const input = document.createElement(['description', 'detail'].includes(field) ? 'textarea' : 'input');
       input.dataset.field = field;
@@ -37,7 +37,8 @@ function setupReceiptScanner() {
   }
 
   async function readReceipt(photo) {
-    if (busy || pending) { status.textContent = 'Primero reintentá guardar el ticket pendiente.'; return; }
+    if (busy) return;
+    if (pending) { status.textContent = 'Primero reintentá guardar el ticket pendiente.'; return; }
     busy = true;
     window.receiptProcessing = true;
     status.textContent = 'Leyendo ticket…';
@@ -75,10 +76,13 @@ function setupReceiptScanner() {
     const photo = byId('receipt-photo').files[0];
     const preview = byId('receipt-preview');
     preview.classList.toggle('hidden', !photo);
-    if (photo) { previewUrl = URL.createObjectURL(photo); preview.src = previewUrl; }
+    if (photo) { previewUrl = URL.createObjectURL(photo); preview.src = previewUrl; readReceipt(true); }
     else { previewUrl = null; preview.removeAttribute('src'); }
   });
-  byId('receipt-scan').addEventListener('click', () => readReceipt(true));
+  byId('receipt-scan').addEventListener('click', () => {
+    if (!byId('receipt-photo').files.length) byId('receipt-photo').click();
+    else readReceipt(true);
+  });
   byId('receipt-parse').addEventListener('click', () => readReceipt(false));
   byId('receipt-add-line').addEventListener('click', () => addLine());
   byId('receipt-confirm').addEventListener('click', async () => {

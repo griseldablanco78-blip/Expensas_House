@@ -78,6 +78,13 @@ class Workflows(unittest.TestCase):
         self.assertEqual(draft['items'][0]['discount'], 100)
         self.assertEqual(draft['subtotal'], 900)
 
+    def test_ocr_blank_lines_do_not_discard_wrapped_product_name(self):
+        draft = parse_receipt('SUPERMERCADO QA\nAv. Siempreviva 123\n\nLECHE ENTERA\nLARGA VIDA QA\n\n2 x 1500,00 3000,00\n\nARROZ INTEGRAL QA 1200,00\nTOTAL 4200,00')
+        self.assertEqual(len(draft['items']), 2)
+        self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA LARGA VIDA QA')
+        self.assertEqual(draft['items'][0]['quantity'], 2)
+        self.assertEqual(draft['subtotal'], 4200)
+
     def test_wrapped_receipt_description_survives_confirmation(self):
         draft = parse_receipt('SUPERMERCADO\nLECHE ENTERA\nLARGA VIDA 1 LITRO\n1.500,00\nTOTAL 1.500,00')
         self.assertEqual(draft['items'][0]['description'], 'LECHE ENTERA LARGA VIDA 1 LITRO')

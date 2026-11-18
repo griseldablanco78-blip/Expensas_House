@@ -8,12 +8,14 @@ import okio.Buffer
 import com.expensahouse.app.data.ocr.DeviceReceiptOcr
 
 interface ReceiptsRepository {
+    suspend fun history(): List<ReceiptSummary> = emptyList()
     suspend fun scanReceipt(image: MultipartBody.Part): ReceiptDraft
     suspend fun parseReceipt(text: ReceiptText): ReceiptDraft
     suspend fun confirmReceipt(receipt: ReceiptCommit): Map<String, Any>
 }
 
 class RemoteReceiptsRepository(private val api: ExpensaApi) : ReceiptsRepository {
+    override suspend fun history(): List<ReceiptSummary> = api.receiptHistory()
     override suspend fun scanReceipt(image: MultipartBody.Part): ReceiptDraft {
         val buffer = Buffer()
         image.body().writeTo(buffer)

@@ -22,6 +22,9 @@ def parse_receipt(text):
     pending_description = []
     for line in text.splitlines():
         line = line.strip()
+        # OCR inserts blank lines between the name block and its price block.
+        if not line:
+            continue
         norm = normalize(line)
         if re.match(r'^total productos\b', norm):
             pending_description = []

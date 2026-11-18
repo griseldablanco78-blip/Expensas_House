@@ -48,3 +48,6 @@ test-results/
 /frontend/web/vendor/
 /public/
 /output/apk/
+
+# Paquetes generados para presentación
+/output/*.zip

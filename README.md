@@ -37,12 +37,12 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 ## Funcionalidades y límites actuales
 
 - **Despensa:** stock, unidades en uso y lista de reposición.
-- **Compras y presupuesto:** selector mensual web, total gastado, saldo y resumen por supermercado. El presupuesto es una referencia común para el mes elegido.
+- **Compras y presupuesto:** resúmenes por fecha de compra en web y Android, selector mensual web, total gastado, saldo y resumen por supermercado. El presupuesto es una referencia común para el mes elegido.
 - **Ofertas:** consulta ofertas guardadas; con `EXPENSA_LIVE_OFFERS=1` también consulta catálogos públicos de Carrefour/Jumbo. Ratoneando permanece como proveedor opcional configurado por `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
 - **Tickets:** tabla de productos por supermercado con detalle, precio unitario, descuento e importe neto; foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
 - **Boti House:** consultas de ofertas, presupuesto y faltantes mediante reglas sobre datos del hogar. No se presenta como un modelo generativo entrenado.
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
-- **Android 1.2.0:** usa la dirección fija de Vercel. ML Kit Text Recognition v2 con modelo latino incluido lee la foto en el teléfono; el servidor interpreta el texto y conserva el comprobante revisado. No requiere una API de IA de pago.
+- **Android 1.3.1:** usa la dirección fija de Vercel. ML Kit Text Recognition v2 con modelo latino incluido lee la foto en el teléfono; el servidor interpreta el texto y conserva el comprobante revisado. No requiere una API de IA de pago.
 - **Acceso:** por defecto usuario y contraseña (`EXPENSA_AUTH_MODE=password`). El modo de correo verificado es opcional y requiere SMTP. Los permisos se comprueban en el servidor.
 
 En la nube, PostgreSQL conserva cuentas y sesiones en tablas propias y el estado del hogar en una fila JSONB con transacciones. Las fotos se guardan en un bucket privado de Supabase. En desarrollo local se mantienen JSON y SQLite. La separación entre múltiples hogares y la normalización de compras/productos en tablas propias siguen pendientes.
@@ -90,3 +90,7 @@ Ver [diagnóstico del escáner, modelo OCR, formatos y ofertas](docs/ESCANER_Y_O
 ## Acceso al entorno de pruebas
 
 Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta pertenece a una demostración aislada; usar únicamente comprobantes ficticios. Versión Android: 1.1.0.
+
+## Paquete de presentación
+
+Ejecutar `python scripts/crear_zip_presentacion.py` después de confirmar los cambios en Git. El archivo `output/Presentacion_Expensas-House.zip` contiene el código de esa revisión, la documentación, las pruebas y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No incluye credenciales privadas, bases locales ni imágenes personales.

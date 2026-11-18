@@ -26,10 +26,17 @@ function renderBudgetAndExpenses() {
   document.getElementById('expense-store-summary').textContent = (state.budget.by_store || []).map(group => `${group.store}: $${group.amount.toLocaleString('es-AR')}`).join(' · ') || 'Sin gastos para este mes.';
   const products = document.getElementById('expense-products-body');
   products.replaceChildren();
-  expenses.forEach(expense => (expense.items || []).forEach(item => {
+  const dateFilter = document.getElementById('expense-receipt-date');
+  const selected = dateFilter.value;
+  const dates = [...new Set(expenses.filter(e => e.items?.length).map(e => e.purchase_date || (e.timestamp ? new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires', year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(e.timestamp)) : '')).filter(Boolean))].sort().reverse();
+  dateFilter.replaceChildren(new Option('Todas las compras del mes', ''));
+  dates.forEach(date => dateFilter.add(new Option(date, date)));
+  dateFilter.value = dates.includes(selected) ? selected : '';
+  dateFilter.onchange = renderBudgetAndExpenses;
+  expenses.filter(e => !dateFilter.value || (e.purchase_date || (e.timestamp ? new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(e.timestamp)) : '')) === dateFilter.value).forEach(expense => (expense.items || []).forEach(item => {
     const row = document.createElement('tr');
     const currency = value => '$' + Number(value || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
-    [expense.store || expense.note || 'Sin supermercado', item.description, item.detail || '—', item.quantity,
+    [expense.purchase_date || (expense.timestamp ? new Date(expense.timestamp).toLocaleDateString('es-AR', {timeZone:'America/Argentina/Buenos_Aires'}) : 'Sin fecha'), expense.store || expense.note || 'Sin supermercado', item.description, item.quantity,
       currency(item.unit_price), currency(item.discount), currency(item.line_total)].forEach(value => {
         const cell = row.insertCell(); cell.textContent = String(value);
       });

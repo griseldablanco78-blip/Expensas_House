@@ -46,6 +46,8 @@ import com.expensahouse.app.ui.components.VoiceOutlinedTextField
 import com.expensahouse.app.ui.features.offers.ConnectedOfferSearch
 import com.expensahouse.app.ui.features.chat.ConnectedChatDialog
 import com.expensahouse.app.ui.features.receipts.ConnectedReceiptDialog
+import com.expensahouse.app.ui.features.receipts.ConnectedReceiptHistory
+import com.expensahouse.app.ui.features.receipts.ReceiptActions
 
 
 private val categories = listOf("Comestibles", "Limpieza", "Carnicería", "Verdulería", "Hogar")
@@ -439,6 +441,7 @@ private fun OffersScreen(
             }
 
             item { ConnectedOfferSearch(initialQuery) }
+            item { ConnectedReceiptHistory(refreshKey = expenses.hashCode()) }
 
             if (expenses.isNotEmpty()) {
                 item { SectionTitle("Reporte de Gastos", null) {} }
@@ -509,11 +512,9 @@ private fun OffersScreen(
                         Text("Quedan", color = Color.White.copy(0.7f), fontSize = 11.sp)
                         Text("$ ${String.format("%.2f", remaining)}", color = if (remaining < 0) Coral else Color.White, fontSize = 16.sp, fontWeight = FontWeight.ExtraBold)
                     }
-                    Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                        Button(onClick = onScanTicket, colors = ButtonDefaults.buttonColors(containerColor = Leaf), shape = RoundedCornerShape(10.dp), modifier = Modifier.height(36.dp), contentPadding = PaddingValues(horizontal = 8.dp)) { Text("ESCANEAR TICKET", fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                        Button(onClick = onAddExpense, colors = ButtonDefaults.buttonColors(containerColor = Lavender), shape = RoundedCornerShape(10.dp), modifier = Modifier.height(36.dp), contentPadding = PaddingValues(horizontal = 8.dp)) { Text("CARGAR TICKET", fontSize = 10.sp, fontWeight = FontWeight.Bold) }
-                    }
+
                 }
+                ReceiptActions(onScan = onScanTicket, onManual = onAddExpense)
             }
         }
     }

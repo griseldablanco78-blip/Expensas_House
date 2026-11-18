@@ -47,3 +47,8 @@ data class ReceiptText(val text: String)
 data class ReceiptLine(val description: String, val quantity: Double, val unit_price: Double, val line_total: Double, val detail: String = "", val discount: Double = 0.0)
 data class ReceiptDraft(val items: List<ReceiptLine>, val total: Double, val warnings: List<String>, val raw_text: String, val receipt_image: String? = null, val vat_amount: Double? = null, val vat_included: Boolean = true)
 data class ReceiptCommit(val id: String, val store: String, val items: List<ReceiptLine>, val total: Double, val adjustment_note: String = "", val purchase_date: String? = null, val raw_text: String = "", val receipt_image: String = "", val vat_amount: Double? = null, val vat_included: Boolean = true)
+
+// Separate read model: receipt metadata must not alter the offline Room schema.
+data class ReceiptSummary(val id: String, val amount: Double, val store: String? = null,
+    val note: String? = null, val purchase_date: String? = null, val timestamp: Long? = null,
+    val items: List<ReceiptLine>? = null, val vat_amount: Double? = null, val vat_included: Boolean = true)

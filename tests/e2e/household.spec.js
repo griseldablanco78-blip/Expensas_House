@@ -1,11 +1,17 @@
 const { test, expect } = require('@playwright/test');
 
-test.beforeEach(async ({page}) => {
+// Authenticate once per worker; exercise normal sessions without triggering the login throttle.
+let sessionCookies = null;
+test.beforeEach(async ({page, context}) => {
+  if (sessionCookies) await context.addCookies(sessionCookies);
   await page.goto('/');
-  await page.locator('#auth-email').fill('test123');
-  await page.locator('#auth-password').fill('PruebasTest1234');
-  await page.locator('#auth-submit').click();
+  if (!sessionCookies) {
+    await page.locator('#auth-email').fill('test123');
+    await page.locator('#auth-password').fill('PruebasTest1234');
+    await page.locator('#auth-submit').click();
+  }
   await expect(page.locator('#app-shell')).toBeVisible();
+  if (!sessionCookies) sessionCookies = await context.cookies();
 });
 
 test('WEB-01: ticket revisado, detalle descargable y descuento por mes', async ({page}) => {
@@ -81,7 +87,7 @@ test('WEB-05: corregir OCR conserva imagen y guarda descuento/neto en el mes de 
   await page.locator('#receipt-parse').click();
   await expect(page.locator('#receipt-status')).toContainText('Revisá descripción');
   const first = page.locator('#receipt-lines tr').first();
-  await first.locator('[data-field="detail"]').fill('Envase de un litro');
+  await expect(first.locator('[data-field="detail"]')).toHaveCount(0);
   await first.locator('[data-field="discount"]').fill('150');
   await expect(first.locator('[data-field="line_total"]')).toHaveValue('1350.00');
   await page.locator('#receipt-total').fill('2550');
@@ -91,7 +97,8 @@ test('WEB-05: corregir OCR conserva imagen y guarda descuento/neto en el mes de 
   await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
   await expect(page.locator('#expense-month')).toHaveValue('2026-12');
   await expect(page.locator('#budget-spent-text')).toContainText('2.550');
-  await expect(page.locator('#expense-products-body')).toContainText('Envase de un litro');
+  await page.locator('#expense-receipt-date').selectOption('2026-12-05');
+  await expect(page.locator('#expense-products-body')).toContainText('2026-12-05');
   await expect(page.locator('#expense-products-body')).toContainText('150,00');
   const image = await page.getByText('Ver comprobante').getAttribute('href');
   expect((await page.request.get(image)).status()).toBe(200);
@@ -151,4 +158,47 @@ test('WEB-08: IVA incluido se conserva sin descontarlo dos veces', async ({page}
   expect(saved.amount).toBe(1400);
   expect(saved.vat_amount).toBe(242.98);
   await expect(page.locator('#budget-spent-text')).toContainText('1.400');
+});
+
+
+test('WEB-09: cargar ticket abre el selector y seleccionar la foto inicia su lectura', async ({page}) => {
+  await page.locator('[data-tab="budget"]').click();
+  const chooserPromise = page.waitForEvent('filechooser');
+  await page.locator('#receipt-scan').click();
+  const chooser = await chooserPromise;
+  await chooser.setFiles(require('path').join(__dirname,'../fixtures/ticket-sintetico.png'));
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(2, {timeout:60000});
+  await expect(page.locator('#receipt-total')).toHaveValue('2700');
+});
+
+
+test('WEB-10: resumen por fecha conserva el precio de cada compra anterior', async ({page}) => {
+  for (const [id,date,price] of [['old-qa','2026-07-01',1000],['new-qa','2026-07-15',1200]]) {
+    const response = await page.evaluate(async ({id,date,price}) => {
+      const result = await fetch('/api/receipts/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id,store:'Histórico QA',purchase_date:date,total:price,items:[{description:'ARROZ HISTÓRICO QA',quantity:1,unit_price:price,line_total:price}]})});
+      return {ok:result.ok,body:await result.text()};
+    },{id,date,price});
+    expect(response.ok, response.body).toBeTruthy();
+  }
+  await page.reload();
+  await page.locator('[data-tab="budget"]').click();
+  await page.locator('#expense-month').fill('2026-07');
+  await expect(page.locator('#expense-products-body tr')).toHaveCount(2);
+  await page.locator('#expense-receipt-date').selectOption('2026-07-01');
+  await expect(page.locator('#expense-products-body tr')).toHaveCount(1);
+  await expect(page.locator('#expense-products-body')).toContainText('1.000,00');
+  await expect(page.locator('#expense-products-body')).not.toContainText('1.200,00');
+  await page.locator('#expense-receipt-date').selectOption('2026-07-15');
+  await expect(page.locator('#expense-products-body')).toContainText('1.200,00');
+});
+
+
+test('WEB-11: foto con letra pequeña y sombras conserva nombres completos y precios', async ({page}) => {
+  await page.locator('[data-tab="budget"]').click();
+  await page.locator('#receipt-preprocessing').selectOption('adaptive');
+  await page.locator('#receipt-photo').setInputFiles(require('path').join(__dirname,'../fixtures/ticket-pequeno-sombras.png'));
+  await expect(page.locator('#receipt-lines tr')).toHaveCount(2,{timeout:60000});
+  await expect(page.locator('[data-field="description"]').first()).toHaveValue('LECHE ENTERA LARGA VIDA QA');
+  await expect(page.locator('[data-field="description"]').last()).toHaveValue('ARROZ INTEGRAL QA');
+  await expect(page.locator('#receipt-total')).toHaveValue('4200');
 });
