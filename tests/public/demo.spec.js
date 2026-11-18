@@ -25,8 +25,8 @@ test('PUBLIC-01: login, ofertas reales, OCR, descuento, gasto y comprobante desd
   const store='Super QA pública '+Date.now();
   await page.locator('#receipt-store').fill(store);
   await page.locator('#receipt-confirm').click();
-  await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
-  await expect(page.locator('#expense-products-body')).toContainText(store);
+  await expect(page.locator('#receipt-status')).toContainText('Ticket registrado',{timeout:30000});
+  await expect(page.locator('#expense-products-body')).toContainText(store,{timeout:30000});
   const after=await (await page.request.get('/api/budget?month='+month)).json();
   expect(after.totalSpent).toBeCloseTo(before.totalSpent+2645,2);
   const expenseRow=page.locator('#expenses-table-body tr').filter({hasText:store});

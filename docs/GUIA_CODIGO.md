@@ -1,5 +1,11 @@
 # Guía del código, tecnologías y librerías
 
+## Almacenamiento en la nube
+
+La web y FastAPI se ejecutan en Vercel. `infrastructure/postgres.py` abre conexiones PostgreSQL por TLS y adapta las consultas de cuentas; `state_lock.py` mantiene una transacción durante cada modificación del hogar para evitar que dos instancias pierdan cambios. `json_store.py` conserva el contrato de acceso a datos: usa archivos en desarrollo local y una fila JSONB en PostgreSQL cuando `EXPENSA_STORAGE=postgres`. `cloud_storage.py` guarda imágenes privadas en Supabase mediante una clave exclusiva del servidor.
+
+En la web, `js/features/browser-ocr.js` ejecuta Tesseract.js con modelos LSTM español/inglés. Reconoce caracteres de la foto en el dispositivo; después la API separa productos y precios. La confirmación del gasto es una operación independiente que requiere revisión. La [guía de despliegue](DESPLIEGUE_NUBE.md) describe variables, migración, pruebas y límites gratuitos. Las secciones de archivos locales de esta guía corresponden al modo de desarrollo.
+
 ## Conceptos básicos
 
 - **Frontend:** pantallas y controles que utiliza la persona. Pide operaciones al servidor.

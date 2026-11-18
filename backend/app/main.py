@@ -6,6 +6,7 @@ load_dotenv(PROJECT_ROOT / ".env")
 from fastapi import FastAPI, Depends
 from fastapi.responses import FileResponse
 from fastapi.responses import JSONResponse
+from psycopg import Error as PostgresError
 from fastapi.staticfiles import StaticFiles
 from backend.app.core.paths import WEB_FRONTEND_DIR
 from backend.app.api.routes import stock, shopping, budget, offers, chat, voice, sync, receipts, legacy
@@ -19,6 +20,7 @@ def create_app():
         description="API compartida de inventario, compras, presupuesto y tickets.")
     application.add_middleware(HttpSecurityMiddleware)
     @application.exception_handler(RuntimeError)
+    @application.exception_handler(PostgresError)
     async def unavailable(request, error):
         return JSONResponse({'detail':'El almacenamiento no está disponible. Reintentá más tarde; no se confirmó la operación.'},status_code=503)
     application.include_router(auth.router)
