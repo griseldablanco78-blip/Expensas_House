@@ -2,6 +2,8 @@
 
 Fecha: 18 de noviembre de 2026. Entorno de demostración con datos ficticios.
 
+Estas pruebas mutantes se realizaron antes de recuperar los datos manuales del teléfono. Después de la recuperación, el despliegue público dejó de usar `EXPENSA_DEMO_MODE=1`, por lo que la prueba pública y la prueba PostgreSQL se niegan a escribir sobre ese hogar. Para repetirlas se requiere un entorno ficticio separado.
+
 ## Comprobaciones
 
 - API local: 50 casos aprobados, además de subcasos de compatibilidad y permisos.

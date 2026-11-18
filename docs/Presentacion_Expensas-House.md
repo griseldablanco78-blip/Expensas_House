@@ -44,4 +44,4 @@ La web y la API están alojadas en Vercel y guardan datos en Supabase. No depend
 
 ## Alcance y próximos pasos
 
-La versión actual es un proyecto académico de demostración con datos ficticios y almacenamiento persistente en la nube. Las cuentas y sesiones tienen tablas propias; el estado del hogar usa temporalmente una fila JSONB. Quedan pendientes la normalización de compras/productos en tablas independientes, la separación de hogares, la adaptación del escáner Android al flujo de OCR del dispositivo y un histórico suficiente para validar modelos predictivos. Ver [despliegue y límites](DESPLIEGUE_NUBE.md).
+La versión actual es un proyecto académico con datos cargados por usuarios y almacenamiento persistente en la nube. Las cuentas y sesiones tienen tablas propias; el estado del hogar usa temporalmente una fila JSONB. La cuenta publicada es compartida. Quedan pendientes la normalización de compras/productos en tablas independientes, la separación de hogares y un histórico suficiente para validar modelos predictivos. Ver [despliegue y límites](DESPLIEGUE_NUBE.md).

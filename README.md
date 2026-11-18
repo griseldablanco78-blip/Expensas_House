@@ -10,7 +10,7 @@ Aplicación para organizar la despensa del hogar, preparar compras, comparar ofe
 
 - [Repositorio](https://github.com/griseldablanco78-blip/Expensas_House)
 - [Plan y estado del proyecto](PLAN_PROYECTO.md)
-- [Aplicación pública de pruebas](https://expensas-house-griselda-blanco.vercel.app) · datos ficticios. Web y API en Vercel; base e imágenes privadas en Supabase.
+- [Aplicación pública](https://expensas-house-griselda-blanco.vercel.app) · cuenta compartida con datos cargados desde Android. Web y API en Vercel; base e imágenes privadas en Supabase. Quien use las credenciales compartidas puede consultar y modificar ese hogar.
 - [Documentación OpenAPI](https://expensas-house-griselda-blanco.vercel.app/docs) y [arquitectura de despliegue](docs/DESPLIEGUE_NUBE.md).
 - Desarrollo local: http://localhost:8000 · API interactiva: http://localhost:8000/docs
 

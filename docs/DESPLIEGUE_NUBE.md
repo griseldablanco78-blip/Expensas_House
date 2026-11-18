@@ -4,7 +4,9 @@
 
 [Expensas House](https://expensas-house-griselda-blanco.vercel.app) · [OpenAPI interactivo](https://expensas-house-griselda-blanco.vercel.app/docs) · [Contrato JSON](https://expensas-house-griselda-blanco.vercel.app/openapi.json).
 
-La web y la API FastAPI se ejecutan en Vercel. No requieren una PC encendida ni un túnel. Supabase conserva datos y comprobantes entre ejecuciones de la API. Se usan datos ficticios y planes gratuitos; no se habilitaron servicios de pago.
+La web y la API FastAPI se ejecutan en Vercel. No requieren una PC encendida ni un túnel. Supabase conserva datos y comprobantes entre ejecuciones de la API. El estado compartido se recuperó desde los datos cargados manualmente en Android, conservando respaldos privados. Se mantienen planes gratuitos; no se habilitaron servicios de pago.
+
+La cuenta `test123` es compartida: quien utilice esas credenciales podrá consultar y modificar los datos. Las pruebas que registran gastos ficticios deben ejecutarse en otro entorno, no sobre ese hogar.
 
 ## Responsabilidades
 
@@ -45,7 +47,7 @@ El OCR puede cometer errores. El texto interpretado y la foto se conservan para 
 - Construcción: `npm ci && npm run build:web`. Los recursos web generados se publican desde `public/static`.
 - Los cambios subidos a GitHub generan nuevos despliegues. Guardar variables de entorno requiere otro despliegue para aplicarlas.
 
-Variables exclusivas del servidor: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (o la alternativa compatible `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_STORAGE_BUCKET`, `EXPENSA_STORAGE=postgres`, `EXPENSA_AUTH_MODE=password`, `EXPENSA_DEMO_MODE=1`, `EXPENSA_PUBLIC_URL`, `EXPENSA_ALLOWED_ORIGINS` y `EXPENSA_LIVE_OFFERS=1`. Las credenciales se guardan como sensibles en Vercel y en `.env.cloud` excluido de GitHub para la migración local.
+Variables exclusivas del servidor: `DATABASE_URL`, `SUPABASE_URL`, `SUPABASE_SECRET_KEY` (o la alternativa compatible `SUPABASE_SERVICE_ROLE_KEY`), `SUPABASE_STORAGE_BUCKET`, `EXPENSA_STORAGE=postgres`, `EXPENSA_AUTH_MODE=password`, `EXPENSA_PUBLIC_URL`, `EXPENSA_ALLOWED_ORIGINS` y `EXPENSA_LIVE_OFFERS=1`. En la instalación actual se utilizan `EXPENSA_DEMO_MODE=0` y `EXPENSA_SHARED_ACCOUNT=1`: se informa que la cuenta es compartida y se impide ejecutar la regresión mutante destinada a datos ficticios. Las credenciales se guardan como sensibles en Vercel y en `.env.cloud` excluido de GitHub para la migración local.
 
 La conexión utiliza Transaction pooler, puerto 6543, TLS y consultas sin preparación persistente. La clave de Storage compatible actualmente configurada debe migrarse a una nueva clave secreta antes del retiro de las claves heredadas anunciado por Supabase.
 
