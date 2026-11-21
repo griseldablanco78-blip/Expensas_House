@@ -97,4 +97,8 @@ Las credenciales se comparten por un medio privado y no se publican en el reposi
 
 `python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde el código confirmado en Git. Incluye únicamente el código con sus archivos de configuración y recursos necesarios, y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No contiene informes, cuadernillos, fotografías personales ni APK.
 
-La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.2 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.2).
+La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.4 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.4).
+
+### Actualización 1.3.4
+
+El detalle revisado del ticket muestra producto, cantidad, precio unitario y total. El historial Android muestra comercio, fecha e importe descontado; al tocar una compra se abre el detalle y la fotografía privada. El teclado del formulario se cierra con «Listo» y al confirmar. En Ofertas → Faltantes, los productos provienen del stock y se consultan en el comparador integrado con marca y presentación disponibles.

@@ -8,6 +8,7 @@ import okio.Buffer
 import com.expensahouse.app.data.ocr.DeviceReceiptOcr
 
 interface ReceiptsRepository {
+    suspend fun image(id: String): ByteArray = error("Imagen no disponible")
     suspend fun history(): List<ReceiptSummary> = emptyList()
     suspend fun scanReceipt(image: MultipartBody.Part): ReceiptDraft
     suspend fun parseReceipt(text: ReceiptText): ReceiptDraft
@@ -15,6 +16,9 @@ interface ReceiptsRepository {
 }
 
 class RemoteReceiptsRepository(private val api: ExpensaApi) : ReceiptsRepository {
+    override suspend fun image(id: String): ByteArray = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+        api.receiptImage(id).use { it.bytes() }
+    }
     override suspend fun history(): List<ReceiptSummary> = api.receiptHistory()
     override suspend fun scanReceipt(image: MultipartBody.Part): ReceiptDraft {
         val buffer = Buffer()

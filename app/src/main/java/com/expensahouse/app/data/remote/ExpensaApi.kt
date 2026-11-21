@@ -50,6 +50,9 @@ interface ExpensaApi {
     @POST("api/receipts/confirm")
     suspend fun confirmReceipt(@Body receipt: ReceiptCommit): Map<String, Any>
 
+    @GET("api/receipts/{id}/image")
+    suspend fun receiptImage(@retrofit2.http.Path("id") id: String): okhttp3.ResponseBody
+
     @GET("api/expenses")
     suspend fun receiptHistory(): List<ReceiptSummary>
 

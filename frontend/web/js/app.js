@@ -272,17 +272,19 @@ async function addOfferToShopping(name, brand, category, store) {
 // Chips de acceso rápido basados en productos críticos
 function renderCriticalChips() {
   const container = document.getElementById('critical-quick-chips');
+  const normalizeText = value => String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
   const criticalItems = state.stock.filter(s => s.stockQuantity <= 1);
 
-  if (criticalItems.length === 0) return;
-
   container.innerHTML = '';
-  criticalItems.slice(0, 6).forEach(item => {
+  if (criticalItems.length === 0) { container.textContent = 'No tenés productos faltantes en el stock.'; return; }
+  criticalItems.forEach(item => {
     const btn = document.createElement('button');
     btn.className = 'chip';
     btn.textContent = `⚠️ ${item.name}`;
     btn.addEventListener('click', () => {
-      performAIComparison(item.name);
+      const brand = item.brand && !/^gen[eé]rica$/i.test(item.brand) && !normalizeText(item.name).includes(normalizeText(item.brand)) ? item.brand : '';
+      const size = /\d+(?:[.,]\d+)?\s*(?:ml|l|lt|kg|g)\b/i.test(item.unit || '') && !normalizeText(item.name).includes(normalizeText(item.unit)) ? item.unit : '';
+      performAIComparison([item.name, brand, size].filter(Boolean).join(' '));
     });
     container.appendChild(btn);
   });

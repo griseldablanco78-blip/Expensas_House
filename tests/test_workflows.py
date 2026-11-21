@@ -19,6 +19,21 @@ from backend.app.services.snapshot_merge import merge_snapshot, SyncConflict
 
 
 class Workflows(unittest.TestCase):
+    def test_receipt_mobile_separate_price_quantity_and_description(self):
+        for block in ('2749,00\n2,00 X', '2,00 X\n2749,00'):
+            with self.subTest(block=block):
+                text = ('DIA ARGENTINA SA\nDescripcion (XIVA) [%BI ] IMPORTE\n'
+                        + block + '\nCUNNING COLA 2,25L\n7790639003437\nSUBTOTAL 5498,00\nTOTAL 5498,00')
+                draft = parse_receipt(text)
+                self.assertEqual(len(draft['items']), 1)
+                item = draft['items'][0]
+                self.assertEqual(item['description'], 'CUNNING COLA 2,25L')
+                self.assertEqual(item['quantity'], 2)
+                self.assertEqual(item['unit_price'], 2749)
+                self.assertEqual(item['line_total'], 5498)
+                self.assertEqual(draft['store'], 'DIA')
+                self.assertEqual(draft['raw_text'], text)
+
     def setUp(self):
         def allowed(request: Request):
             request.state.user = {"id": "test-admin", "email": "admin@example.test", "role": "admin"}

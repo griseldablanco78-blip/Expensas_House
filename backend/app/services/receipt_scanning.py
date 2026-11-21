@@ -51,7 +51,16 @@ def parse_receipt(text):
     meaningful_name = lambda value: len(re.findall(r'[a-záéíóúñ]', value, re.I)) >= 2
     pending_description = []
     pending_quantity_price = None
-    for line in text.splitlines():
+    # Some mobile OCR engines emit the unit-price column before quantity ×.
+    # Rejoin only adjacent numeric blocks; raw_text remains the original OCR.
+    parsed_text = re.sub(
+        r"(?m)^\s*(\d[\d.,]*[.,]\d{2})\s*\n\s*(\d+(?:[.,]\d+)?)\s*[xX×]\s*$",
+        r"\2 X \1", text)
+    parsed_text = re.sub(
+        r"(?m)^(\s*\d+(?:[.,]\d+)?\s*[xX×])\s*\n\s*(\d[\d.,]*[.,]\d{2})\s*$",
+        r"\1 \2", parsed_text)
+    lines = parsed_text.splitlines()
+    for line_index, line in enumerate(lines):
         line = line.strip()
         line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', line)
         # OCR inserts blank lines between the name block and its price block.
@@ -93,6 +102,17 @@ def parse_receipt(text):
         if qty and quantity > 0 and len(values) == 1 and money(values[0][1]) and not meaningful_name(line[:values[0].start()]):
             pending_quantity_price = (quantity, money(values[0][1]))
             continue
+        if not values and pending_quantity_price and meaningful_name(line) and not finished:
+            # A complete quantity × unit-price block can price a name-only row.
+            # Keep wrapped names pending when the next row contains the net amount.
+            following = next((value.strip() for value in lines[line_index + 1:] if value.strip()), '')
+            boundary = not following or re.match(r'^\d{8,}$', following) or re.match(
+                r'^(?:subtotal|total|descuentos?)\b', normalize(following))
+            if boundary:
+                count, price = pending_quantity_price
+                line = f"{line} {cents(count * price):.2f}"
+                values = list(re.finditer(amount, line))
+                warnings.append('Se calculó el importe del producto con cantidad × precio unitario. Revisalo contra la foto.')
         if not values:
             # Preserve wrapped names, but do not attach fiscal/header lines to products.
             if not line or re.search(r'\b(cuit|iva|fecha|hora|ticket|factura|domicilio|supermercado|cajero|subtotal|total)\b', norm):

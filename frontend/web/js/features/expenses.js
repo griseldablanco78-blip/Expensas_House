@@ -37,7 +37,7 @@ function renderBudgetAndExpenses() {
     const row = document.createElement('tr');
     const currency = value => '$' + Number(value || 0).toLocaleString('es-AR', {minimumFractionDigits:2, maximumFractionDigits:2});
     [expense.purchase_date || (expense.timestamp ? new Date(expense.timestamp).toLocaleDateString('es-AR', {timeZone:'America/Argentina/Buenos_Aires'}) : 'Sin fecha'), expense.store || expense.note || 'Sin supermercado', item.description, item.quantity,
-      currency(item.unit_price), currency(item.discount), currency(item.line_total)].forEach(value => {
+      currency(item.unit_price), currency(item.line_total)].forEach(value => {
         const cell = row.insertCell(); cell.textContent = String(value);
       });
     products.appendChild(row);

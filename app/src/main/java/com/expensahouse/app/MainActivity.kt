@@ -424,9 +424,12 @@ private fun OffersScreen(
 ) {
     val uriHandler = LocalUriHandler.current
     val critical = stock.filter { it.stockQuantity <= 1 }
+    var offerQuery by remember(initialQuery) { mutableStateOf(initialQuery) }
+    val offersScroll = androidx.compose.foundation.lazy.rememberLazyListState()
+    val offersScope = rememberCoroutineScope()
 
     Column(modifier = Modifier.fillMaxSize().then(modifier)) {
-        LazyColumn(modifier = Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        LazyColumn(state = offersScroll, modifier = Modifier.weight(1f).padding(horizontal = 16.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
             item { 
                 Spacer(Modifier.height(16.dp))
                 Text("Súper Online", style = MaterialTheme.typography.headlineSmall, fontWeight = FontWeight.Black)
@@ -440,7 +443,7 @@ private fun OffersScreen(
                 }
             }
 
-            item { ConnectedOfferSearch(initialQuery) }
+            item { ConnectedOfferSearch(offerQuery) }
             item { ConnectedReceiptHistory(refreshKey = expenses.hashCode()) }
 
             if (expenses.isNotEmpty()) {
@@ -474,7 +477,12 @@ private fun OffersScreen(
                 item { SectionTitle("Faltantes", null) {} }
                 items(critical) { item ->
                     Card(
-                        onClick = { uriHandler.openUri("https://ratoneando.ar/?q=${java.net.URLEncoder.encode(item.name, "UTF-8")}") },
+                        onClick = {
+                            val brand = item.brand.takeUnless { it.isBlank() || it.equals("Genérica", true) || it.equals("Generica", true) || item.name.contains(it, ignoreCase = true) }
+                            val size = item.unit.takeIf { Regex("(?i)\\d+(?:[.,]\\d+)?\\s*(?:ml|l|lt|kg|g)\\b").containsMatchIn(it) && !item.name.contains(it, ignoreCase = true) }
+                            offerQuery = listOfNotNull(item.name, brand, size).joinToString(" ")
+                            offersScope.launch { offersScroll.animateScrollToItem(2) }
+                        },
                         modifier = Modifier.fillMaxWidth(),
                         colors = CardDefaults.cardColors(containerColor = Color.White),
                         shape = RoundedCornerShape(12.dp)

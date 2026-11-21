@@ -1,6 +1,13 @@
 package com.expensahouse.app.ui.features.receipts
 
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.window.Dialog
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
@@ -29,6 +36,7 @@ private fun ReceiptSummary.date(): String = purchase_date ?: timestamp?.let {
 @Composable
 internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRepository = AppContainer.receiptsRepository) {
     var receipts by remember { mutableStateOf<List<ReceiptSummary>>(emptyList()) }
+    var selected by remember { mutableStateOf<ReceiptSummary?>(null) }
     var selectedDate by remember { mutableStateOf("") }
     var menu by remember { mutableStateOf(false) }
     var retry by remember { mutableStateOf(0) }
@@ -60,16 +68,57 @@ internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRe
             val visible = receipts.filter { selectedDate.isBlank() || it.date() == selectedDate }.sortedByDescending { it.date() }
             if (!busy && visible.isEmpty() && status.isBlank()) Text("No hay compras guardadas para esta fecha.")
             visible.forEach { receipt ->
-                Text("${receipt.date()} · ${receipt.store ?: receipt.note ?: "Sin supermercado"}", style = MaterialTheme.typography.titleSmall)
-                receipt.items.orEmpty().forEach { product ->
-                    Text(product.description)
-                    Text("Cantidad: ${product.quantity} · Precio unitario: ${money.format(product.unit_price)}")
-                    Text("Descuento: ${money.format(product.discount)} · Neto: ${money.format(product.line_total)}")
+                OutlinedCard(onClick = { selected = receipt }, modifier = Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(receipt.store?.takeIf { it.isNotBlank() } ?: receipt.note ?: "Comercio sin nombre", style = MaterialTheme.typography.titleSmall)
+                        Text("Fecha de compra: ${receipt.date()}")
+                        Text("Descontado del presupuesto: ${money.format(receipt.amount)}")
+                        Text("Ver ticket y productos", color = MaterialTheme.colorScheme.primary)
+                    }
                 }
-                if (receipt.items.isNullOrEmpty()) Text("Este gasto no tiene productos detallados guardados.")
-                Text("IVA: ${receipt.vat_amount?.let { money.format(it) } ?: "No informado"} (${if (receipt.vat_included) "incluido" else "separado"})")
-                Text("Total pagado: ${money.format(receipt.amount)}")
                 HorizontalDivider()
+            }
+        }
+    }
+
+    selected?.let { receipt ->
+        ReceiptDetail(receipt, repository, onDismiss = { selected = null })
+    }
+}
+
+@Composable
+private fun ReceiptDetail(receipt: ReceiptSummary, repository: ReceiptsRepository, onDismiss: () -> Unit) {
+    var image by remember(receipt.id) { mutableStateOf<androidx.compose.ui.graphics.ImageBitmap?>(null) }
+    var loading by remember(receipt.id) { mutableStateOf(true) }
+    var imageStatus by remember(receipt.id) { mutableStateOf("") }
+    val money = remember { NumberFormat.getCurrencyInstance(Locale("es", "AR")) }
+    LaunchedEffect(receipt.id) {
+        try {
+            image = withContext(Dispatchers.IO) {
+                val bytes = repository.image(receipt.id)
+                requireNotNull(android.graphics.BitmapFactory.decodeByteArray(bytes, 0, bytes.size)).asImageBitmap()
+            }
+        } catch (error: Exception) { imageStatus = "No se pudo mostrar la imagen del ticket. Los productos guardados siguen disponibles." }
+        finally { loading = false }
+    }
+    Dialog(onDismissRequest = onDismiss) {
+        Surface(shape = MaterialTheme.shapes.large) {
+            Column(Modifier.fillMaxWidth().padding(16.dp)) {
+                Text(receipt.store ?: receipt.note ?: "Ticket", style = MaterialTheme.typography.titleLarge)
+                Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    Text("Fecha de compra: ${receipt.date()}")
+                    Text("Descontado del presupuesto: ${money.format(receipt.amount)}")
+                    receipt.items.orEmpty().forEach { product ->
+                        Text(product.description, style = MaterialTheme.typography.titleSmall)
+                        Text("Cantidad: ${product.quantity} · Precio unitario: ${money.format(product.unit_price)}")
+                        Text("Total: ${money.format(product.line_total)}")
+                    }
+                    if (receipt.items.isNullOrEmpty()) Text("Este gasto no tiene productos detallados guardados.")
+                    if (loading) LinearProgressIndicator(Modifier.fillMaxWidth())
+                    if (imageStatus.isNotBlank()) Text(imageStatus)
+                    image?.let { Image(it, contentDescription = "Imagen del ticket guardado", modifier = Modifier.fillMaxWidth()) }
+                }
+                TextButton(onClick = onDismiss, modifier = Modifier.fillMaxWidth()) { Text("Cerrar detalle") }
             }
         }
     }

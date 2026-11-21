@@ -88,7 +88,8 @@ test('WEB-05: corregir OCR conserva imagen y guarda descuento/neto en el mes de 
   await expect(page.locator('#receipt-status')).toContainText('Revisá descripción');
   const first = page.locator('#receipt-lines tr').first();
   await expect(first.locator('[data-field="detail"]')).toHaveCount(0);
-  await first.locator('[data-field="discount"]').fill('150');
+  await expect(first.locator('[data-field="discount"]')).toBeHidden();
+  await first.locator('[data-field="line_total"]').fill('1350.00');
   await expect(first.locator('[data-field="line_total"]')).toHaveValue('1350.00');
   await page.locator('#receipt-total').fill('2550');
   await page.locator('#receipt-store').fill('Super descuento QA');
@@ -99,7 +100,7 @@ test('WEB-05: corregir OCR conserva imagen y guarda descuento/neto en el mes de 
   await expect(page.locator('#budget-spent-text')).toContainText('2.550');
   await page.locator('#expense-receipt-date').selectOption('2026-12-05');
   await expect(page.locator('#expense-products-body')).toContainText('2026-12-05');
-  await expect(page.locator('#expense-products-body')).toContainText('150,00');
+  await expect(page.locator('#expense-products-body')).toContainText('1.350,00');
   const image = await page.getByText('Ver comprobante').getAttribute('href');
   expect((await page.request.get(image)).status()).toBe(200);
 });
@@ -237,4 +238,15 @@ test('WEB-13: leche por marca y tamaño excluye alimentos que la mencionan',asyn
   await expect(page.locator('.store-product-title')).toHaveText('Leche La Serenísima 1L');
   await page.locator('#ai-search-input').fill('arroz');
   await expect(page.locator('#comparator-results')).toBeHidden();
+});
+
+
+test('WEB-14: faltantes consulta nombre marca y presentación del stock', async ({page}) => {
+  await page.route('**/api/stock', route => route.fulfill({json:[{id:'qa-milk',name:'Leche',brand:'La Serenísima',unit:'1 L',category:'Comestibles',stockQuantity:0,inUseCount:0}]}));
+  await page.reload();
+  await expect(page.locator('#critical-quick-chips .chip')).toHaveCount(1);
+  const request = page.waitForRequest(r => r.url().includes('/api/offers/compare?'));
+  await page.locator('#critical-quick-chips .chip').click();
+  expect(new URL((await request).url()).searchParams.get('q')).toBe('Leche La Serenísima 1 L');
+  await expect(page.locator('#ai-search-input')).toHaveValue('Leche La Serenísima 1 L');
 });

@@ -4,6 +4,12 @@ import android.net.Uri
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.text.input.ImeAction
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
@@ -31,6 +37,10 @@ import com.expensahouse.app.ui.components.errorText
 internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, repository: com.expensahouse.app.data.repository.ReceiptsRepository = AppContainer.receiptsRepository) {
     val appContext = LocalContext.current
     val scope = rememberCoroutineScope()
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    fun finishEditing() { focus.clearFocus(); keyboard?.hide() }
+    val doneActions = KeyboardActions(onDone = { finishEditing() })
     val storage = remember { appContext.getSharedPreferences("receipt_pending_${com.expensahouse.app.core.auth.AuthSession.user.value?.id}", 0) }
     val gson = remember { com.google.gson.Gson() }
     var pending by remember { mutableStateOf(storage.getString("payload", null)?.let {
@@ -59,7 +69,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
         capturePath = null
     }
     fun dismiss() {
-        if (!busy && !cameraOpen) { clearCapture(); onDismiss() }
+        if (!busy && !cameraOpen) { finishEditing(); clearCapture(); onDismiss() }
     }
     suspend fun interpretReceipt(photo: ByteArray? = null, captured: Boolean = false) {
             try {
@@ -78,12 +88,14 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
     }
     fun read() {
         if (busy || pending != null) return
+        finishEditing()
         busy = true
         scope.launch { interpretReceipt() }
     }
     fun loadPhoto(uri: Uri, captured: Boolean = false) {
         if (busy || pending != null) return
         busy = true
+        finishEditing()
         if (!captured) galleryUri = uri.toString()
         status = "Preparando foto del ticket…"
         scope.launch {
@@ -114,7 +126,7 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
         else { clearCapture(); status = "Captura cancelada. Podés volver a sacar la foto." }
     }
     AlertDialog(onDismissRequest = { dismiss() }, title = { Text("Escanear ticket") }, text = {
-        Column(Modifier.verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Column(Modifier.imePadding().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Text("Fotografiá el ticket completo, con buena luz y sin sombras. Se leerán los productos, precios y total para que los revises antes de guardar el gasto.")
             Button(onClick = {
                 try {
@@ -138,30 +150,28 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
             }, enabled = !busy && pending == null) { Text("Volver a leer la foto tomada") }
             if (galleryUri != null) TextButton(onClick = { galleryUri?.let { loadPhoto(Uri.parse(it)) } }, enabled = !busy && pending == null) { Text("Volver a leer la foto elegida") }
             if (busy) { LinearProgressIndicator(Modifier.fillMaxWidth()); Text("Procesando ticket…") }
-            OutlinedTextField(value = text, onValueChange = { text = it }, label = { Text("Texto del ticket") }, enabled = !busy && pending == null)
+            OutlinedTextField(keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = doneActions, value = text, onValueChange = { text = it }, label = { Text("Texto del ticket") }, enabled = !busy && pending == null)
             TextButton(onClick = { read() }, enabled = !busy && pending == null) { Text("Interpretar texto") }
             if (status.isNotBlank()) Text(status)
-            OutlinedTextField(value = purchaseDate, onValueChange = { purchaseDate = it }, label = { Text("Fecha de compra (AAAA-MM-DD)") }, enabled = !busy && pending == null)
-            OutlinedTextField(value = store, onValueChange = { store = it }, label = { Text("Supermercado") }, enabled = !busy && pending == null)
+            OutlinedTextField(keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = doneActions, value = purchaseDate, onValueChange = { purchaseDate = it }, label = { Text("Fecha de compra (AAAA-MM-DD)") }, enabled = !busy && pending == null)
+            OutlinedTextField(keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = doneActions, value = store, onValueChange = { store = it }, label = { Text("Supermercado") }, enabled = !busy && pending == null)
             items.forEachIndexed { index, item ->
-                OutlinedTextField(value = item.description, onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(description = value) } }, label = { Text("Producto ${index + 1}") }, enabled = !busy && pending == null)
-                Text("${item.quantity} × $${item.unit_price} − $${item.discount} = neto $${item.line_total}")
+                OutlinedTextField(keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = doneActions, value = item.description, onValueChange = { value -> items = items.toMutableList().also { it[index] = item.copy(description = value) } }, label = { Text("Producto ${index + 1}") }, enabled = !busy && pending == null)
+                Text("Cantidad: ${item.quantity} · Precio unitario: $${item.unit_price} · Total: $${item.line_total}")
                 Row {
                     ReceiptNumber(item.quantity, "Cantidad", Modifier.weight(1f), !busy && pending == null) { quantity -> items = items.toMutableList().also { it[index] = item.copy(quantity = quantity, line_total = kotlin.math.round((quantity * item.unit_price - item.discount) * 100) / 100) } }
                     ReceiptNumber(item.unit_price, "Precio unidad", Modifier.weight(1f), !busy && pending == null) { price -> items = items.toMutableList().also { it[index] = item.copy(unit_price = price, line_total = kotlin.math.round((item.quantity * price - item.discount) * 100) / 100) } }
                 }
-                ReceiptNumber(item.discount, "Descuento de la línea ($)", Modifier.fillMaxWidth(), !busy && pending == null, allowZero = true) { discount -> items = items.toMutableList().also { it[index] = item.copy(discount = discount, line_total = kotlin.math.round((item.quantity * item.unit_price - discount) * 100) / 100) } }
+                ReceiptNumber(item.line_total, "Total del producto", Modifier.fillMaxWidth(), !busy && pending == null) { net -> items = items.toMutableList().also { it[index] = item.copy(line_total = net, discount = (item.quantity * item.unit_price - net).coerceAtLeast(0.0)) } }
                 TextButton(onClick = { items = items.filterIndexed { i, _ -> i != index } }, enabled = !busy && pending == null) { Text("Quitar producto") }
             }
             TextButton(onClick = { items = items + ReceiptLine("Producto", 1.0, 1.0, 1.0) }, enabled = !busy && pending == null) { Text("+ Producto") }
-            OutlinedTextField(value = vat, onValueChange = { vat = it }, label = { Text("IVA informado ($; vacío si no figura)") }, enabled = !busy && pending == null)
-            Row { Checkbox(checked = vatIncluded, onCheckedChange = { vatIncluded = it }, enabled = !busy && pending == null); Text("IVA incluido en los precios") }
-            Text("Se descuenta el total pagado. El IVA incluido no se suma de nuevo.")
-            OutlinedTextField(value = total, onValueChange = { total = it }, label = { Text("Total gastado") }, enabled = !busy && pending == null)
-            OutlinedTextField(value = adjustment, onValueChange = { adjustment = it }, label = { Text("Ajuste por impuestos o descuentos") }, enabled = !busy && pending == null)
+            Text("Se descuenta del presupuesto el total pagado del ticket.")
+            OutlinedTextField(keyboardOptions = KeyboardOptions(imeAction = ImeAction.Done), keyboardActions = doneActions, value = total, onValueChange = { total = it }, label = { Text("Total gastado") }, enabled = !busy && pending == null)
         }
     }, confirmButton = {
         Button(enabled = !busy && (pending != null || (items.isNotEmpty() && store.isNotBlank())), onClick = {
+            finishEditing()
             val amount = total.replace(',', '.').toDoubleOrNull()
             if (pending == null && (amount == null || amount <= 0 || !amount.isFinite())) { status = "Revisá el total."; return@Button }
             if (pending == null && runCatching { java.time.LocalDate.parse(purchaseDate) }.isFailure) { status = "Revisá la fecha (AAAA-MM-DD)."; return@Button }
@@ -183,9 +193,12 @@ internal fun ConnectedReceiptDialog(onDismiss: () -> Unit, onSaved: () -> Unit, 
 
 @Composable
 private fun ReceiptNumber(value: Double, label: String, modifier: Modifier, enabled: Boolean, allowZero: Boolean = false, onChange: (Double) -> Unit) {
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    val doneActions = KeyboardActions(onDone = { focus.clearFocus(); keyboard?.hide() })
     var text by remember { mutableStateOf(value.toString()) }
     LaunchedEffect(value) { if (text.replace(',', '.').toDoubleOrNull() != value) text = value.toString() }
-    OutlinedTextField(value = text, onValueChange = { input ->
+    OutlinedTextField(singleLine = true, keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal, imeAction = ImeAction.Done), keyboardActions = doneActions, value = text, onValueChange = { input ->
         text = input
         input.replace(',', '.').toDoubleOrNull()?.takeIf { (it > 0 || (allowZero && it == 0.0)) && it.isFinite() }?.let(onChange)
     }, label = { Text(label) }, modifier = modifier, enabled = enabled)

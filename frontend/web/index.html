@@ -123,15 +123,9 @@
 
           <!-- Chips de acceso rápido / productos críticos -->
           <div class="quick-chips-wrapper">
-            <span class="chips-label">💡 Sugerencias de tu alacena:</span>
+            <span class="chips-label">Faltantes de tu stock:</span>
             <div id="critical-quick-chips" class="chips-container">
-              <!-- Rellenado dinámicamente con productos de la casa -->
-              <button class="chip" data-search="leche entera">🥛 Leche</button>
-              <button class="chip" data-search="cafe molido">☕ Café</button>
-              <button class="chip" data-search="arroz largo fino">🌾 Arroz</button>
-              <button class="chip" data-search="detergente ala">🫧 Detergente</button>
-              <button class="chip" data-search="jabon ariel">🧺 Jabón Ropa</button>
-              <button class="chip" data-search="yerba mate">🧉 Yerba</button>
+              <!-- Productos faltantes cargados desde el inventario del usuario. -->
             </div>
           </div>
         </div>
@@ -376,13 +370,13 @@
         <div id="receipt-review" class="hidden">
           <label>Fecha de compra <input id="receipt-date" type="date" required></label>
           <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
-          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario ($)</th><th>Descuento de la línea ($)</th><th>Importe neto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
+          <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario ($)</th><th hidden>Descuento de la línea ($)</th><th>Total del producto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
           <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
-          <label>IVA informado ($; vacío si no figura) <input id="receipt-vat" type="number" min="0" step="0.01"></label>
-          <label><input id="receipt-vat-included" type="checkbox" checked> El IVA está incluido en los precios</label>
-          <p>Se descontará del presupuesto el total pagado. El IVA incluido no se suma de nuevo.</p>
+          <label hidden>IVA informado ($; vacío si no figura) <input id="receipt-vat" type="number" min="0" step="0.01"></label>
+          <label hidden><input id="receipt-vat-included" type="checkbox" checked> El IVA está incluido en los precios</label>
+          <p>Se descontará del presupuesto el total pagado del ticket.</p>
           <label>Total gastado ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
-          <label>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
+          <label hidden>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
           <button id="receipt-confirm" type="button" class="btn-primary">Confirmar ticket y descontar del presupuesto</button>
         </div>
       </section>
@@ -412,7 +406,7 @@
         <h3>Resumen de compras y precios históricos</h3>
         <label>Fecha del resumen <select id="expense-receipt-date"><option value="">Todas las compras del mes</option></select></label>
         <p>Importe neto = cantidad × precio unitario − descuento de la línea. Los ajustes generales del ticket se muestran en su comprobante.</p>
-        <div class="table-container"><table class="data-table"><thead><tr><th>Fecha de compra</th><th>Supermercado</th><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Descuento</th><th>Importe neto</th></tr></thead><tbody id="expense-products-body"></tbody></table></div>
+        <div class="table-container"><table class="data-table"><thead><tr><th>Fecha de compra</th><th>Supermercado</th><th>Descripción</th><th>Cantidad</th><th>Precio unitario</th><th>Total del producto</th></tr></thead><tbody id="expense-products-body"></tbody></table></div>
       </div>
       <!-- Historial de Gastos / Tickets -->
       <div class="card-panel mt-4">

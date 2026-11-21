@@ -14,13 +14,17 @@ function setupReceiptScanner() {
     const row = document.createElement('tr');
     ['description', 'quantity', 'unit_price', 'discount', 'line_total'].forEach(field => {
       const cell = row.insertCell();
+      cell.hidden = field === 'discount';
       const input = document.createElement(['description', 'detail'].includes(field) ? 'textarea' : 'input');
       input.dataset.field = field;
       if (['description', 'detail'].includes(field)) { input.rows = 3; } else { input.type = 'number'; }
       if (input.type === 'number') { input.min = field === 'discount' ? '0' : '.01'; input.step = '.01'; }
       input.value = item[field] ?? (field === 'quantity' ? 1 : field === 'discount' ? 0 : '');
-      input.setAttribute('aria-label', {description:'Producto', detail:'Detalle', quantity:'Cantidad', unit_price:'Precio unitario', discount:'Descuento', line_total:'Importe neto'}[field]);
+      input.setAttribute('aria-label', {description:'Producto', detail:'Detalle', quantity:'Cantidad', unit_price:'Precio unitario', discount:'Descuento', line_total:'Total del producto'}[field]);
       input.addEventListener('input', () => {
+        if (field === 'line_total') {
+          row.querySelector('[data-field=discount]').value = Math.max(0, Number(row.querySelector('[data-field=quantity]').value) * Number(row.querySelector('[data-field=unit_price]').value) - Number(input.value)).toFixed(2);
+        }
         if (['quantity', 'unit_price', 'discount'].includes(field)) {
           row.querySelector('[data-field=line_total]').value =
             (Number(row.querySelector('[data-field=quantity]').value) * Number(row.querySelector('[data-field=unit_price]').value) - Number(row.querySelector('[data-field=discount]').value)).toFixed(2);
