@@ -105,10 +105,12 @@ El detalle revisado del ticket muestra producto, cantidad, precio unitario y tot
 
 ### Actualización 1.3.5
 
-La oferta top identifica el menor precio entre las presentaciones confirmadas; si no hay ninguna confirmada, se informa la falta de verificación. El descuento porcentual sigue disponible como orden alternativo sin cambiar la recomendación por precio. Cada tarjeta comienza con el nombre del supermercado.
+La oferta top identifica el menor precio entre las presentaciones que coinciden con la consulta. El descuento porcentual se muestra como información adicional y no define la recomendación top. Cada tarjeta comienza con el nombre del supermercado.
 
 El comparador consulta los catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo. Coto utiliza su búsqueda pública y toma el precio por unidad de la sucursal 200; las promociones condicionadas no se presentan como precio de una unidad. Las otras cadenas utilizan el catálogo público VTEX. La disponibilidad y los precios pueden cambiar por zona. Si una fuente falla, se conservan las demás y se informa el problema.
 
 En Android, las ofertas se muestran en dos columnas con información ampliable. Al final de Ofertas, «Tickets guardados» lista únicamente comercio y fecha; un doble toque (o mantener presionado) abre el comprobante privado y sus productos.
 
 La web aplica los mismos cambios de contenido: tarjetas compactas con detalle ampliable, columnas adaptadas al ancho disponible y tickets al final de Ofertas. La foto privada se abre con doble clic o doble toque; también puede abrirse con Enter al enfocar el ticket.
+
+Cuando la consulta especifica peso o volumen, la coincidencia es estricta: «1 kg», «1000 g» y «1.000 g» son equivalentes; se excluyen 500 g, otros tamaños, presentaciones contradictorias y productos sin tamaño informado. Esta regla se aplica en la API compartida por web y Android.

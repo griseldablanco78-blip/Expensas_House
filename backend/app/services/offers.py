@@ -19,6 +19,9 @@ def normalize(value):
 def clean_query(value):
     text = normalize(value)
     text = re.sub(r'\bla\s*serenisima(?=\b|\d)', 'serenisima ', text)
+    # Argentine thousands separators in base units: 1.000 g == 1000 g.
+    text = re.sub(r'\b(\d{1,3}(?:\.\d{3})+)\s*(?=gramos?\b|grs?\b|g\b|ml\b|cc\b)',
+                  lambda match: match[1].replace('.', '') + ' ', text)
     # Compare quantities in a common unit, including compact names such as 1L.
     text = re.sub(r'\b(?:un|una)\s+(?=litros?\b|kilos?\b)', '1 ', text)
     def quantity(match):
@@ -27,7 +30,7 @@ def clean_query(value):
         volume = unit in {'l', 'lt', 'lts', 'litro', 'litros', 'ml', 'cc', 'mililitro', 'mililitros'}
         base = amount * (1000 if unit in {'l', 'lt', 'lts', 'litro', 'litros', 'kg', 'kilo', 'kilos', 'kilogramo', 'kilogramos'} else 1)
         return f" {base:g}{'ml' if volume else 'g'} "
-    text = re.sub(r'\b(\d+(?:[.,]\d+)?)\s*(mililitros?|kilogramos?|litros?|kilos?|gramos?|lts?|ml|cc|kg|g|l)\b', quantity, text)
+    text = re.sub(r'\b(\d+(?:[.,]\d+)?)\s*(mililitros?|kilogramos?|litros?|kilos?|gramos?|grs?|lts?|ml|cc|kg|g|l)\b', quantity, text)
     # Remove complete command words, never substrings of a product name.
     noise = {'quiero', 'quisiera', 'saber', 'consulta', 'consultar', 'buscar', 'busca',
              'buscame', 'mostrame', 'mostrar', 'dame', 'traeme', 'comparar', 'compara',
@@ -115,9 +118,9 @@ def compare_supermarket_offers(raw_query, sort='price'):
     for item in [*get_offers(), *remote] if query else []:
         product = str(item.get('product') or '')
         words = set(clean_query(product + ' ' + str(item.get('brand') or '')).split())
-        # Unknown size is visible as a candidate, never asserted as equivalent.
+        # An explicit size is mandatory and exact; do not mix other or unknown sizes.
         product_sizes = {t for t in words if re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t)}
-        if not matches_product(query, clean_query(product), clean_query(item.get('brand') or '')) or (sizes and product_sizes and not sizes.issubset(product_sizes)):
+        if not matches_product(query, clean_query(product), clean_query(item.get('brand') or '')) or (sizes and product_sizes != sizes):
             continue
         size_unknown = bool(sizes and not product_sizes)
         price = money(item.get('price'))

@@ -310,24 +310,36 @@ class Workflows(unittest.TestCase):
         db.save_db(self.state)
         for query in ('leche entera de 1 lt', 'leche entera un litro', 'leche entera 1000ml'):
             result = offer_service.compare_supermarket_offers(query, 'price')
-            self.assertEqual([o['id'] for o in result['offers']], ['litre', 'unknown'])
+            self.assertEqual([o['id'] for o in result['offers']], ['litre'])
             self.assertEqual(result['top_offer']['id'], 'litre')
-            unknown = result['offers'][1]
-            self.assertFalse(unknown['size_confirmed'])
-            self.assertIn('Presentación sin confirmar', unknown['conditions'])
+            self.assertTrue(result['offers'][0]['size_confirmed'])
         self.assertEqual(offer_service.clean_query('Aceite 1,5 L'), offer_service.clean_query('Aceite 1500 cc'))
         self.assertEqual(offer_service.clean_query('Arroz 1 kg'), offer_service.clean_query('Arroz 1000 gramos'))
         self.state['offers'] = self.state['offers'][:1]
         db.save_db(self.state)
         result = offer_service.compare_supermarket_offers('leche entera de 1 lt')
-        self.assertEqual(len(result['offers']), 1)
-        self.assertIn('no está confirmada', result['ai_analysis']['verdict'])
+        self.assertEqual(result['offers'], [])
+        self.assertIsNone(result['top_offer'])
+        self.state['offers'][0]['product'] = 'Leche entera 1 litro'
         self.state['offers'][0]['price'] = ''
         db.save_db(self.state)
         result = offer_service.compare_supermarket_offers('leche entera de 1 lt')
         self.assertEqual(result['offers'], [])
         self.assertIn('precio válido', result['warning'])
         self.assertIn('falta un precio válido', result['ai_analysis']['verdict'])
+
+    @patch.object(offer_service, 'ratoneando_offers', return_value=([], 'Sin proveedor'))
+    def test_explicit_kilogram_excludes_half_kilo_unknown_and_conflicting_sizes(self, _):
+        self.state['offers'] = [
+            {'id':str(index), 'product':name, 'store':'QA', 'price':1000+index}
+            for index,name in enumerate(('Arroz QA 1 kg', 'Arroz QA 1000 gramos', 'Arroz QA 1.000 g',
+                'Arroz QA 500 g', 'Arroz QA 0,5 kg', 'Arroz QA 2 kg', 'Arroz QA', 'Arroz QA 1 kg / 500 g'))]
+        db.save_db(self.state)
+        for query in ('Arroz QA 1 kg', 'Arroz QA 1000g', 'Arroz QA 1.000 gr'):
+            with self.subTest(query=query):
+                result=offer_service.compare_supermarket_offers(query)
+                self.assertEqual([offer['id'] for offer in result['offers']], ['0','1','2'])
+                self.assertEqual(result['top_offer']['id'],'0')
 
     def test_saved_offer_photo_is_validated_and_used_in_comparison(self):
         self.state['offers'] = [{'id':'saved', 'product':'Leche entera', 'store':'A', 'price':''}]
