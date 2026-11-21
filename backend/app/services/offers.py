@@ -106,6 +106,10 @@ def compare_supermarket_offers(raw_query, sort='price'):
         from backend.app.services.catalog_search import catalog_offers
         # Fetch by product words; filter normalized pack sizes below.
         source_query = ' '.join(t for t in query.split() if not re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t))
+        # Sources often label white rice as largo fino rather than blanco.
+        # Fetch the broader family and apply product/type/brand/size rules below.
+        if 'arroz' in query.split() and 'blanco' in query.split():
+            source_query = ' '.join(word for word in source_query.split() if word != 'blanco')
         live, live_warning = catalog_offers(source_query or query)
         if not os.getenv('RATONEANDO_API_URL', '').strip():
             warning = ''

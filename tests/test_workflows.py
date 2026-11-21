@@ -364,6 +364,29 @@ class Workflows(unittest.TestCase):
             self.assertEqual(merged['user_prefs']['totalSpent'],0)
         self.assertEqual(self.client.delete('/api/receipts/unknown').status_code,404)
 
+    @patch.object(offer_service, 'ratoneando_offers', return_value=([], ''))
+    def test_white_rice_compares_all_brands_unless_explicitly_requested(self, _):
+        self.state['offers']=[{'id':str(index),'product':name,'brand':brand,'store':'Día','price':price}
+            for index,(name,brand,price) in enumerate([
+                ('Arroz Blanco Doble Calidad Dia 1 Kg','DIA',3050),
+                ('Arroz Largo Fino Luchetti 1 Kg','LUCCHETTI',1456),
+                ('Molinos Ala Arroz Largo Fino 1 Kg','MOLINOS ALA',2240),
+                ('Arroz Integral Cuquets 1 Kg','CUQUETS',1450),
+                ('Arroz Parboil Luchetti 1 Kg','LUCCHETTI',1709),
+                ('Arroz Largo Fino Luchetti 500 g','LUCCHETTI',800),
+                ('Arroz con leche Dia 1 Kg','DIA',700),
+                ('Galletitas de arroz Dia 1 Kg','DIA',600),
+                ('Arroz Amarillo Luchetti 1 Kg','LUCCHETTI',500),
+                ('Arroz Con Azafran Dia 1 Kg','DIA',400)])]
+        db.save_db(self.state)
+        all_brands=offer_service.compare_supermarket_offers('Arroz blanco 1 kg')
+        self.assertEqual([row['id'] for row in all_brands['offers']],['1','2','0'])
+        self.assertEqual(all_brands['top_offer']['brand'],'LUCCHETTI')
+        dia=offer_service.compare_supermarket_offers('Arroz blanco Dia 1 kg')
+        self.assertEqual([row['id'] for row in dia['offers']],['0'])
+        without_size=offer_service.compare_supermarket_offers('Arroz blanco')
+        self.assertIn('5',[row['id'] for row in without_size['offers']])
+
     def test_saved_offer_photo_is_validated_and_used_in_comparison(self):
         self.state['offers'] = [{'id':'saved', 'product':'Leche entera', 'store':'A', 'price':''}]
         db.save_db(self.state)
