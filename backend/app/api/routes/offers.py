@@ -98,7 +98,7 @@ def offer_image(filename: str):
 
 
 @router.get("/api/offers/compare")
-def api_compare_offers(q: str = "leche", sort: str = "discount"):
+def api_compare_offers(q: str = "leche", sort: str = "price"):
     """Busca ofertas guardadas y del proveedor configurado, usando reglas y unidades equivalentes."""
     return compare_supermarket_offers(q, sort)
 

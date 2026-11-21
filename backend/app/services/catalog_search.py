@@ -8,7 +8,10 @@ import time
 from urllib.parse import urlencode, quote
 from urllib.request import Request, urlopen
 
-STORES = {'Carrefour': 'https://www.carrefour.com.ar', 'Jumbo': 'https://www.jumbo.com.ar'}
+STORES = {'Día': 'https://diaonline.supermercadosdia.com.ar',
+          'Coto': 'https://www.cotodigital.com.ar',
+          'Carrefour': 'https://www.carrefour.com.ar',
+          'Vea': 'https://www.vea.com.ar', 'Jumbo': 'https://www.jumbo.com.ar'}
 _CACHE = {}
 _LOCK = threading.Lock()
 
@@ -19,7 +22,7 @@ def catalog_offers(query):
         if cached and time.monotonic() - cached[0] < 300:
             return cached[1], cached[2]
     results, warnings = [], []
-    with ThreadPoolExecutor(max_workers=2) as pool:
+    with ThreadPoolExecutor(max_workers=len(STORES)) as pool:
         futures = {name: pool.submit(fetch_catalog, name, base, query) for name, base in STORES.items()}
         for name, future in futures.items():
             try:
@@ -37,7 +40,10 @@ def catalog_offers(query):
 
 def fetch_catalog(name, base, query):
     from backend.app.services.offers import money, normalize
-    url = base + '/api/catalog_system/pub/products/search/?' + urlencode({'ft': query, '_from': 0, '_to': 19}, quote_via=quote)
+    if name == "Coto":
+        from backend.app.services.coto_catalog import fetch_coto
+        return fetch_coto(query)
+    url = base + '/api/catalog_system/pub/products/search/?' + urlencode({'ft': query, '_from': 0, '_to': 49}, quote_via=quote)
     with urlopen(Request(url, headers={'Accept': 'application/json', 'User-Agent': 'ExpensaHouse/1.0'}), timeout=8) as response:
         raw = response.read(4_000_001)
     if len(raw) > 4_000_000:

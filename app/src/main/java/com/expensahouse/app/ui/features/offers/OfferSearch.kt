@@ -6,6 +6,9 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import com.expensahouse.app.data.remote.*
 import kotlinx.coroutines.launch
 
@@ -17,79 +20,82 @@ import com.expensahouse.app.ui.components.errorText
 @Composable
 internal fun ConnectedOfferSearch(initialQuery: String = "", repository: com.expensahouse.app.data.repository.OffersRepository = AppContainer.offersRepository) {
     var query by remember(initialQuery) { mutableStateOf(initialQuery) }
-    var sort by remember { mutableStateOf("discount") }
     var result by remember { mutableStateOf<Comparison?>(null) }
     var status by remember { mutableStateOf("") }
     var busy by remember { mutableStateOf(false) }
+    var searchSequence by remember { mutableStateOf(0) }
     val scope = rememberCoroutineScope()
     val uri = LocalUriHandler.current
+    val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
+    var showSourceInfo by remember { mutableStateOf(false) }
     fun search() {
-        if (busy || query.isBlank()) return
+        if (query.isBlank()) return
+        val submitted = query.trim()
+        val sequence = ++searchSequence
+        focus.clearFocus(); keyboard?.hide()
         busy = true
+        result = null
         scope.launch {
-            try { result = repository.compare(query, sort); status = result?.warning.orEmpty() }
-            catch (error: Exception) { result = null; status = errorText(error) }
-            finally { busy = false }
+            try {
+                val response = repository.compare(submitted, "price")
+                if (sequence == searchSequence) { result = response; status = response.warning.orEmpty() }
+            } catch (error: kotlinx.coroutines.CancellationException) { throw error }
+            catch (error: Exception) { if (sequence == searchSequence) { result = null; status = errorText(error) } }
+            finally { if (sequence == searchSequence) busy = false }
         }
     }
     LaunchedEffect(initialQuery) { if (initialQuery.isNotBlank()) search() }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        VoiceOutlinedTextField(value = query, onValueChange = { query = it }, label = { Text("Producto o consulta por voz") })
-        Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            FilterChip(selected = sort == "discount", onClick = { sort = "discount" }, label = { Text("Mayor descuento") })
-            FilterChip(selected = sort == "price", onClick = { sort = "price" }, label = { Text("Menor precio") })
-        }
+        VoiceOutlinedTextField(value = query, onValueChange = { query = it; result = null; status = ""; searchSequence++; busy = false }, label = { Text("Producto o consulta por voz") })
         Button(onClick = { search() }, enabled = !busy && query.isNotBlank()) { Text(if (busy) "Buscando…" else "Buscar oferta top") }
-        if (status.isNotBlank()) Text(status)
+        if (status.isNotBlank()) {
+            TextButton(onClick = { showSourceInfo = !showSourceInfo }) { Text(if (showSourceInfo) "Ocultar información de fuentes" else "Información de fuentes") }
+            if (showSourceInfo || result == null) Text(status)
+        }
         result?.let { comparison ->
             var visible by remember(comparison) { mutableStateOf(10) }
-            val analysis = comparison.ai_analysis
-            val cheapest = comparison.offers.minByOrNull { it.promo_price }
-            Card(Modifier.fillMaxWidth()) {
-                Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                    Text("Resumen de la comparación", style = MaterialTheme.typography.titleMedium)
-                    Text("${comparison.offers.size} ofertas · ${comparison.cleaned_query ?: query}")
-                    if (analysis?.best_single != null) Text("Menor precio publicado: ${analysis.best_single.store} · ${offerMoney(analysis.best_single.price)}")
-                    else if (cheapest != null) Text("Menor precio publicado: ${cheapest.store} · ${offerMoney(cheapest.promo_price)}")
-                    val saving = analysis?.max_saving_percent ?: comparison.offers.maxOfOrNull { it.saving_percent } ?: 0.0
-                    Text(if (saving > 0) "Mayor descuento comparable: ${String.format(java.util.Locale("es","AR"),"%.2f",saving)}%" else "Sin descuento informado")
-                    analysis?.verdict?.takeIf { it.isNotBlank() }?.let { Text(it) }
-                    analysis?.stock_alert?.takeIf { it.isNotBlank() }?.let { Text(it) }
-                    Text("Compará la misma presentación y revisá las condiciones antes de comprar.")
-                }
-            }
+            val ordered = comparison.offers.sortedWith(compareBy<ProductOffer>({ !it.size_confirmed }, { it.promo_price }))
+            Text("${ordered.size} ofertas · de menor a mayor precio", style = MaterialTheme.typography.labelMedium)
             if (comparison.offers.isEmpty()) Text("No hay ofertas coincidentes con precio.")
-            comparison.offers.take(visible).forEachIndexed { index, offer ->
-              key(offer.id.ifBlank { "${offer.store}:${offer.product}:$index" }) {
-                var expanded by remember { mutableStateOf(false) }
-                Card(Modifier.fillMaxWidth()) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(5.dp)) {
-                        if (index == 0) Text("🏆 Oferta top según el filtro elegido")
-                        OfferImage(offer.image_url, offer.product)
-                        Text(offer.product, style = MaterialTheme.typography.titleMedium)
-                        Text("${offer.store} · ${offerMoney(offer.promo_price)}")
-                        Text(offer.promo_text)
-                        if (!offer.conditions.isNullOrBlank()) Text(offer.conditions)
-                        Text("Fuente: ${offer.source.orEmpty()}")
-                        TextButton(onClick = { expanded = !expanded }) { Text(if (expanded) "Ocultar detalle" else "Ver detalle") }
-                        if (expanded) {
-                            Text("Marca: ${offer.brand?.takeIf { it.isNotBlank() } ?: "No informada"}")
-                            Text("Precio publicado: ${offerMoney(offer.promo_price)}")
-                            Text(if (offer.size_confirmed) "Presentación coincidente con la consulta" else "Presentación sin confirmar")
-                            offer.unit?.takeIf { it.isNotBlank() }?.let { Text("Unidad: $it") }
-                            offer.unit_price?.takeIf { it > 0 }?.let { Text("Precio por unidad de referencia: ${offerMoney(it)}") }
-                            offer.updated_at?.takeIf { it.isNotBlank() }?.let { Text("Consulta de la fuente: ${it.take(19).replace('T',' ')}") }
-                            if (offer.promo_type == "bulk") Text("La promoción requiere varias unidades; el descuento comparable no se aplica a una sola unidad.")
-                            Text("Vigencia y disponibilidad: confirmar en el supermercado.")
+            ordered.take(visible).chunked(2).forEach { pair ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    pair.forEach { offer ->
+                        key(offer.id.ifBlank { "${offer.store}:${offer.product}" }) {
+                            CompactOfferCard(offer, offer.id == comparison.top_offer?.id, Modifier.weight(1f))
                         }
-                        if (offer.direct_link?.startsWith("https://") == true) TextButton(onClick = { uri.openUri(offer.direct_link) }) { Text("Ver en supermercado") }
                     }
+                    if (pair.size == 1) Spacer(Modifier.weight(1f))
                 }
-              }
             }
             if (comparison.offers.size > visible) TextButton(onClick = { visible += 10 }) { Text("Ver más ofertas (${visible.coerceAtMost(comparison.offers.size)} de ${comparison.offers.size})") }
         }
         TextButton(onClick = { uri.openUri("https://ratoneando.ar/?q=" + java.net.URLEncoder.encode(query, "UTF-8")) }) { Text("Consultar en Ratoneando ↗") }
+    }
+}
+
+@Composable
+private fun CompactOfferCard(offer: ProductOffer, isTop: Boolean, modifier: Modifier) {
+    var expanded by remember(offer.id) { mutableStateOf(false) }
+    val uri = LocalUriHandler.current
+    Card(modifier) {
+        Column(Modifier.padding(10.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            Text(offer.store, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
+            if (isTop) Text("🏆 Menor precio", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary)
+            OfferImage(offer.image_url, offer.product)
+            Text(offer.product, style = MaterialTheme.typography.bodySmall, maxLines = if (expanded) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis)
+            Text(offerMoney(offer.promo_price), style = MaterialTheme.typography.titleMedium)
+            if (!offer.size_confirmed) Text("Tamaño sin confirmar", style = MaterialTheme.typography.labelSmall)
+            TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) { Text(if (expanded) "Cerrar detalle" else "Ver detalle") }
+            if (expanded) {
+                Text(offer.promo_text, style = MaterialTheme.typography.bodySmall)
+                if (!offer.conditions.isNullOrBlank()) Text(offer.conditions, style = MaterialTheme.typography.bodySmall)
+                Text("Fuente: ${offer.source.orEmpty()}", style = MaterialTheme.typography.bodySmall)
+                Text(if (offer.size_confirmed) "Presentación coincidente" else "Presentación sin confirmar", style = MaterialTheme.typography.bodySmall)
+                offer.updated_at?.takeIf { it.isNotBlank() }?.let { Text("Consulta: ${it.take(19).replace('T',' ')}", style = MaterialTheme.typography.bodySmall) }
+                if (offer.direct_link?.startsWith("https://") == true) TextButton(onClick = { uri.openUri(offer.direct_link) }, contentPadding = PaddingValues(0.dp)) { Text("Ir a la tienda ↗") }
+            }
+        }
     }
 }
 

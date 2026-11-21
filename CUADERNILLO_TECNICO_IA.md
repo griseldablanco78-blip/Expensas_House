@@ -105,7 +105,7 @@ Ratoneando se considera una fuente preferida para ampliar la consulta de superme
 
 El adaptador existente está en `backend/app/services/offers.py` y se configura mediante `RATONEANDO_API_URL`. El frontend público de Ratoneando utiliza `https://go.ratoneando.ar?q=...`. La consulta de servidor realizada el 18/11/2026 respondió **HTTP 403**; la integración automática con ese servicio alojado queda pendiente de disponer de acceso autorizado. El [controlador publicado](https://github.com/matiasbontempo/ratoneando-go/blob/main/controllers/normalized_scrapper.go) contiene una restricción de origen.
 
-Mientras esa conexión no esté habilitada, Expensas House conserva ofertas manuales y conectores de catálogos públicos Carrefour/Jumbo. Cada resultado debe identificar su fuente y fecha de consulta. Los precios y promociones se toman de la fuente; no se estiman mediante un modelo.
+Mientras esa conexión no esté habilitada, Expensas House conserva ofertas manuales y conectores de catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo. Cada resultado debe identificar su fuente y fecha de consulta. Los precios y promociones se toman de la fuente; no se estiman mediante un modelo.
 
 La web incluye «Consultar en Ratoneando», que abre el sitio oficial con la misma búsqueda por palabras clave. Es una consulta externa; sus resultados no se presentan como datos importados por la API de Expensas House. La licencia del código permite estudiar o desplegar el proyecto según sus condiciones; el uso del servicio alojado requiere respetar sus controles de acceso.
 
@@ -191,7 +191,7 @@ Referencias: [fuga de datos y pipelines](https://scikit-learn.org/stable/common_
 | `/api/receipts/draft` y `/confirm` | Interpretar y registrar un ticket revisado. | Separar lectura, revisión y confirmación contable. |
 | `/api/offers/compare` | Comparar ofertas. | Unificar consultas escritas, dictadas y del chatbot. |
 | `/api/ai/chat` | Resolver consultas por reglas. | Reutilizar stock, presupuesto y comparador. |
-| Catálogos públicos Carrefour/Jumbo | Obtener precios observados. | Conectores actualmente disponibles; pueden cambiar o restringir acceso. |
+| Catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo | Obtener precios observados. | Conectores actualmente disponibles; pueden cambiar o restringir acceso. |
 | Ratoneando | Fuente preferida de comparación ampliada. | Adaptador preparado; servicio alojado respondió 403 en la revisión. |
 | Web Speech API y RecognizerIntent | Voz a texto. | Aprovechar reconocimiento existente, sin entrenamiento propio. |
 | ML Kit y Tesseract.js | OCR. | Reconocimiento en el dispositivo, con modelos preentrenados. |

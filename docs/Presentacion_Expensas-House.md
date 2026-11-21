@@ -52,7 +52,7 @@ Este recorrido conecta adquisición y mejora de imágenes, OCR, validación de d
 
 ## Imágenes reales de productos en las ofertas
 
-**El buscador muestra la fotografía del producto proporcionada por la fuente externa, junto con su nombre, supermercado, precio y condiciones.** El backend consulta catálogos públicos de Carrefour y Jumbo mediante sus endpoints de catálogo, extrae `imageUrl` del SKU y devuelve `image_url` a los clientes. La web y Android utilizan esa dirección para mostrar la imagen real del catálogo. No se generan fotografías mediante IA ni se inventan precios. Las ofertas manuales pueden incorporar una foto suministrada por el usuario.
+**El buscador muestra la fotografía del producto proporcionada por la fuente externa, junto con su nombre, supermercado, precio y condiciones.** El backend consulta catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo mediante sus endpoints de catálogo, extrae la fotografía de la variante (`imageUrl` en VTEX; `image_url` en Coto) y devuelve `image_url` a los clientes. La web y Android utilizan esa dirección para mostrar la imagen real del catálogo. No se generan fotografías mediante IA ni se inventan precios. Las ofertas manuales pueden incorporar una foto suministrada por el usuario.
 
 Las imágenes ayudan a reconocer marca y presentación, pero no sustituyen la comparación de tamaño, precio y condiciones. Si la API no aporta una foto o el recurso deja de estar disponible, la interfaz informa que no hay imagen. La consulta externa depende de la disponibilidad y permisos de la fuente. Ratoneando permanece como consulta enlazada y proveedor opcional, no como integración garantizada.
 
@@ -116,3 +116,5 @@ La web y la API están alojadas en Vercel y guardan datos en Supabase. No depend
 ## Alcance y próximos pasos
 
 La versión actual es un proyecto académico con datos cargados por usuarios y almacenamiento persistente en la nube. Las cuentas y sesiones tienen tablas propias; el estado del hogar usa temporalmente una fila JSONB. La cuenta publicada es compartida. Quedan pendientes la normalización de compras/productos en tablas independientes, la separación de hogares y un histórico suficiente para validar modelos predictivos. Ver [despliegue y límites](DESPLIEGUE_NUBE.md).
+
+Actualización de ofertas: Día, Carrefour, Vea y Jumbo utilizan sus catálogos públicos VTEX; Coto se consulta mediante la búsqueda pública usada por su tienda. En Coto se compara el precio de una unidad en la sucursal 200, sin aplicar descuentos que exigen varias unidades o un medio de pago. Las fotografías provienen del catálogo correspondiente. La recomendación top es el menor precio entre presentaciones comparables, con advertencia cuando falta confirmar el tamaño. Android muestra dos tarjetas por fila y reserva las condiciones y la fuente para el detalle ampliable.

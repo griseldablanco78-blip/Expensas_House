@@ -40,7 +40,7 @@ Se utiliza un monolito modular. Frontend y backend están separados en el códig
 
 - **Despensa:** stock, unidades en uso y lista de reposición.
 - **Compras y presupuesto:** resúmenes por fecha de compra en web y Android, selector mensual web, total gastado, saldo y resumen por supermercado. El presupuesto es una referencia común para el mes elegido.
-- **Ofertas:** consulta ofertas guardadas; con `EXPENSA_LIVE_OFFERS=1` también consulta catálogos públicos de Carrefour/Jumbo. Ratoneando permanece como proveedor opcional configurado por `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
+- **Ofertas:** consulta ofertas guardadas; con `EXPENSA_LIVE_OFFERS=1` también consulta catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo. Ratoneando permanece como proveedor opcional configurado por `RATONEANDO_API_URL`. La web permite agregar y editar ofertas reales. No hay monitoreo automático garantizado de supermercados.
 - **Tickets:** tabla de productos por supermercado con detalle, precio unitario, descuento e importe neto; foto JPG/PNG/WebP o texto; OCR con Tesseract, revisión editable y confirmación del gasto con detalle. Conserva nombres en varias líneas, fecha, supermercado, texto reconocido e imagen privada de respaldo; permite descargar un archivo de lectura `.txt`. OpenCV ofrece un modo opcional para fotos con sombras. El OCR puede cometer errores y no recupera palabras ausentes en una foto cortada. Registrar el gasto no implica ingreso automático al stock.
 - **Boti House:** consultas de ofertas, presupuesto y faltantes mediante reglas sobre datos del hogar. No se presenta como un modelo generativo entrenado.
 - **Android y web:** comparten API; la sincronización depende de conexión y solicitudes, no de un canal de tiempo real.
@@ -97,8 +97,18 @@ Las credenciales se comparten por un medio privado y no se publican en el reposi
 
 `python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde el código confirmado en Git. Incluye únicamente el código con sus archivos de configuración y recursos necesarios, y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No contiene informes, cuadernillos, fotografías personales ni APK.
 
-La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.4 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.4).
+La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.5 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.5).
 
 ### Actualización 1.3.4
 
 El detalle revisado del ticket muestra producto, cantidad, precio unitario y total. El historial Android muestra comercio, fecha e importe descontado; al tocar una compra se abre el detalle y la fotografía privada. El teclado del formulario se cierra con «Listo» y al confirmar. En Ofertas → Faltantes, los productos provienen del stock y se consultan en el comparador integrado con marca y presentación disponibles.
+
+### Actualización 1.3.5
+
+La oferta top identifica el menor precio entre las presentaciones confirmadas; si no hay ninguna confirmada, se informa la falta de verificación. El descuento porcentual sigue disponible como orden alternativo sin cambiar la recomendación por precio. Cada tarjeta comienza con el nombre del supermercado.
+
+El comparador consulta los catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo. Coto utiliza su búsqueda pública y toma el precio por unidad de la sucursal 200; las promociones condicionadas no se presentan como precio de una unidad. Las otras cadenas utilizan el catálogo público VTEX. La disponibilidad y los precios pueden cambiar por zona. Si una fuente falla, se conservan las demás y se informa el problema.
+
+En Android, las ofertas se muestran en dos columnas con información ampliable. Al final de Ofertas, «Tickets guardados» lista únicamente comercio y fecha; un doble toque (o mantener presionado) abre el comprobante privado y sus productos.
+
+La web aplica los mismos cambios de contenido: tarjetas compactas con detalle ampliable, columnas adaptadas al ancho disponible y tickets al final de Ofertas. La foto privada se abre con doble clic o doble toque; también puede abrirse con Enter al enfocar el ticket.

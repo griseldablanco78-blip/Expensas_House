@@ -437,14 +437,17 @@ private fun OffersScreen(
 
             item {
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    StoreButton("Coto", "https://www.cotodigital3.com.ar/", Coral, Modifier.weight(1f))
+                    StoreButton("Coto", "https://www.cotodigital.com.ar/", Coral, Modifier.weight(1f))
                     StoreButton("Carrefour", "https://www.carrefour.com.ar/", Sky, Modifier.weight(1f))
-                    StoreButton("Día", "https://www.diaonline.com.ar/", Gold, Modifier.weight(1f))
+                    StoreButton("Día", "https://diaonline.supermercadosdia.com.ar/", Gold, Modifier.weight(1f))
+                }
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    StoreButton("Vea", "https://www.vea.com.ar/", Lavender, Modifier.weight(1f))
+                    StoreButton("Jumbo", "https://www.jumbo.com.ar/", Leaf, Modifier.weight(1f))
                 }
             }
 
             item { ConnectedOfferSearch(offerQuery) }
-            item { ConnectedReceiptHistory(refreshKey = expenses.hashCode()) }
 
             if (expenses.isNotEmpty()) {
                 item { SectionTitle("Reporte de Gastos", null) {} }
@@ -496,6 +499,7 @@ private fun OffersScreen(
                     }
                 }
             }
+            item { ConnectedReceiptHistory(refreshKey = expenses.hashCode()) }
             item { Spacer(Modifier.height(20.dp)) }
         }
 

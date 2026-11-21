@@ -1,5 +1,6 @@
 // Monthly expense view and private receipt downloads.
 function renderBudgetAndExpenses() {
+  renderOfferReceiptHistory();
   const budget = state.budget.monthlyBudget || 0;
   const spent = state.budget.totalSpent || 0;
   const remaining = budget - spent;
@@ -56,9 +57,71 @@ function renderBudgetAndExpenses() {
     tr.innerHTML = `
       <td>${dateStr}</td>
       <td><span class="cat-badge">${escapeHtml(e.category)}</span></td>
-      <td>${escapeHtml(e.store || e.note || '-')} ${(e.items || []).length ? `<details><summary>Ver ${e.items.length} productos</summary>${e.items.map(i => `${escapeHtml(i.description)} · ${Number(i.quantity)} × $${Number(i.unit_price)} = $${Number(i.line_total)}`).join('<br>')}</details>` : ''} ${e.source === 'receipt' ? `<p>IVA: ${e.vat_amount == null ? 'No informado' : '$' + Number(e.vat_amount).toLocaleString('es-AR')} (${e.vat_included === false ? 'separado' : 'incluido'})</p><p><a href="/api/receipts/${encodeURIComponent(e.id)}/text" download>Descargar texto</a>${e.receipt_image ? ` · <a href="/api/receipts/${encodeURIComponent(e.id)}/image" target="_blank" rel="noopener">Ver comprobante</a>` : ''}</p>` : ''}</td>
+      <td>${escapeHtml(e.store || e.note || '-')} ${(e.items || []).length ? `<details><summary>Ver ${e.items.length} productos</summary>${e.items.map(i => `${escapeHtml(i.description)} · ${Number(i.quantity)} × $${Number(i.unit_price)} = $${Number(i.line_total)}`).join('<br>')}</details>` : ''} ${e.source === 'receipt' ? `<p><a href="/api/receipts/${encodeURIComponent(e.id)}/text" download>Descargar texto</a>${e.receipt_image ? ` · <a href="/api/receipts/${encodeURIComponent(e.id)}/image" target="_blank" rel="noopener">Ver comprobante</a>` : ''}</p>` : ''}</td>
       <td class="text-right" style="font-weight:800; font-family:var(--font-heading); color:var(--text-main);">$${(e.amount || 0).toLocaleString('es-AR')}</td>
     `;
     expTbody.appendChild(tr);
   });
+}
+
+
+let receiptPreviewUrl = null;
+let receiptPreviewSerial = 0;
+function renderOfferReceiptHistory() {
+  const list = document.getElementById('offer-receipt-list');
+  list.replaceChildren();
+  const dateOf = receipt => receipt.purchase_date || (receipt.timestamp ? new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(receipt.timestamp)) : 'Sin fecha');
+  [...state.expenses].sort((a,b) => dateOf(b).localeCompare(dateOf(a))).forEach(receipt => {
+    const button = document.createElement('button');
+    button.type = 'button'; button.className = 'saved-receipt-row';
+    const date = document.createElement('span'); date.textContent = dateOf(receipt);
+    const store = document.createElement('strong'); store.textContent = receipt.store || receipt.note || 'Comercio sin nombre';
+    button.append(date, store);
+    button.title = 'Doble clic para abrir el ticket';
+    button.addEventListener('dblclick', () => openSavedReceipt(receipt));
+    button.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); openSavedReceipt(receipt); } });
+    // Touch double-tap on browsers that do not synthesize dblclick.
+    let previousTap = 0;
+    button.addEventListener('touchend', event => {
+      const now = Date.now();
+      if (previousTap && now - previousTap < 350) { event.preventDefault(); openSavedReceipt(receipt); previousTap = 0; }
+      else previousTap = now;
+    });
+    list.appendChild(button);
+  });
+  if (!list.children.length) list.textContent = 'Todavía no hay tickets guardados.';
+}
+
+async function openSavedReceipt(receipt) {
+  const dialog = document.getElementById('saved-receipt-dialog');
+  if (dialog.open) return;
+  const serial = ++receiptPreviewSerial;
+  const content = document.getElementById('saved-receipt-content'); content.replaceChildren();
+  document.getElementById('saved-receipt-title').textContent = receipt.store || receipt.note || 'Ticket guardado';
+  const date = document.createElement('p'); date.textContent = receipt.purchase_date || 'Sin fecha de compra'; content.append(date);
+  const total = document.createElement('p'); total.textContent = 'Descontado del presupuesto: $' + Number(receipt.amount).toLocaleString('es-AR'); content.append(total);
+  (receipt.items || []).forEach(item => {
+    const row = document.createElement('p');
+    row.textContent = `${item.description} · ${item.quantity} × $${Number(item.unit_price).toLocaleString('es-AR')} = $${Number(item.line_total).toLocaleString('es-AR')}`;
+    content.append(row);
+  });
+  const status = document.createElement('p'); status.textContent = 'Cargando imagen del ticket…'; content.append(status);
+  const close = () => {
+    receiptPreviewSerial++;
+    if (receiptPreviewUrl) { URL.revokeObjectURL(receiptPreviewUrl); receiptPreviewUrl = null; }
+  };
+  dialog.onclose = close;
+  document.getElementById('saved-receipt-close').onclick = () => dialog.close();
+  dialog.showModal();
+  try {
+    const response = await fetch(`/api/receipts/${encodeURIComponent(receipt.id)}/image`);
+    if (!response.ok) throw new Error('Imagen no disponible');
+    const photo = await response.blob();
+    if (!dialog.open || serial !== receiptPreviewSerial) return;
+    receiptPreviewUrl = URL.createObjectURL(photo);
+    const image = document.createElement('img'); image.src = receiptPreviewUrl; image.alt = 'Imagen del ticket guardado'; image.className = 'saved-receipt-photo';
+    status.replaceWith(image);
+  } catch {
+    if (dialog.open && serial === receiptPreviewSerial) status.textContent = 'No hay una imagen disponible para este gasto. Los productos guardados se muestran arriba.';
+  }
 }

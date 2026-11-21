@@ -34,11 +34,11 @@ class ReceiptHistoryTest {
         } }
         compose.onNodeWithText("Cargar ticket · foto o galería").performClick()
         compose.runOnIdle { assertEquals(1,scan); assertEquals(0,manual) }
-        compose.waitUntil(5000) { compose.onAllNodesWithText("Fecha de compra: 2026-10-01").fetchSemanticsNodes().isNotEmpty() }
+        compose.waitUntil(5000) { compose.onAllNodesWithText("2026-10-01").fetchSemanticsNodes().isNotEmpty() }
         compose.onNodeWithText("ARROZ ANTIGUO QA").assertDoesNotExist()
         compose.onNodeWithText("Elegir fecha del resumen").performScrollTo().performClick()
         compose.onNodeWithText("2026-10-01").performClick()
-        compose.onNodeWithText("Fecha de compra: 2026-10-01").performScrollTo().performClick()
+        compose.onNodeWithText("2026-10-01").performScrollTo().performTouchInput { doubleClick() }
         compose.onNodeWithText("ARROZ ANTIGUO QA").assertExists()
         compose.onNodeWithText("ARROZ NUEVO QA").assertDoesNotExist()
         compose.onNodeWithText("Cerrar detalle").performClick()

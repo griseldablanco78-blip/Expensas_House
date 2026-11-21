@@ -21,10 +21,12 @@ El OCR local Python sigue como opción de desarrollo con Pillow, pytesseract/Tes
 
 ## Fotografías y precios de ofertas
 
-`catalog_search.py` consulta catálogos públicos de Carrefour y Jumbo y extrae precio, marca, disponibilidad, enlace y `imageUrl` del SKU. La API entrega `image_url` y los clientes muestran esa fotografía real junto con su fuente. Si la imagen falta o deja de estar disponible, la interfaz lo informa. No se generan imágenes ni precios con IA. Ratoneando es un enlace de consulta y un proveedor opcional sujeto a autorización; no hay cobertura garantizada de todas las tiendas.
+`catalog_search.py` consulta catálogos públicos de Día, Coto, Carrefour, Vea y Jumbo y extrae precio, marca, disponibilidad, enlace y la fotografía de la variante (`imageUrl` en VTEX; `image_url` en Coto). La API entrega `image_url` y los clientes muestran esa fotografía real junto con su fuente. Si la imagen falta o deja de estar disponible, la interfaz lo informa. No se generan imágenes ni precios con IA. Ratoneando es un enlace de consulta y un proveedor opcional sujeto a autorización; no hay cobertura garantizada de todas las tiendas.
 
 ## Verificación y límites
 
 Las pruebas locales usan almacenamiento temporal y fotos sintéticas. La foto real de DIA se prueba únicamente cuando se indica su ruta local mediante `E2E_RECEIPT_FIXTURE`; no se incorpora a Git ni se registra en el hogar publicado. Un carácter ambiguo como la letra L frente al número 1 puede requerir corrección manual. Las advertencias no se presentan como un porcentaje de exactitud ni como garantía sobre cualquier foto.
 
 La cuenta publicada del hogar es compartida y contiene información cargada por usuarios; las pruebas que escriben compras se ejecutan en entornos locales ficticios. Ver [presentación](Presentacion_Expensas-House.md), [informe breve](INFORME_PRESENTACION.md) y [cuadernillo](../CUADERNILLO_TECNICO_IA.md).
+
+Actualización de ofertas: Día, Carrefour, Vea y Jumbo utilizan sus catálogos públicos VTEX; Coto se consulta mediante la búsqueda pública usada por su tienda. En Coto se compara el precio de una unidad en la sucursal 200, sin aplicar descuentos que exigen varias unidades o un medio de pago. Las fotografías provienen del catálogo correspondiente. La recomendación top es el menor precio entre presentaciones comparables, con advertencia cuando falta confirmar el tamaño. Android muestra dos tarjetas por fila y reserva las condiciones y la fuente para el detalle ampliable.

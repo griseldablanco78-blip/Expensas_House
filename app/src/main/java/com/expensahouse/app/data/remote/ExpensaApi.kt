@@ -35,7 +35,7 @@ interface ExpensaApi {
     @POST("api/auth/accept-invitation")
     suspend fun acceptInvitation(@Body request: InvitationRequest): AccountResponse
     @GET("api/offers/compare")
-    suspend fun compare(@Query("q") query: String, @Query("sort") sort: String = "discount"): Comparison
+    suspend fun compare(@Query("q") query: String, @Query("sort") sort: String = "price"): Comparison
 
     @POST("api/ai/chat")
     suspend fun chat(@Body request: ChatRequest): ChatAnswer

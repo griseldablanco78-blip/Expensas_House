@@ -132,10 +132,17 @@
       </div>
 
       <div class="filter-bar">
-        <label>Ordenar ofertas <select id="offer-sort"><option value="discount">Mayor descuento informado</option><option value="price">Menor precio publicado</option></select></label>
+        <label>Ordenar ofertas <select id="offer-sort"><option value="price">Menor precio publicado</option></select></label>
         <a id="ratoneando-search" href="https://ratoneando.ar/" target="_blank" rel="noopener noreferrer">Consultar en Ratoneando ↗</a>
       </div>
-      <p id="offer-source-status" role="status"></p>
+      <nav class="supermarket-links filter-bar" aria-label="Tiendas de supermercados">
+        <a href="https://diaonline.supermercadosdia.com.ar/" target="_blank" rel="noopener noreferrer">Día ↗</a>
+        <a href="https://www.cotodigital.com.ar/" target="_blank" rel="noopener noreferrer">Coto ↗</a>
+        <a href="https://www.carrefour.com.ar/" target="_blank" rel="noopener noreferrer">Carrefour ↗</a>
+        <a href="https://www.vea.com.ar/" target="_blank" rel="noopener noreferrer">Vea ↗</a>
+        <a href="https://www.jumbo.com.ar/" target="_blank" rel="noopener noreferrer">Jumbo ↗</a>
+      </nav>
+      <details class="offer-source-detail"><summary>Información de fuentes</summary><p id="offer-source-status" role="status"></p></details>
       <details class="offer-editor edit-only"><summary>Mis ofertas · agregar y editar</summary><p>Agregá ofertas reales o editá las sincronizadas con tu app.</p><form id="saved-offer-form" class="offer-editor-grid">
       <label>Oferta guardada<select id="saved-offer-id"></select></label><label>Producto y presentación<input id="saved-offer-product" required maxlength="200" placeholder="Ej.: leche entera 1 litro"></label>
       <label>Supermercado<input id="saved-offer-store" required maxlength="150"></label><label>Precio publicado<input id="saved-offer-price" type="number" min="0.01" step="0.01" required></label><label>Foto del producto (opcional)<input id="saved-offer-image" type="file" accept="image/jpeg,image/png,image/webp"></label>
@@ -150,7 +157,7 @@
       <!-- Contenedor de Resultados Comparativos -->
       <div id="comparator-results" class="comparator-results hidden">
         <!-- Veredicto IA Card -->
-        <div class="ai-verdict-card" id="ai-verdict-box">
+        <details class="ai-verdict-card" id="ai-verdict-box"><summary>Ver comparación y condiciones</summary>
           <div class="verdict-header">
             <div class="verdict-icon">💡</div>
             <div>
@@ -178,7 +185,7 @@
           <div id="verdict-stock-alert" class="verdict-stock-alert">
             <!-- Alerta del estado de stock en casa -->
           </div>
-        </div>
+        </details>
 
         <!-- Título de sección de ofertas -->
         <div class="section-title-row">
@@ -191,7 +198,16 @@
           <!-- Tarjetas generadas dinámicamente -->
         </div>
       </div>
-
+      <section class="offer-receipt-history" aria-labelledby="offer-receipt-title">
+        <h3 id="offer-receipt-title">Tickets guardados</h3>
+        <p>Doble clic o doble toque para abrir el ticket.</p>
+        <div id="offer-receipt-list"></div>
+      </section>
+      <dialog id="saved-receipt-dialog" aria-labelledby="saved-receipt-title">
+        <button type="button" id="saved-receipt-close" class="btn-secondary">Cerrar ticket</button>
+        <h3 id="saved-receipt-title">Ticket guardado</h3>
+        <div id="saved-receipt-content"></div>
+      </dialog>
     </section>
 
     <!-- ========================================== -->
@@ -542,6 +558,7 @@
               <option value="Carrefour">Carrefour</option>
               <option value="Día">Día</option>
               <option value="Jumbo">Jumbo</option>
+              <option value="Vea">Vea</option>
             </select>
           </div>
         </div>

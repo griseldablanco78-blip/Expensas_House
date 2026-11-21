@@ -2,6 +2,8 @@ package com.expensahouse.app.ui.features.receipts
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.ui.graphics.asImageBitmap
@@ -33,6 +35,7 @@ private fun ReceiptSummary.date(): String = purchase_date ?: timestamp?.let {
     Instant.ofEpochMilli(it).atZone(ZoneId.of("America/Argentina/Buenos_Aires")).toLocalDate().toString()
 } ?: "Sin fecha"
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRepository = AppContainer.receiptsRepository) {
     var receipts by remember { mutableStateOf<List<ReceiptSummary>>(emptyList()) }
@@ -51,8 +54,8 @@ internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRe
     val money = remember { NumberFormat.getCurrencyInstance(Locale("es", "AR")) }
     Card(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("Resumen de compras y precios históricos", style = MaterialTheme.typography.titleMedium)
-            Text("Los precios corresponden a la fecha de compra guardada.")
+            Text("Tickets guardados", style = MaterialTheme.typography.titleMedium)
+            Text("Doble toque para abrir", style = MaterialTheme.typography.labelSmall)
             if (busy) LinearProgressIndicator(Modifier.fillMaxWidth())
             if (status.isNotBlank()) Text(status)
             TextButton(onClick = { retry++ }, enabled = !busy) { Text("Actualizar resúmenes") }
@@ -68,12 +71,12 @@ internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRe
             val visible = receipts.filter { selectedDate.isBlank() || it.date() == selectedDate }.sortedByDescending { it.date() }
             if (!busy && visible.isEmpty() && status.isBlank()) Text("No hay compras guardadas para esta fecha.")
             visible.forEach { receipt ->
-                OutlinedCard(onClick = { selected = receipt }, modifier = Modifier.fillMaxWidth()) {
+                OutlinedCard(modifier = Modifier.fillMaxWidth().combinedClickable(
+                    onClick = {}, onDoubleClick = { selected = receipt },
+                    onLongClick = { selected = receipt }, onLongClickLabel = "Abrir ticket")) {
                     Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
                         Text(receipt.store?.takeIf { it.isNotBlank() } ?: receipt.note ?: "Comercio sin nombre", style = MaterialTheme.typography.titleSmall)
-                        Text("Fecha de compra: ${receipt.date()}")
-                        Text("Descontado del presupuesto: ${money.format(receipt.amount)}")
-                        Text("Ver ticket y productos", color = MaterialTheme.colorScheme.primary)
+                        Text(receipt.date())
                     }
                 }
                 HorizontalDivider()

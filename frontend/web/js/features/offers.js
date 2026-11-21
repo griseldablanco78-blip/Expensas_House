@@ -32,7 +32,7 @@ function renderComparisonResults(data) {
   document.getElementById('comparator-results').classList.remove('hidden');
   const analysis = data.ai_analysis;
   const offers = data.offers || [];
-  document.getElementById('comparison-target-title').textContent = `Ofertas para "${data.product_name}"`;
+  document.getElementById('comparison-target-title').textContent = 'Ofertas encontradas';
   document.getElementById('comparison-store-count').textContent = `${offers.length} ofertas`;
   document.getElementById('verdict-text').textContent = analysis.verdict;
   document.getElementById('offer-source-status').textContent = data.warning || '';
@@ -48,20 +48,21 @@ function renderComparisonResults(data) {
   if (!offers.length) container.textContent = 'No hay coincidencias con precio en las fuentes disponibles. Probá con menos palabras, por ejemplo leche o arroz, y revisá el estado de las fuentes indicado arriba.';
   offers.forEach((off, index) => {
     const card = document.createElement('div');
-    card.className = `store-card ${index === 0 ? 'is-winner' : ''}`;
+    const isTop = data.top_offer && off.id === data.top_offer.id;
+    card.className = `store-card ${isTop ? 'is-winner' : ''}`;
     const image = safeUrl(off.image_url);
     const link = safeUrl(off.direct_link);
     card.innerHTML = `
-      ${index === 0 ? '<strong class="top-offer-label">🏆 Oferta top según el filtro elegido</strong>' : ''}
+      <h3 class="offer-store-title">${escapeHtml(off.store)}</h3>
+      ${isTop ? '<strong class="top-offer-label">🏆 Oferta top · menor precio</strong>' : ''}
       <div class="product-image-slot">${image ? `<img class="offer-product-image" src="${escapeHtml(image)}" alt="${escapeHtml(off.product)}" loading="lazy" referrerpolicy="no-referrer">` : '<span class="product-photo-empty"><span aria-hidden="true">▧</span>Sin fotografía<small>Podés agregarla en Mis ofertas</small></span>'}</div>
       <h4 class="store-product-title">${escapeHtml(off.product)}</h4>
-      <strong>${escapeHtml(off.store)}</strong>
-      <span>${escapeHtml(off.brand)}</span>
-      <p>${escapeHtml(off.promo_text)}</p>
-      <p>${escapeHtml(off.conditions)}</p>
       <strong class="promo-price">$${off.promo_price.toLocaleString('es-AR')}</strong>
+      <details class="offer-card-detail"><summary>Ver detalle</summary>
+      <p>${escapeHtml(off.product)}</p><p>${escapeHtml(off.promo_text)}</p><p>${escapeHtml(off.conditions)}</p>
       <small>Fuente: ${escapeHtml(off.source)}${off.updated_at ? ` · ${escapeHtml(off.updated_at)}` : ' · Sin fecha informada'}</small>
       ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Ver oferta en el supermercado</a>` : ''}
+      </details>
       <button class="btn-add-to-cart">➕ A la lista</button>`;
     card.querySelector('img')?.addEventListener('error', event => {
       event.target.parentElement.textContent = '📦 Imagen no disponible';

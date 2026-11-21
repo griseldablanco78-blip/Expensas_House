@@ -95,7 +95,7 @@ def ratoneando_offers(query):
         return [], 'Ratoneando no respondió. Se muestran solo las ofertas guardadas.'
 
 
-def compare_supermarket_offers(raw_query, sort='discount'):
+def compare_supermarket_offers(raw_query, sort='price'):
     query = clean_query(raw_query)
     tokens = set(query.split())
     remote, warning = ratoneando_offers(query) if query else ([], '')
@@ -151,7 +151,8 @@ def compare_supermarket_offers(raw_query, sort='discount'):
                 else (lambda o: (not o['size_confirmed'], -o['saving_percent'], o['promo_price'])))
     confirmed = [o for o in offers if o['size_confirmed']]
     best = min(confirmed or offers, key=lambda o: o['promo_price']) if offers else None
-    top = offers[0] if offers else None
+    # Ranking by discount may reorder cards, but the top recommendation is always the lowest comparable price.
+    top = best
     if missing_prices:
         warning = ' '.join(filter(None, [warning,
             f'{missing_prices} oferta(s) coincide(n), pero no tienen un precio válido. Completá el precio en las ofertas guardadas para poder compararlas.']))
@@ -159,7 +160,7 @@ def compare_supermarket_offers(raw_query, sort='discount'):
         warning = ' '.join(filter(None, [warning, 'Hay coincidencias sin tamaño informado; confirmá la presentación antes de comparar precios.']))
     stock = next((s for s in get_stock() if tokens and tokens.issubset(
         set(clean_query(s.get('name', '') + ' ' + s.get('brand', '')).split()))), None)
-    verdict = (f"Oferta top: {top['product']} en {top['store']}, ${top['promo_price']:,.2f}. "
+    verdict = (f"Oferta top por menor precio: {top['product']} en {top['store']}, ${top['promo_price']:,.2f}. "
                f"{top['promo_text']}. Menor precio publicado: {best['store']} (${best['promo_price']:,.2f}). "
                'Las presentaciones pueden variar; revisá tamaño, vigencia y condiciones antes de comprar.'
                if top else 'No encontramos ofertas con precio que coincidan con tu producto, marca y presentación. Revisá la escritura o probá otra consulta.')

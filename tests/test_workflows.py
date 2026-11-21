@@ -290,12 +290,15 @@ class Workflows(unittest.TestCase):
             {'id': '3', 'product': 'Arroz', 'store': 'C', 'price': '$800', 'saving': '50% off'}]
         db.save_db(self.state)
         result = offer_service.compare_supermarket_offers('Quiero saber la oferta top de leche entera')
-        self.assertEqual(result['top_offer']['store'], 'B')
+        self.assertEqual(result['top_offer']['store'], 'A')
+        by_discount = offer_service.compare_supermarket_offers('leche entera', 'discount')
+        self.assertEqual(by_discount['offers'][0]['store'], 'B')
+        self.assertEqual(by_discount['top_offer']['store'], 'A')
         self.assertEqual(len(result['offers']), 2)
         self.assertEqual(offer_service.compare_supermarket_offers('leche entera', 'price')['top_offer']['store'], 'A')
         self.assertEqual(offer_service.compare_supermarket_offers('producto inexistente')['offers'], [])
         chat = self.client.post('/api/ai/chat', json={'message': 'leche entera', 'context': 'offers'}).json()
-        self.assertEqual(chat['comparison']['top_offer']['store'], 'B')
+        self.assertEqual(chat['comparison']['top_offer']['store'], 'A')
 
     @patch.object(offer_service, 'ratoneando_offers', return_value=([], 'Sin proveedor'))
     def test_equivalent_sizes_and_unknown_presentation(self, _):

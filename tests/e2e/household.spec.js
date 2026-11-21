@@ -250,3 +250,38 @@ test('WEB-14: faltantes consulta nombre marca y presentación del stock', async 
   expect(new URL((await request).url()).searchParams.get('q')).toBe('Leche La Serenísima 1 L');
   await expect(page.locator('#ai-search-input')).toHaveValue('Leche La Serenísima 1 L');
 });
+
+
+test('WEB-15: supermercado encabeza la tarjeta y top identifica el menor precio', async ({page}) => {
+  const cheap = {id:'cheap',store:'Supermercado Económico',product:'Leche QA 1L',brand:'QA',promo_price:1000,promo_text:'Precio publicado',conditions:'',source:'Prueba local',saving_percent:0};
+  const discount = {...cheap,id:'discount',store:'Supermercado Descuento',promo_price:1500,saving_percent:30};
+  await page.route('**/api/offers/compare*', route => route.fulfill({json:{offers:[discount,cheap],top_offer:cheap,product_name:'Leche QA 1L',category:'Comestibles',ai_analysis:{best_single:{store:cheap.store,price:1000},max_saving_percent:30,verdict:'Oferta top por menor precio'}}}));
+  await expect(page.locator('#offer-sort')).toHaveValue('price');
+  await page.locator('#ai-search-input').fill('Leche QA 1L');
+  await page.locator('#btn-ai-search').click();
+  await expect(page.locator('.store-card')).toHaveCount(2);
+  await expect(page.locator('.store-card').first().locator(':scope > :first-child')).toHaveText(discount.store);
+  await expect(page.locator('.is-winner .offer-store-title')).toHaveText(cheap.store);
+  await expect(page.locator('.top-offer-label')).toHaveText('🏆 Oferta top · menor precio');
+});
+
+
+test('WEB-16: ticket compacto muestra fecha y comercio y abre la foto por doble clic', async ({page}) => {
+  await page.route('**/api/expenses', route => route.fulfill({json:[{id:'receipt-view',store:'Día QA',purchase_date:'2026-11-15',amount:5498,items:[{description:'CUNNING COLA 2,25L',quantity:2,unit_price:2749,line_total:5498}]}]}));
+  await page.route('**/api/receipts/receipt-view/image', route => route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jf1sAAAAASUVORK5CYII=', 'base64')}));
+  await page.reload();
+  const ticket = page.locator('#offer-receipt-list .saved-receipt-row');
+  await expect(ticket).toHaveCount(1);
+  await expect(ticket).toContainText('2026-11-15');
+  await expect(ticket).toContainText('Día QA');
+  await expect(ticket).not.toContainText('CUNNING');
+  await expect(ticket).not.toContainText('5498');
+  await ticket.click();
+  await expect(page.locator('#saved-receipt-dialog')).not.toBeVisible();
+  await ticket.dblclick();
+  await expect(page.locator('#saved-receipt-dialog')).toBeVisible();
+  await expect(page.locator('#saved-receipt-content')).toContainText('CUNNING COLA 2,25L');
+  await expect(page.locator('.saved-receipt-photo')).toHaveAttribute('src',/^blob:/);
+  await page.locator('#saved-receipt-close').click();
+  await expect(page.locator('#saved-receipt-dialog')).not.toBeVisible();
+});
