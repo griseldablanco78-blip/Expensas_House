@@ -1,0 +1,34 @@
+[
+  {
+    "seconds": 15,
+    "body": "Expensas House organiza productos, compras y presupuesto desde Android y desde una página web. El trabajo aplica procesamiento digital de imágenes para transformar un ticket impreso en un comprobante digital que el usuario puede revisar."
+  },
+  {
+    "seconds": 20,
+    "body": "La aplicación permite saber qué productos hay, qué falta comprar y cuánto presupuesto queda. Reúne stock, lista de compras y ofertas con imágenes reales. Los tickets guardan gastos y precios por fecha para consultar compras anteriores."
+  },
+  {
+    "seconds": 50,
+    "body": "La foto completa se conserva como respaldo. La web prepara una copia con ajustes de resolución, contraste y sombras. Tesseract.js utiliza un modelo neuronal LSTM preentrenado en español. Android usa ML Kit Text Recognition v2, con reconocimiento latino preentrenado. El proyecto no entrenó esos pesos. Python separa nombre, cantidad, precio, descuento e IVA. El usuario revisa y confirma. En el ejemplo, dos botellas de 2.749 pesos suman 5.498 pesos. Ese total se registra una sola vez y actualiza el presupuesto del mes. El IVA contenido ya forma parte del importe pagado."
+  },
+  {
+    "seconds": 50,
+    "body": "La web y Android tienen interfaces distintas y comparten el mismo backend modular con FastAPI. La web usa HTML, CSS, JavaScript y Fetch. Android utiliza Kotlin, Compose y MVVM, con ViewModel y repositorios. Room guarda la copia local. Retrofit y OkHttp conectan con la API por HTTPS. Los datos viajan como JSON y las fotos como multipart. Cuando Android sincroniza un cambio, el servidor lo guarda en PostgreSQL. La web consulta cada quince segundos mientras está visible. Hace falta conexión. Si falla la red, Android mantiene los datos y permite reintentar. El intercambio no es instantáneo ni utiliza WebSocket."
+  },
+  {
+    "seconds": 65,
+    "body": "El buscador utiliza búsqueda léxica, normalización y reglas para comparar producto, marca y presentación. Python, re, unicodedata y FastAPI implementan esa lógica. Los catálogos externos aportan precios e imágenes reales. La leche La Serenísima es un ejemplo visual, no una oferta ganadora garantizada. La voz utiliza reconocimiento automático del habla, llamado ASR. Web Speech API o RecognizerIntent convierten audio en texto. El navegador o Android elige el modelo del proveedor. Boti House es un asistente por reglas que consulta stock, ofertas y presupuesto. Usa Python, re y el endpoint de chat de FastAPI. Estas funciones ya están integradas. No se entrenó un modelo generativo propio para responder o buscar ofertas."
+  },
+  {
+    "seconds": 35,
+    "body": "Los lectores del ticket utilizan modelos preentrenados. Ofertas y Boti utilizan reglas. La predicción de reposición con Random Forest requiere un historial real de compras y consumos. Estamos preparando esos registros antes de entrenar y evaluar una versión de producción. CSV significa valores separados por comas. Es un archivo de texto que organiza datos en filas y columnas para preparar el entrenamiento. Los datos operativos de la aplicación permanecen en la base compartida."
+  },
+  {
+    "seconds": 30,
+    "body": "Vercel sirve la web y ejecuta FastAPI bajo el mismo dominio. La API forma parte del backend y utiliza HTTPS y JSON. OpenAPI documenta sus contratos. Supabase conserva PostgreSQL y las fotografías privadas. Android funciona en el teléfono. GitHub aloja el código, la automatización de pruebas y la APK. Ya no se necesita una computadora encendida ni un túnel temporal."
+  },
+  {
+    "seconds": 35,
+    "body": "El servidor temporal se reemplazó por una dirección fija con persistencia. En OCR se corrigieron nombres partidos y confusiones entre cantidades, precios e impuestos. Los caracteres dudosos siguen siendo editables antes de confirmar. El identificador del ticket evita gastos duplicados si se reintenta un envío. Las pruebas verifican el recorrido de la aplicación, pero no implican exactitud total del OCR. La siguiente etapa es validar varios ciclos reales para integrar la predicción de reposición."
+  }
+]

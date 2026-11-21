@@ -4,7 +4,7 @@
 |---|---|---|
 | Backend local aislado | pytest, contratos, descuentos/netos, OCR, catálogo, permisos y sincronización | 50 pruebas aprobadas |
 | Navegador local | Playwright + API temporal real | 6 escenarios aprobados |
-| Vercel público | Login test123; búsqueda de leche entera; foto sintética; descuento; registro de gasto; comprobantes | 1 escenario completo aprobado; 37 resultados de catálogo visibles en esa consulta |
+| Vercel público | Login con cuenta autorizada; búsqueda de leche entera; foto sintética; descuento; registro de gasto; comprobantes | 1 escenario completo aprobado; 37 resultados de catálogo visibles en esa consulta |
 | Android | Compilación de APK y pruebas instrumentadas | Versión 1.1.0 instalada por USB sin borrar datos; 1 prueba instrumentada aprobada en el teléfono |
 
 URL verificada: https://expensas-house-griselda-blanco.vercel.app

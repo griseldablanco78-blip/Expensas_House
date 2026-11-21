@@ -6,7 +6,7 @@
 
 La web y la API FastAPI se ejecutan en Vercel. No requieren una PC encendida ni un túnel. Supabase conserva datos y comprobantes entre ejecuciones de la API. El estado compartido se recuperó desde los datos cargados manualmente en Android, conservando respaldos privados. Se mantienen planes gratuitos; no se habilitaron servicios de pago.
 
-La cuenta `test123` es compartida: quien utilice esas credenciales podrá consultar y modificar los datos. Las pruebas que registran gastos ficticios deben ejecutarse en otro entorno, no sobre ese hogar.
+La cuenta del hogar es compartida: quien utilice esas credenciales podrá consultar y modificar los datos. Las pruebas que registran gastos ficticios deben ejecutarse en otro entorno, no sobre ese hogar.
 
 ## Responsabilidades
 

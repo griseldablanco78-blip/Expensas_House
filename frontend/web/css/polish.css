@@ -55,3 +55,15 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 @media(prefers-reduced-motion:reduce) { *,*::before,*::after { animation:none !important; transition:none !important; } }
 
 .hero-header h2 { color:var(--text-main); }.hero-header p { color:var(--text-muted); }.comparator-hero::before { display:none; }.search-input-wrapper input { min-width:0; }
+
+/* Passwords remain masked unless the user explicitly reveals one field. */
+.password-control { display:block; position:relative; }
+.auth-panel .password-control input { padding-right:56px; }
+.password-visibility { position:absolute; right:8px; top:12px; width:36px; height:36px; display:grid; place-items:center; border:0; border-radius:8px; background:transparent; color:var(--text-main); cursor:pointer; }
+.password-visibility:hover,.password-visibility[aria-pressed="true"] { background:var(--border-color); }
+.password-visibility:focus-visible { outline:2px solid var(--color-leaf,#286347); outline-offset:2px; }
+
+/* Acciones de alta visibles en inventario y lista de compras. */
+.add-product-button { display:inline-flex; align-items:center; justify-content:center; gap:10px; min-height:44px; flex-shrink:0; }
+.add-product-icon { display:inline-flex; align-items:center; justify-content:center; width:28px; height:28px; border-radius:50%; background:rgba(255,255,255,.18); font-size:25px; line-height:1; }
+@media(max-width:600px) { #tab-stock .page-header, #tab-shopping .page-header { flex-wrap:wrap; gap:16px; } .add-product-button { width:100%; } }

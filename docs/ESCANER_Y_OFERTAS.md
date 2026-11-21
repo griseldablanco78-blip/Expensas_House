@@ -27,4 +27,4 @@ El OCR local Python sigue como opción de desarrollo con Pillow, pytesseract/Tes
 
 Las pruebas locales usan almacenamiento temporal y fotos sintéticas. La foto real de DIA se prueba únicamente cuando se indica su ruta local mediante `E2E_RECEIPT_FIXTURE`; no se incorpora a Git ni se registra en el hogar publicado. Un carácter ambiguo como la letra L frente al número 1 puede requerir corrección manual. Las advertencias no se presentan como un porcentaje de exactitud ni como garantía sobre cualquier foto.
 
-La cuenta publicada test123 es compartida y contiene información cargada por usuarios; las pruebas que escriben compras se ejecutan en entornos locales ficticios. Ver [presentación](Presentacion_Expensas-House.md), [informe breve](INFORME_PRESENTACION.md) y [cuadernillo](../CUADERNILLO_TECNICO_IA.md).
+La cuenta publicada del hogar es compartida y contiene información cargada por usuarios; las pruebas que escriben compras se ejecutan en entornos locales ficticios. Ver [presentación](Presentacion_Expensas-House.md), [informe breve](INFORME_PRESENTACION.md) y [cuadernillo](../CUADERNILLO_TECNICO_IA.md).

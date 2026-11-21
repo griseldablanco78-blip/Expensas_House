@@ -14,11 +14,34 @@ window.fetch = async (input, options = {}) => {
   return response;
 };
 
+function setupPasswordVisibility(form) {
+  const controls = [];
+  const eye = '<svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12Z" fill="none" stroke="currentColor" stroke-width="1.8"/><circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.8"/></svg>';
+  for (const id of ['auth-password','auth-new-password','auth-confirm-password']) {
+    const input = document.getElementById(id);
+    const wrapper = document.createElement('span'); wrapper.className = 'password-control';
+    input.before(wrapper); wrapper.append(input);
+    const button = document.createElement('button'); button.type = 'button'; button.className = 'password-visibility';
+    button.innerHTML = eye; button.setAttribute('aria-controls', id);
+    const label = id === 'auth-password' ? 'contraseña' : id === 'auth-new-password' ? 'nueva contraseña' : 'confirmación de contraseña';
+    function hide() { input.type = 'password'; button.setAttribute('aria-label','Mostrar ' + label); button.setAttribute('aria-pressed','false'); }
+    button.addEventListener('click', () => {
+      const showing = input.type === 'password'; input.type = showing ? 'text' : 'password';
+      button.setAttribute('aria-label',(showing ? 'Ocultar ' : 'Mostrar ') + label);
+      button.setAttribute('aria-pressed',String(showing)); input.focus();
+    });
+    input.addEventListener('input', () => { if (!input.value) hide(); });
+    wrapper.append(button); hide(); controls.push(hide);
+  }
+  return () => controls.forEach(hide => hide());
+}
+
 async function bootAuthentication(onReady) {
   const panel = document.getElementById('auth-panel');
   const shell = document.getElementById('app-shell');
   const status = document.getElementById('auth-status');
   const form = document.getElementById('auth-form');
+  const hidePasswords = setupPasswordVisibility(form);
   const mode = document.getElementById('auth-mode');
   const email = document.getElementById('auth-email');
   const password = document.getElementById('auth-password');
@@ -45,7 +68,7 @@ async function bootAuthentication(onReady) {
     panel.hidden = true; shell.hidden = false;
     document.body.classList.toggle('read-only', !canEditHousehold());
     document.body.classList.toggle('inventory-only', user.role === 'inventory_viewer');
-    document.getElementById('session-email').textContent = user.email;
+    document.getElementById('session-email').textContent = 'Mi cuenta';
     document.getElementById('members-nav').hidden = user.role !== 'admin';
     if (!started) { started = true; onReady(); }
   }
@@ -53,10 +76,11 @@ async function bootAuthentication(onReady) {
   function fields() {
     const changing = mode.value === 'change-password';
     email.required = true; password.required = true; code.required = false;
-    email.parentElement.hidden = false; password.parentElement.hidden = false; code.parentElement.hidden = true;
+    email.parentElement.hidden = false; password.closest('label').hidden = false; code.parentElement.hidden = true;
     for (const id of ['auth-new-password', 'auth-confirm-password']) {
-      const input = document.getElementById(id); input.required = changing; input.parentElement.hidden = !changing; input.value = '';
+      const input = document.getElementById(id); input.required = changing; input.closest('label').hidden = !changing; input.value = '';
     }
+    hidePasswords();
     password.value = ''; password.minLength = mode.value === 'register' ? 15 : 1;
     password.autocomplete = mode.value === 'register' ? 'new-password' : 'current-password';
     document.getElementById('auth-heading').textContent = changing ? 'Renová tu contraseña.' : mode.value === 'register' ? 'Tu hogar empieza acá.' : 'Qué bueno verte.';
@@ -68,6 +92,7 @@ async function bootAuthentication(onReady) {
   fields(); mode.addEventListener('change', fields);
   form.addEventListener('submit', async event => {
     event.preventDefault();
+    hidePasswords();
     if (mode.value === 'register' && !registrationAvailable) {
       status.textContent = setupMessage;
       return;
@@ -87,7 +112,7 @@ async function bootAuthentication(onReady) {
       }
       const data = await response.json();
       if (!response.ok) throw new Error(typeof data.detail === 'string' ? data.detail : 'Revisá los datos del formulario.');
-      password.value = '';
+      hidePasswords(); password.value = '';
       document.getElementById('auth-new-password').value = ''; document.getElementById('auth-confirm-password').value = '';
       if (changing) { mode.value = 'login'; fields(); }
       if (data.user) await showUser(data.user);

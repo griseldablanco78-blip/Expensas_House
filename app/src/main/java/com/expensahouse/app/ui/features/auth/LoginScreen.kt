@@ -7,6 +7,12 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.ui.unit.dp
 import com.expensahouse.app.core.auth.*
 import com.expensahouse.app.data.remote.ExpensaApiClient
@@ -35,12 +41,12 @@ internal fun AccountGate(beforeSessionChange: () -> Unit, content: @Composable (
                     Button(onClick = { beforeSessionChange(); AuthSession.clear() }) { Text("Volver al inicio de sesión") }
                 } else {
                     listOf("login" to "Iniciar sesión", "register" to "Crear cuenta").forEach { (value, label) ->
-                        FilterChip(selected = action == value, onClick = { action = value; status = "" }, label = { Text(label) }, enabled = !busy)
+                        FilterChip(selected = action == value, onClick = { action = value; status = ""; password = "" }, label = { Text(label) }, enabled = !busy)
                     }
                     if (action !in setOf("verify", "reset")) OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Usuario") }, singleLine = true, enabled = !busy)
                     if (action in setOf("verify", "reset")) OutlinedTextField(value = code, onValueChange = { code = it }, label = { Text("Código recibido por correo") }, enabled = !busy)
                     if (action !in setOf("resend", "forgot")) {
-                        OutlinedTextField(value = password, onValueChange = { password = it }, label = { Text("Contraseña") }, visualTransformation = PasswordVisualTransformation(), singleLine = true, enabled = !busy)
+                        PasswordInputField(password, { password = it }, "Contraseña", enabled = !busy)
                         if (action != "login") Text("Usá una frase de al menos 15 caracteres. Después de crear la cuenta, iniciá sesión.")
                     }
                     Button(enabled = !busy, onClick = {
@@ -86,9 +92,9 @@ internal fun ChangePasswordDialog(onDismiss: () -> Unit) {
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text("Usá al menos 15 caracteres. Se cerrarán todas tus sesiones.")
-                OutlinedTextField(current, { current = it }, label = { Text("Contraseña actual") }, visualTransformation = PasswordVisualTransformation(), enabled = !busy, singleLine = true)
-                OutlinedTextField(next, { next = it }, label = { Text("Nueva contraseña") }, visualTransformation = PasswordVisualTransformation(), enabled = !busy, singleLine = true)
-                OutlinedTextField(confirmation, { confirmation = it }, label = { Text("Repetir contraseña") }, visualTransformation = PasswordVisualTransformation(), enabled = !busy, singleLine = true)
+                PasswordInputField(current, { current = it }, "Contraseña actual", enabled = !busy)
+                PasswordInputField(next, { next = it }, "Nueva contraseña", enabled = !busy)
+                PasswordInputField(confirmation, { confirmation = it }, "Repetir contraseña", enabled = !busy)
                 if (status.isNotBlank()) Text(status)
             }
         },
@@ -111,4 +117,21 @@ internal fun ChangePasswordDialog(onDismiss: () -> Unit) {
         },
         dismissButton = { TextButton(enabled = !busy, onClick = onDismiss) { Text("Cancelar") } }
     )
+}
+
+
+@Composable
+internal fun PasswordInputField(value: String, onValueChange: (String) -> Unit, label: String, enabled: Boolean = true) {
+    var visible by remember { mutableStateOf(false) }
+    LaunchedEffect(value.isEmpty(), enabled) { if (value.isEmpty() || !enabled) visible = false }
+    OutlinedTextField(value = value, onValueChange = onValueChange, label = { Text(label) },
+        visualTransformation = if (visible) VisualTransformation.None else PasswordVisualTransformation(),
+        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
+        singleLine = true, enabled = enabled,
+        trailingIcon = {
+            IconButton(onClick = { visible = !visible }, enabled = enabled) {
+                Icon(if (visible) Icons.Filled.VisibilityOff else Icons.Filled.Visibility,
+                    contentDescription = if (visible) "Ocultar ${label.lowercase()}" else "Mostrar ${label.lowercase()}")
+            }
+        })
 }

@@ -20,7 +20,7 @@ if not Path(store.DB_FILE).exists():
     store.save_db({'stock': [], 'shopping': [], 'offers': [], 'expenses': [],
                    'user_prefs': {'id':0, 'monthlyBudget':10000, 'totalSpent':0}})
 from scripts.configurar_cuenta_prueba import provision
-provision('test123', 'PruebasTest1234')
+provision('qa_household', 'SoloParaQA_2026_SinDatosReales')
 # An offline manager reserves administration; the public demonstration account cannot grant access.
 with security.database() as connection:
     if not connection.execute("SELECT 1 FROM memberships WHERE role='admin'").fetchone():

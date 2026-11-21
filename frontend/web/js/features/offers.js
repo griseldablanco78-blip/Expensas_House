@@ -14,7 +14,7 @@ async function performAIComparison(query) {
     const res = await fetch(`/api/offers/compare?q=${encodeURIComponent(query)}&sort=${document.getElementById('offer-sort').value}`);
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data.detail || "No se pudieron consultar las ofertas");
-    if (serial === comparisonSerial) renderComparisonResults(data);
+    if (serial === comparisonSerial && searchInput.value.trim() === query.trim()) renderComparisonResults(data);
   } catch (error) {
     console.error('Error en la comparación IA:', error);
     if (serial === comparisonSerial) {
@@ -29,6 +29,7 @@ async function performAIComparison(query) {
 
 let comparisonSerial = 0;
 function renderComparisonResults(data) {
+  document.getElementById('comparator-results').classList.remove('hidden');
   const analysis = data.ai_analysis;
   const offers = data.offers || [];
   document.getElementById('comparison-target-title').textContent = `Ofertas para "${data.product_name}"`;

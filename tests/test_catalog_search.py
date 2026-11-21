@@ -19,6 +19,13 @@ class PublicCatalogTests(unittest.TestCase):
         self.assertEqual(offers[0]['saving'],'20.0%')
         self.assertEqual(offers[0]['source'],'Catálogo web de Carrefour')
 
+    def test_variant_name_preserves_presentation_when_title_is_generic(self):
+        payload=[{'productName':'Leche La Serenísima','brand':'La Serenísima','items':[
+            {'itemId':'one','name':'Envase 1L','sellers':[{'commertialOffer':{'Price':1500,'AvailableQuantity':2}}]}]}]
+        with patch.object(catalog_search,'urlopen',return_value=io.BytesIO(json.dumps(payload).encode())):
+            offers=catalog_search.fetch_catalog('QA','https://example.test','leche')
+        self.assertIn('1L',offers[0]['product'])
+
     def test_source_failure_preserves_other_source_and_cache(self):
         def source(name, base, query):
             if name == 'Jumbo': raise TimeoutError()

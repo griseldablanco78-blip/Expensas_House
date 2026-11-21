@@ -28,9 +28,7 @@ document.addEventListener('DOMContentLoaded', () => bootAuthentication(() => {
   initSpeechRecognition();
   initEventListeners();
   loadAllData().then(() => {
-    // Consulta inicial amplia para mostrar las fuentes disponibles.
-    if (window.currentUser.role !== 'inventory_viewer') performAIComparison("leche");
-    else switchTab('stock');
+    if (window.currentUser.role === 'inventory_viewer') switchTab('stock');
   });
   startDataAutoRefresh();
   setupMembers();
@@ -653,6 +651,12 @@ function initEventListeners() {
   // Buscador principal
   const searchInput = document.getElementById('ai-search-input');
   const searchBtn = document.getElementById('btn-ai-search');
+  searchInput.addEventListener('input', () => {
+    comparisonSerial++;
+    document.getElementById('comparator-results').classList.add('hidden');
+    document.getElementById('comparator-loading').classList.add('hidden');
+    document.getElementById('offer-source-status').textContent = searchInput.value.trim() ? 'Presioná «Descubrir ofertas» para comparar tu nueva búsqueda.' : '';
+  });
 
   searchBtn.addEventListener('click', () => {
     performAIComparison(searchInput.value.trim());

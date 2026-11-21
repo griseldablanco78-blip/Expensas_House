@@ -21,7 +21,7 @@ La web y FastAPI están publicados en Vercel. PostgreSQL y el almacenamiento pri
 
 Los registros actuales se recuperaron de los datos cargados manualmente en el teléfono. Las pruebas que agregan gastos de ejemplo se ejecutaron antes de esa recuperación; la instalación actual tiene desactivado el modo ficticio para evitar que esas pruebas vuelvan a modificar el hogar.
 
-La cuenta publicada `test123`, contraseña `PruebasTest1234`, es compartida: quienes utilicen esas credenciales podrán consultar y modificar sus datos. La separación de hogares privados e invitaciones con permisos detallados figura como mejora futura.
+La cuenta publicada del hogar es compartida y sus credenciales no se incluyen en esta documentación: quienes utilicen esas credenciales podrán consultar y modificar sus datos. La separación de hogares privados e invitaciones con permisos detallados figura como mejora futura.
 
 ## 2. Arquitectura y responsabilidades
 

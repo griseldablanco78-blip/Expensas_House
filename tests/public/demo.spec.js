@@ -2,9 +2,10 @@ const {test,expect}=require('@playwright/test');
 test('PUBLIC-01: login, ofertas reales, OCR, descuento, gasto y comprobante desde Vercel',async({page})=>{
   const mode=await (await page.request.get('/api/system/info')).json();
   expect(mode.mode,'La prueba pública solo permite entornos de demostración').toBe('demo');
+  test.skip(!process.env.PUBLIC_TEST_USER || !process.env.PUBLIC_TEST_PASSWORD, 'Configurar una cuenta ficticia del entorno demo.');
   await page.goto('/');
-  await page.locator('#auth-email').fill('test123');
-  await page.locator('#auth-password').fill('PruebasTest1234');
+  await page.locator('#auth-email').fill(process.env.PUBLIC_TEST_USER);
+  await page.locator('#auth-password').fill(process.env.PUBLIC_TEST_PASSWORD);
   await page.locator('#auth-submit').click();
   await expect(page.locator('#app-shell')).toBeVisible({timeout:30000});
   await expect(page.locator('#environment-notice')).toBeVisible();
@@ -19,7 +20,6 @@ test('PUBLIC-01: login, ofertas reales, OCR, descuento, gasto y comprobante desd
   await page.locator('#receipt-scan').click();
   await expect(page.locator('#receipt-lines tr')).toHaveCount(2,{timeout:120000});
   const first=page.locator('#receipt-lines tr').first();
-  await first.locator('[data-field="detail"]').fill('Lectura de prueba desde Vercel');
   await first.locator('[data-field="discount"]').fill('55');
   await page.locator('#receipt-total').fill('2645');
   const store='Super QA pública '+Date.now();

@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timezone
 import json
+import re
 import threading
 import time
 from urllib.parse import urlencode, quote
@@ -35,7 +36,7 @@ def catalog_offers(query):
 
 
 def fetch_catalog(name, base, query):
-    from backend.app.services.offers import money
+    from backend.app.services.offers import money, normalize
     url = base + '/api/catalog_system/pub/products/search/?' + urlencode({'ft': query, '_from': 0, '_to': 19}, quote_via=quote)
     with urlopen(Request(url, headers={'Accept': 'application/json', 'User-Agent': 'ExpensaHouse/1.0'}), timeout=8) as response:
         raw = response.read(4_000_001)
@@ -60,8 +61,14 @@ def fetch_catalog(name, base, query):
                 regular = money(offer.get('ListPrice'))
                 saving = f"{round((1-price/regular)*100, 2)}%" if regular and regular > price else ''
                 images = sku.get('images') or []
+                sku_name = str(sku.get('name') or '').strip()
+                title = product['productName']
+                sku_key = re.sub(r'\W+', ' ', normalize(sku_name)).strip()
+                title_key = re.sub(r'\W+', ' ', normalize(title)).strip()
+                if sku_key and sku_key not in title_key:
+                    title = title + ' ' + sku_name
                 result.append({'id': f"catalog:{name}:{sku.get('itemId', product.get('productId', ''))}",
-                    'product': product['productName'], 'store': name, 'brand': product.get('brand', ''),
+                    'product': title, 'store': name, 'brand': product.get('brand', ''),
                     'price': price, 'saving': saving, 'image_url': images[0].get('imageUrl', '') if images else '',
                     'direct_link': product.get('link', ''), 'source': f'Catálogo web de {name}',
                     'updated_at': observed})

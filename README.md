@@ -91,7 +91,7 @@ Ver [diagnóstico del escáner, modelo OCR, formatos y ofertas](docs/ESCANER_Y_O
 
 ## Acceso al entorno de pruebas
 
-Usuario: `test123`. Contraseña: `PruebasTest1234`. La cuenta publicada es compartida y conserva información cargada por sus usuarios. Las pruebas automatizadas que crean compras utilizan almacenamiento local separado. Versión Android: 1.3.2.
+Las credenciales se comparten por un medio privado y no se publican en el repositorio. La cuenta publicada es compartida y conserva información cargada por sus usuarios. Las pruebas automatizadas que crean compras utilizan almacenamiento local separado. Versión Android: 1.3.2.
 
 ## Paquete de presentación
 

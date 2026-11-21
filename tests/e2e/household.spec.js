@@ -6,8 +6,8 @@ test.beforeEach(async ({page, context}) => {
   if (sessionCookies) await context.addCookies(sessionCookies);
   await page.goto('/');
   if (!sessionCookies) {
-    await page.locator('#auth-email').fill('test123');
-    await page.locator('#auth-password').fill('PruebasTest1234');
+    await page.locator('#auth-email').fill('qa_household');
+    await page.locator('#auth-password').fill('SoloParaQA_2026_SinDatosReales');
     await page.locator('#auth-submit').click();
   }
   await expect(page.locator('#app-shell')).toBeVisible();
@@ -221,4 +221,20 @@ test('WEB-12: ticket local DIA permite revisar la presentación y confirmar el p
   await page.locator('#receipt-confirm').click();
   await expect(page.locator('#receipt-status')).toContainText('Ticket registrado');
   await expect(page.locator('#budget-spent-text')).toContainText('5.498');
+});
+
+
+test('WEB-13: leche por marca y tamaño excluye alimentos que la mencionan',async({page})=>{
+  await page.evaluate(async()=>{
+    for(const product of ['Leche La Serenísima 1L','Galletitas con leche La Serenísima 1L','Leche La Serenísima 1,5L','Leche otra marca 1L','Leche La Serenísima pack 6x1L']){
+      const response=await fetch('/api/offers/saved',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product,store:'Relevancia QA',price:1500})});
+      if(!response.ok)throw new Error(await response.text());
+    }
+  });
+  await page.locator('#ai-search-input').fill('Quiero encontrar leche LaSerenisima de 1 litro');
+  await page.locator('#btn-ai-search').click();
+  await expect(page.locator('.store-card')).toHaveCount(1);
+  await expect(page.locator('.store-product-title')).toHaveText('Leche La Serenísima 1L');
+  await page.locator('#ai-search-input').fill('arroz');
+  await expect(page.locator('#comparator-results')).toBeHidden();
 });

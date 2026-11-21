@@ -12,9 +12,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const response = await fetch('/api/system/info');
     const info = await readApiJson(response);
     const notice = document.getElementById('environment-notice');
-    if (info.shared_account) {
-      notice.textContent = 'Cuenta de pruebas compartida: quienes usen ese usuario podrán ver y modificar los datos cargados.';
-      notice.hidden = false;
-    } else if (info.mode === 'demo') notice.hidden = false;
+    notice.hidden = info.mode !== 'demo';
   } catch { /* The sign-in form reports backend availability separately. */ }
 });

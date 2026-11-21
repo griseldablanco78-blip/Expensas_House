@@ -19,7 +19,11 @@ class LiveCloudConnectionTest {
         assumeTrue(InstrumentationRegistry.getArguments().getString("liveCloud") == "true")
         assertEquals("https://expensas-house-griselda-blanco.vercel.app/",BuildConfig.API_BASE_URL)
         val api = ExpensaApiClient.service
-        AuthSession.start(api.login(LoginRequest("test123","PruebasTest1234")))
+        val arguments = InstrumentationRegistry.getArguments()
+        val username = arguments.getString("liveUser").orEmpty()
+        val password = arguments.getString("livePassword").orEmpty()
+        assumeTrue("Configurar credenciales explícitas de prueba", username.isNotBlank() && password.isNotBlank())
+        AuthSession.start(api.login(LoginRequest(username,password)))
         try {
             val context = ApplicationProvider.getApplicationContext<ExpensaApp>()
             val local = context.database.dao.getStockSnapshot()

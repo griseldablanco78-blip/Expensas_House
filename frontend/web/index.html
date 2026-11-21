@@ -17,7 +17,7 @@
   <link rel="stylesheet" href="/static/css/polish.css?v=cloud-10">
 </head>
 <body>
-  <p id="environment-notice" hidden role="status" style="padding:12px;text-align:center;background:#fff3cd;color:#503b00">Entorno de pruebas · datos ficticios y cuenta compartida. Usá comprobantes de ejemplo.</p>
+  <p id="environment-notice" hidden role="status" style="padding:12px;text-align:center;background:#fff3cd;color:#503b00">Entorno de pruebas · datos ficticios.</p>
   <section id="auth-panel" class="auth-panel">
     <aside class="auth-story"><span class="eyebrow">TU HOGAR, EN ORDEN</span><div class="auth-house" aria-hidden="true">⌂</div><h1>Menos pendientes.<br>Más tranquilidad.</h1><p>Tu alacena, tus compras y tu presupuesto, juntos en un solo lugar.</p><div class="auth-story-footer">Expensa House <span>Hecho para compartir en casa.</span></div></aside>
     <div class="auth-card"><span class="auth-wordmark">EXPENSA <strong>HOUSE</strong></span><h2 id="auth-heading">Qué bueno verte.</h2><p class="auth-intro">Ingresá para organizar tu hogar.</p>
@@ -91,15 +91,15 @@
       <div class="comparator-hero">
         <div class="hero-header">
           <div class="hero-pill">🛒 COMPARADOR DE OFERTAS</div>
-          <h2>Compará ofertas de supermercados</h2>
-          <p>Buscá por voz o texto. Compará las ofertas guardadas y los resultados del proveedor configurado. Revisá presentación, vigencia y condiciones de cada promoción.</p>
+          <h2>Buscá tu producto y descubrí tu oferta top</h2>
+          <p>Compará marcas, presentaciones y precios entre los supermercados disponibles. Encontrá la opción que más te conviene.</p>
         </div>
 
         <!-- Barra de Búsqueda Inteligente con Voz -->
         <div class="search-box-card">
           <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
-            <input type="text" id="ai-search-input" placeholder="¿Qué producto buscas? Ej.: Leche La Serenísima, Café molido, Detergente Ala..." autocomplete="off">
+            <input type="text" id="ai-search-input" placeholder="Ej.: leche La Serenísima 1 L" autocomplete="off">
             
             <!-- Botón de Voz a Texto -->
             <button id="btn-voice-search" class="voice-btn" title="Buscar usando tu voz (Speech to Text)">
@@ -109,7 +109,7 @@
 
             <!-- Botón de Comparar -->
             <button id="btn-ai-search" class="btn-primary search-action-btn">
-              <span>Buscar ofertas</span>
+              <span>Descubrir ofertas</span>
               <span class="sparkle">✨</span>
             </button>
           </div>
@@ -154,7 +154,7 @@
       </div>
 
       <!-- Contenedor de Resultados Comparativos -->
-      <div id="comparator-results" class="comparator-results">
+      <div id="comparator-results" class="comparator-results hidden">
         <!-- Veredicto IA Card -->
         <div class="ai-verdict-card" id="ai-verdict-box">
           <div class="verdict-header">
@@ -277,8 +277,8 @@
           <h2>Inventario del Hogar</h2>
           <p>Gestioná unidades cerradas en alacena y productos abiertos actualmente en uso.</p>
         </div>
-        <button id="btn-open-add-stock-modal" class="btn-primary">
-          <span>+ Agregar Producto</span>
+        <button id="btn-open-add-stock-modal" type="button" class="btn-primary add-product-button">
+          <span class="add-product-icon" aria-hidden="true">+</span><span>Agregar producto</span>
         </button>
       </div>
 
@@ -332,8 +332,8 @@
           <h2>Lista de Compras</h2>
           <p>Productos que faltan en casa o agregados desde las ofertas encontradas por el comparador.</p>
         </div>
-        <button id="btn-open-add-shopping-modal" class="btn-primary">
-          <span>+ Agregar a la Lista</span>
+        <button id="btn-open-add-shopping-modal" type="button" class="btn-primary add-product-button">
+          <span class="add-product-icon" aria-hidden="true">+</span><span>Agregar a la lista</span>
         </button>
       </div>
 

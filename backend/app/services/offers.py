@@ -7,6 +7,7 @@ import unicodedata
 from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
+from backend.app.services.offer_matching import matches_product
 from backend.app.infrastructure.json_store import get_offers, get_stock, get_user_prefs
 
 
@@ -17,6 +18,7 @@ def normalize(value):
 
 def clean_query(value):
     text = normalize(value)
+    text = re.sub(r'\bla\s*serenisima(?=\b|\d)', 'serenisima ', text)
     # Compare quantities in a common unit, including compact names such as 1L.
     text = re.sub(r'\b(?:un|una)\s+(?=litros?\b|kilos?\b)', '1 ', text)
     def quantity(match):
@@ -34,7 +36,9 @@ def clean_query(value):
              'economica', 'top', 'donde', 'esta', 'estan', 'cuanto', 'cuesta', 'sale',
              'producto', 'productos', 'supermercado', 'supermercados', 'en', 'de',
              'del', 'el', 'la', 'los', 'las', 'un', 'una', 'por', 'para', 'que', 'hay',
-             'tiene', 'tienen', 'con', 'favor', 'me', 'cual', 'es'}
+             'tiene', 'tienen', 'con', 'favor', 'me', 'cual', 'es', 'necesito',
+             'comprar', 'conseguir', 'encontrar', 'gustaria', 'podes', 'podrias',
+             'puedes', 'marca', 'porfa', 'tengo'}
     return ' '.join(w for w in re.findall(r'\d+(?:\.\d+)?(?:ml|g)\b|[a-z0-9]+', text) if w not in noise)
 
 
@@ -108,13 +112,12 @@ def compare_supermarket_offers(raw_query, sort='discount'):
     offers = []
     missing_prices = 0
     sizes = {t for t in tokens if re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t)}
-    names = tokens - sizes
     for item in [*get_offers(), *remote] if query else []:
         product = str(item.get('product') or '')
         words = set(clean_query(product + ' ' + str(item.get('brand') or '')).split())
         # Unknown size is visible as a candidate, never asserted as equivalent.
         product_sizes = {t for t in words if re.fullmatch(r'\d+(?:\.\d+)?(?:ml|g)', t)}
-        if not names.issubset(words) or (sizes and product_sizes and not sizes.issubset(product_sizes)):
+        if not matches_product(query, clean_query(product), clean_query(item.get('brand') or '')) or (sizes and product_sizes and not sizes.issubset(product_sizes)):
             continue
         size_unknown = bool(sizes and not product_sizes)
         price = money(item.get('price'))
@@ -159,7 +162,7 @@ def compare_supermarket_offers(raw_query, sort='discount'):
     verdict = (f"Oferta top: {top['product']} en {top['store']}, ${top['promo_price']:,.2f}. "
                f"{top['promo_text']}. Menor precio publicado: {best['store']} (${best['promo_price']:,.2f}). "
                'Las presentaciones pueden variar; revisá tamaño, vigencia y condiciones antes de comprar.'
-               if top else 'No se encontraron ofertas coincidentes con precio. Probá con el nombre y la marca del producto.')
+               if top else 'No encontramos ofertas con precio que coincidan con tu producto, marca y presentación. Revisá la escritura o probá otra consulta.')
     if top and not top['size_confirmed']:
         verdict = 'Coincidencia orientativa: la presentación solicitada no está confirmada. ' + verdict
     if not top and missing_prices:

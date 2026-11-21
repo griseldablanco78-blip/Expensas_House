@@ -22,7 +22,7 @@ with tempfile.TemporaryDirectory(prefix='expensa-e2e-') as directory:
                    'user_prefs':{'id':0,'monthlyBudget':10000,'totalSpent':0}})
     with security.database() as connection:
         connection.execute('INSERT INTO users VALUES (?, ?, ?, 1)',
-                           ('test123','test123',security.HASHER.hash('PruebasTest1234')))
-        connection.execute('INSERT INTO memberships VALUES (?, ?)', ('test123','admin'))
+                           ('qa_household','qa_household',security.HASHER.hash('SoloParaQA_2026_SinDatosReales')))
+        connection.execute('INSERT INTO memberships VALUES (?, ?)', ('qa_household','admin'))
     from backend.app.main import create_app
     uvicorn.run(create_app(), host='127.0.0.1', port=18765)

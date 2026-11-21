@@ -244,6 +244,29 @@ class Workflows(unittest.TestCase):
             response = self.client.post('/api/ai/chat', json={'message': message})
             self.assertEqual(response.json()['action'], action)
 
+    @patch.object(offer_service, 'ratoneando_offers', return_value=([], ''))
+    def test_milk_search_requires_product_brand_size_and_single_pack(self, _):
+        self.state['offers'] = [
+            {'id':'milk','product':'Leche La Serenísima entera 1L','store':'A','price':1500},
+            {'id':'brand-first','product':'LaSerenisima Leche descremada 1000 ml','store':'B','price':1600},
+            {'id':'carton','product':'Leche en caja La Serenísima 1L','store':'B','price':1700},
+            {'id':'cookie','product':'Galletitas con leche La Serenísima 1L','store':'C','price':100},
+            {'id':'rice','product':'Arroz con leche La Serenísima 1L','store':'C','price':100},
+            {'id':'bar','product':'Barrita con leche La Serenísima 1L','store':'C','price':100},
+            {'id':'condensed','product':'Leche condensada La Serenísima 1L','store':'C','price':100},
+            {'id':'wrong-brand','product':'Leche otra marca 1L','store':'C','price':100},
+            {'id':'wrong-size','product':'Leche La Serenísima 1,5L','store':'C','price':100},
+            {'id':'pack','product':'Leche La Serenísima pack 6x1L','store':'C','price':100}]
+        db.save_db(self.state)
+        for query in ('leche La Serenísima de 1L', 'Quiero encontrar leche marca LaSerenisima de un litro', 'La Serenísima leche 1000ml', 'leche LaSerenisima1L'):
+            with self.subTest(query=query):
+                result=offer_service.compare_supermarket_offers(query,'price')
+                self.assertEqual({o['id'] for o in result['offers']},{'milk','brand-first','carton'})
+                self.assertEqual(result['top_offer']['id'],'milk')
+        missing=offer_service.compare_supermarket_offers('leche inexistente 1L')
+        self.assertEqual(missing['offers'],[])
+        self.assertIsNone(missing['top_offer'])
+
     @patch.object(offer_service, 'ratoneando_offers', return_value=([], 'Sin proveedor'))
     def test_voice_phrases_filter_exact_product_and_sort_by_discount_or_price(self, _):
         self.state['offers'] = [

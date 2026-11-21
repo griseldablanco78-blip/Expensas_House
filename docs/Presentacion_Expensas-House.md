@@ -10,8 +10,6 @@
 
 **Repositorio:** https://github.com/griseldablanco78-blip/Expensas_House
 **Web:** https://expensas-house-griselda-blanco.vercel.app
-**Usuario de prueba:** `test123`
-**Contraseña de prueba:** `PruebasTest1234`
 
 ## Resumen
 
