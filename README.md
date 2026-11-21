@@ -122,3 +122,5 @@ Web y Android permiten eliminar un ticket desde el tachito, con confirmación. S
 Sin peso en la consulta se admiten todos los tamaños. Con peso se exige equivalencia exacta. Se reconocen las abreviaturas de Coto «Kgm» y «Grm», de modo que «Arroz Blanco 1 kg» incluye su presentación de 1 Kgm y excluye 500 g.
 
 Actualización del buscador: sin marca solicitada se comparan todas las marcas coincidentes de cada supermercado. Para «arroz blanco», se incluyen las descripciones de arroz simple «largo fino» y «doble carolina», aunque no contengan la palabra blanco; se excluyen integral, amarillo, arroz con azafrán u otros condimentos, parboil, arroz preparado, postres y derivados. Una marca explícita y el peso indicado siguen siendo obligatorios. La regla se ejecuta en la API utilizada tanto por web como por Android.
+
+En arroz blanco, «doble», «fino» y «partido» solo restringen los resultados cuando la persona los escribe. Si no se especifican, se incluyen las variedades blancas coincidentes. El precio menor determina la recomendación entre las presentaciones solicitadas.

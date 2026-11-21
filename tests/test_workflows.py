@@ -377,10 +377,15 @@ class Workflows(unittest.TestCase):
                 ('Arroz con leche Dia 1 Kg','DIA',700),
                 ('Galletitas de arroz Dia 1 Kg','DIA',600),
                 ('Arroz Amarillo Luchetti 1 Kg','LUCCHETTI',500),
-                ('Arroz Con Azafran Dia 1 Kg','DIA',400)])]
+                ('Arroz Con Azafran Dia 1 Kg','DIA',400),
+                ('Arroz Doble Carolina Luchetti 1 Kg','LUCCHETTI',1600),
+                ('Arroz Partido Molinos Ala 1 Kg','MOLINOS ALA',1700)])]
         db.save_db(self.state)
         all_brands=offer_service.compare_supermarket_offers('Arroz blanco 1 kg')
-        self.assertEqual([row['id'] for row in all_brands['offers']],['1','2','0'])
+        self.assertEqual([row['id'] for row in all_brands['offers']],['1','10','11','2','0'])
+        for kind,expected in [('fino',['1','2']),('doble',['10','0']),('partido',['11'])]:
+            filtered=offer_service.compare_supermarket_offers('Arroz blanco '+kind+' 1 kg')
+            self.assertEqual([row['id'] for row in filtered['offers']],expected)
         self.assertEqual(all_brands['top_offer']['brand'],'LUCCHETTI')
         dia=offer_service.compare_supermarket_offers('Arroz blanco Dia 1 kg')
         self.assertEqual([row['id'] for row in dia['offers']],['0'])
