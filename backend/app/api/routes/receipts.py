@@ -95,3 +95,11 @@ def download_receipt_image(expense_id: str):
     if not identity or not image_exists(identity):
         raise HTTPException(404, 'Este gasto no tiene imagen archivada.')
     return Response(read_image(identity), media_type='image/jpeg', headers={'Content-Disposition':'attachment; filename="comprobante.jpg"'})
+
+
+@router.delete('/api/receipts/{expense_id}')
+def api_delete_receipt(expense_id: str):
+    from backend.app.services.receipt_registration import delete_receipt
+    if not delete_receipt(expense_id):
+        raise HTTPException(404, 'Ticket no encontrado.')
+    return {'status': 'success', 'deleted': True}

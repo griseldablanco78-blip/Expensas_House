@@ -285,3 +285,25 @@ test('WEB-16: ticket compacto muestra fecha y comercio y abre la foto por doble 
   await page.locator('#saved-receipt-close').click();
   await expect(page.locator('#saved-receipt-dialog')).not.toBeVisible();
 });
+
+
+test('WEB-17: tachito permite cancelar y eliminar el ticket con presupuesto corregido', async ({page}) => {
+  const created = await page.evaluate(async () => {
+    const response = await fetch('/api/receipts/confirm',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:'delete-qa',store:'Comercio borrar QA',purchase_date:'2027-06-10',total:1300,items:[{description:'Arroz borrar QA',quantity:1,unit_price:1300,line_total:1300}]})});
+    return {status:response.status,body:await response.text()};
+  });
+  expect(created.status,created.body).toBe(200);
+  await page.reload();
+  const ticket = page.locator('.saved-receipt-row').filter({hasText:'Comercio borrar QA'});
+  const trash = ticket.getByRole('button',{name:'Eliminar ticket de Comercio borrar QA'});
+  page.once('dialog',dialog=>dialog.dismiss());
+  await trash.click();
+  await expect(ticket).toHaveCount(1);
+  page.once('dialog',dialog=>dialog.accept());
+  await trash.click();
+  await expect(ticket).toHaveCount(0);
+  expect((await (await page.request.get('/api/expenses')).json()).some(row=>row.id==='delete-qa')).toBeFalsy();
+  const budget=await (await page.request.get('/api/budget?month=2027-06')).json();
+  expect(budget.totalSpent).toBe(0);
+  await expect(page.locator('#saved-receipt-dialog')).not.toBeVisible();
+});

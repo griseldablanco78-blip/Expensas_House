@@ -335,11 +335,34 @@ class Workflows(unittest.TestCase):
             for index,name in enumerate(('Arroz QA 1 kg', 'Arroz QA 1000 gramos', 'Arroz QA 1.000 g',
                 'Arroz QA 500 g', 'Arroz QA 0,5 kg', 'Arroz QA 2 kg', 'Arroz QA', 'Arroz QA 1 kg / 500 g'))]
         db.save_db(self.state)
+        all_sizes=offer_service.compare_supermarket_offers('Arroz QA')
+        self.assertEqual(len(all_sizes['offers']),8)
         for query in ('Arroz QA 1 kg', 'Arroz QA 1000g', 'Arroz QA 1.000 gr'):
             with self.subTest(query=query):
                 result=offer_service.compare_supermarket_offers(query)
                 self.assertEqual([offer['id'] for offer in result['offers']], ['0','1','2'])
                 self.assertEqual(result['top_offer']['id'],'0')
+
+    def test_coto_weight_abbreviations_keep_exact_size(self):
+        self.assertEqual(offer_service.clean_query('Arroz Blanco 1 Kgm'), offer_service.clean_query('Arroz Blanco 1000 g'))
+        self.assertEqual(offer_service.clean_query('Arroz Blanco 500 Grm'), offer_service.clean_query('Arroz Blanco 0,5 kg'))
+
+    def test_delete_receipt_reverses_budget_once_and_stale_sync_cannot_restore_it(self):
+        payload={'id':'remove-me','store':'Día QA','items':[{'description':'Arroz','quantity':1,'unit_price':1500,'line_total':1500}], 'total':1500,'purchase_date':'2026-11-15'}
+        self.assertEqual(self.client.post('/api/receipts/confirm',json=payload).status_code,200)
+        baseline=copy.deepcopy(db.load_db())
+        self.assertEqual(self.client.delete('/api/receipts/remove-me').status_code,200)
+        self.assertEqual(db.load_db()['user_prefs']['totalSpent'],0)
+        self.assertEqual(self.client.delete('/api/receipts/remove-me').status_code,200)
+        self.assertEqual(db.load_db()['user_prefs']['totalSpent'],0)
+        self.assertEqual(self.client.get('/api/receipts/remove-me/image').status_code,404)
+        self.assertEqual(self.client.get('/api/receipts/remove-me/text').status_code,404)
+        self.assertEqual(self.client.post('/api/receipts/confirm',json=payload).status_code,422)
+        for old_baseline in (None,baseline):
+            merged=merge_snapshot(db.load_db(),baseline,old_baseline)
+            self.assertEqual(merged['expenses'],[])
+            self.assertEqual(merged['user_prefs']['totalSpent'],0)
+        self.assertEqual(self.client.delete('/api/receipts/unknown').status_code,404)
 
     def test_saved_offer_photo_is_validated_and_used_in_comparison(self):
         self.state['offers'] = [{'id':'saved', 'product':'Leche entera', 'store':'A', 'price':''}]

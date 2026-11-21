@@ -28,9 +28,9 @@ def clean_query(value):
         amount = float(match[1].replace(',', '.'))
         unit = match[2]
         volume = unit in {'l', 'lt', 'lts', 'litro', 'litros', 'ml', 'cc', 'mililitro', 'mililitros'}
-        base = amount * (1000 if unit in {'l', 'lt', 'lts', 'litro', 'litros', 'kg', 'kilo', 'kilos', 'kilogramo', 'kilogramos'} else 1)
+        base = amount * (1000 if unit in {'l', 'lt', 'lts', 'litro', 'litros', 'kg', 'kgm', 'kgs', 'kilo', 'kilos', 'kilogramo', 'kilogramos'} else 1)
         return f" {base:g}{'ml' if volume else 'g'} "
-    text = re.sub(r'\b(\d+(?:[.,]\d+)?)\s*(mililitros?|kilogramos?|litros?|kilos?|gramos?|grs?|lts?|ml|cc|kg|g|l)\b', quantity, text)
+    text = re.sub(r'\b(\d+(?:[.,]\d+)?)\s*(mililitros?|kilogramos?|litros?|kilos?|gramos?|grm|grs?|lts?|ml|cc|kgm|kgs?|g|l)\b', quantity, text)
     # Remove complete command words, never substrings of a product name.
     noise = {'quiero', 'quisiera', 'saber', 'consulta', 'consultar', 'buscar', 'busca',
              'buscame', 'mostrame', 'mostrar', 'dame', 'traeme', 'comparar', 'compara',

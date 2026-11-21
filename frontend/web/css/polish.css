@@ -89,3 +89,9 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 
 .store-card.is-winner::after { content:none; }
 .store-product-title { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+
+.receipt-delete-button { margin-left:auto; min-width:44px; min-height:44px; border:0; border-radius:8px; background:transparent; color:var(--color-coral); font-size:20px; cursor:pointer; }
+.receipt-delete-button:hover { background:rgba(220,60,60,.1); }
+
+.saved-receipt-open { flex:1; display:flex; gap:16px; align-items:center; text-align:left; border:0; background:transparent; color:inherit; font:inherit; cursor:pointer; }
+@media(max-width:600px) { .saved-receipt-open { flex-direction:column; align-items:flex-start; gap:6px; } }

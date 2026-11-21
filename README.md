@@ -97,7 +97,7 @@ Las credenciales se comparten por un medio privado y no se publican en el reposi
 
 `python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde el código confirmado en Git. Incluye únicamente el código con sus archivos de configuración y recursos necesarios, y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No contiene informes, cuadernillos, fotografías personales ni APK.
 
-La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.5 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.5).
+La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.6 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.6).
 
 ### Actualización 1.3.4
 
@@ -114,3 +114,9 @@ En Android, las ofertas se muestran en dos columnas con información ampliable. 
 La web aplica los mismos cambios de contenido: tarjetas compactas con detalle ampliable, columnas adaptadas al ancho disponible y tickets al final de Ofertas. La foto privada se abre con doble clic o doble toque; también puede abrirse con Enter al enfocar el ticket.
 
 Cuando la consulta especifica peso o volumen, la coincidencia es estricta: «1 kg», «1000 g» y «1.000 g» son equivalentes; se excluyen 500 g, otros tamaños, presentaciones contradictorias y productos sin tamaño informado. Esta regla se aplica en la API compartida por web y Android.
+
+### Actualización 1.3.6
+
+Web y Android permiten eliminar un ticket desde el tachito, con confirmación. Se quita el gasto y se corrige el presupuesto; el stock no se modifica. El servidor conserva el identificador eliminado para impedir que una sincronización antigua lo restaure o se descuente dos veces al reintentar. Los enlaces a imagen y texto dejan de estar disponibles; la limpieza física de imágenes privadas sin referencia es una tarea separada de mantenimiento.
+
+Sin peso en la consulta se admiten todos los tamaños. Con peso se exige equivalencia exacta. Se reconocen las abreviaturas de Coto «Kgm» y «Grm», de modo que «Arroz Blanco 1 kg» incluye su presentación de 1 Kgm y excluye 500 g.

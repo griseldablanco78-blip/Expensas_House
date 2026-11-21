@@ -12,12 +12,13 @@ def merge_snapshot(current, incoming, baseline=None):
         if incoming.get(key) is None:
             continue
         remote = {r['id']: r for r in current.get(key, [])}
-        local = {r['id']: r for r in incoming[key]}
+        deleted = set(current.get('deleted_expense_ids', [])) if key == 'expenses' else set()
+        local = {r['id']: r for r in incoming[key] if r['id'] not in deleted}
         if baseline is None:
             # First pairing keeps the server version of shared IDs; imports new IDs.
             result[key] = list({**local, **remote}.values())
             continue
-        base = {r['id']: r for r in baseline.get(key, [])}
+        base = {r['id']: r for r in baseline.get(key, []) if r['id'] not in deleted}
         merged = {}
         for identity in base.keys() | remote.keys() | local.keys():
             old, left, right = base.get(identity), remote.get(identity), local.get(identity)

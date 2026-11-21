@@ -95,6 +95,7 @@ class SecurityTests(unittest.TestCase):
         self.assertEqual(self.client.get('/api/budget', headers=headers).status_code, 200)
         response = self.client.post('/api/budget', headers=headers, json={'monthlyBudget':1})
         self.assertEqual(response.status_code, 403)
+        self.assertEqual(self.client.delete('/api/receipts/not-allowed',headers=headers).status_code,403)
         self.assertEqual(db.get_user_prefs()['monthlyBudget'], 10000)
         self.assertEqual(self.client.post('/api/ai/chat', headers=headers, json={'message':'2'}).status_code, 200)
 

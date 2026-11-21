@@ -72,14 +72,23 @@ function renderOfferReceiptHistory() {
   list.replaceChildren();
   const dateOf = receipt => receipt.purchase_date || (receipt.timestamp ? new Intl.DateTimeFormat('en-CA', {timeZone:'America/Argentina/Buenos_Aires',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date(receipt.timestamp)) : 'Sin fecha');
   [...state.expenses].sort((a,b) => dateOf(b).localeCompare(dateOf(a))).forEach(receipt => {
-    const button = document.createElement('button');
-    button.type = 'button'; button.className = 'saved-receipt-row';
+    const button = document.createElement('div');
+    button.className = 'saved-receipt-row';
+    const open = document.createElement('button'); open.type = 'button'; open.className = 'saved-receipt-open';
     const date = document.createElement('span'); date.textContent = dateOf(receipt);
     const store = document.createElement('strong'); store.textContent = receipt.store || receipt.note || 'Comercio sin nombre';
-    button.append(date, store);
+    open.append(date, store); button.append(open);
+    if (canEditHousehold()) {
+      const trash = document.createElement('button'); trash.type = 'button'; trash.className = 'receipt-delete-button';
+      trash.textContent = '🗑'; trash.setAttribute('aria-label', 'Eliminar ticket de ' + store.textContent);
+      trash.addEventListener('click', event => { event.stopPropagation(); deleteSavedReceipt(receipt, trash); });
+      trash.addEventListener('dblclick', event => event.stopPropagation());
+      trash.addEventListener('touchend', event => event.stopPropagation());
+      button.append(trash);
+    }
     button.title = 'Doble clic para abrir el ticket';
     button.addEventListener('dblclick', () => openSavedReceipt(receipt));
-    button.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); openSavedReceipt(receipt); } });
+    button.addEventListener('keydown', event => { if (event.target === open && event.key === 'Enter') { event.preventDefault(); openSavedReceipt(receipt); } });
     // Touch double-tap on browsers that do not synthesize dblclick.
     let previousTap = 0;
     button.addEventListener('touchend', event => {
@@ -124,4 +133,20 @@ async function openSavedReceipt(receipt) {
   } catch {
     if (dialog.open && serial === receiptPreviewSerial) status.textContent = 'No hay una imagen disponible para este gasto. Los productos guardados se muestran arriba.';
   }
+}
+
+
+async function deleteSavedReceipt(receipt, button) {
+  const store = receipt.store || receipt.note || 'este comercio';
+  if (!window.confirm(`¿Eliminar el ticket de ${store} del ${receipt.purchase_date || 'día registrado'}? Se quitarán $${Number(receipt.amount).toLocaleString('es-AR')} del gasto registrado y se actualizará el presupuesto disponible.`)) return;
+  button.disabled = true;
+  try {
+    const response = await fetch(`/api/receipts/${encodeURIComponent(receipt.id)}`, {method:'DELETE'});
+    const result = await readApiJson(response);
+    if (!response.ok) throw new Error(result.detail || 'No se pudo eliminar el ticket.');
+    state.expenses = state.expenses.filter(row => row.id !== receipt.id);
+    renderOfferReceiptHistory();
+    await loadAllData();
+    showToast('Ticket eliminado. Presupuesto actualizado.');
+  } catch (error) { button.disabled = false; showToast(error.message); }
 }

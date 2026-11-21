@@ -50,6 +50,9 @@ interface ExpensaApi {
     @POST("api/receipts/confirm")
     suspend fun confirmReceipt(@Body receipt: ReceiptCommit): Map<String, Any>
 
+    @retrofit2.http.DELETE("api/receipts/{id}")
+    suspend fun deleteReceipt(@retrofit2.http.Path("id") id: String): Map<String, Any>
+
     @GET("api/receipts/{id}/image")
     suspend fun receiptImage(@retrofit2.http.Path("id") id: String): okhttp3.ResponseBody
 

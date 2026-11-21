@@ -170,7 +170,8 @@ private fun ExpensaHouseApp(viewModel: ExpensaViewModel) {
                     initialQuery = offerQuery,
                     onSetBudget = { if (canEdit) showBudgetDialog = true },
                     onAddExpense = { if (canEdit) showExpenseDialog = true },
-                    onScanTicket = { if (canEdit) showScanTicketDialog = true }
+                    onScanTicket = { if (canEdit) showScanTicketDialog = true },
+                    onReceiptDeleted = { viewModel.onEvent(ExpensaEvent.RefreshData) }
                 )
             }
         }
@@ -420,7 +421,8 @@ private fun OffersScreen(
     initialQuery: String,
     onSetBudget: () -> Unit,
     onAddExpense: () -> Unit,
-    onScanTicket: () -> Unit
+    onScanTicket: () -> Unit,
+    onReceiptDeleted: () -> Unit
 ) {
     val uriHandler = LocalUriHandler.current
     val critical = stock.filter { it.stockQuantity <= 1 }
@@ -499,7 +501,7 @@ private fun OffersScreen(
                     }
                 }
             }
-            item { ConnectedReceiptHistory(refreshKey = expenses.hashCode()) }
+            item { ConnectedReceiptHistory(refreshKey = expenses.hashCode(), onDeleted = onReceiptDeleted) }
             item { Spacer(Modifier.height(20.dp)) }
         }
 

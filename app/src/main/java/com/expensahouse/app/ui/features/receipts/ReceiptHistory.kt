@@ -11,6 +11,10 @@ import androidx.compose.ui.window.Dialog
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import androidx.compose.material3.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
+import kotlinx.coroutines.launch
+import com.expensahouse.app.core.auth.AuthSession
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -37,8 +41,10 @@ private fun ReceiptSummary.date(): String = purchase_date ?: timestamp?.let {
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRepository = AppContainer.receiptsRepository) {
+internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRepository = AppContainer.receiptsRepository, onDeleted: () -> Unit = {}) {
     var receipts by remember { mutableStateOf<List<ReceiptSummary>>(emptyList()) }
+    val scope = rememberCoroutineScope()
+    var deleting by remember { mutableStateOf<ReceiptSummary?>(null) }
     var selected by remember { mutableStateOf<ReceiptSummary?>(null) }
     var selectedDate by remember { mutableStateOf("") }
     var menu by remember { mutableStateOf(false) }
@@ -74,9 +80,14 @@ internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRe
                 OutlinedCard(modifier = Modifier.fillMaxWidth().combinedClickable(
                     onClick = {}, onDoubleClick = { selected = receipt },
                     onLongClick = { selected = receipt }, onLongClickLabel = "Abrir ticket")) {
-                    Column(Modifier.padding(12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                        Text(receipt.store?.takeIf { it.isNotBlank() } ?: receipt.note ?: "Comercio sin nombre", style = MaterialTheme.typography.titleSmall)
-                        Text(receipt.date())
+                    Row(Modifier.fillMaxWidth().padding(12.dp), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Column(Modifier.weight(1f), verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                            Text(receipt.store?.takeIf { it.isNotBlank() } ?: receipt.note ?: "Comercio sin nombre", style = MaterialTheme.typography.titleSmall)
+                            Text(receipt.date())
+                        }
+                        if (AuthSession.canEdit) IconButton(onClick = { deleting = receipt }, enabled = !busy) {
+                            Icon(Icons.Filled.Delete, contentDescription = "Eliminar ticket de ${receipt.store ?: receipt.note ?: "comercio"}")
+                        }
                     }
                 }
                 HorizontalDivider()
@@ -84,6 +95,23 @@ internal fun ConnectedReceiptHistory(refreshKey: Int = 0, repository: ReceiptsRe
         }
     }
 
+    deleting?.let { receipt ->
+        AlertDialog(onDismissRequest = { if (!busy) deleting = null }, title = { Text("¿Eliminar ticket?") },
+            text = { Text("Se eliminará la compra de ${receipt.store ?: receipt.note ?: "este comercio"} del ${receipt.date()}. El gasto de ${money.format(receipt.amount)} se quitará del presupuesto utilizado.") },
+            confirmButton = { TextButton(enabled = !busy, onClick = {
+                busy = true
+                scope.launch {
+                    try {
+                        repository.delete(receipt.id)
+                        receipts = receipts.filterNot { it.id == receipt.id }
+                        deleting = null; status = "Ticket eliminado. Presupuesto actualizado."
+                        onDeleted()
+                    } catch (error: Exception) { status = errorText(error); deleting = null }
+                    finally { busy = false }
+                }
+            }) { Text(if (busy) "Eliminando…" else "Eliminar") } },
+            dismissButton = { TextButton(enabled = !busy, onClick = { deleting = null }) { Text("Cancelar") } })
+    }
     selected?.let { receipt ->
         ReceiptDetail(receipt, repository, onDismiss = { selected = null })
     }
