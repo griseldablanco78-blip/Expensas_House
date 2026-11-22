@@ -8,6 +8,7 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 from backend.app.services.offer_matching import matches_product
+from backend.app.services.loyalty_programs import loyalty_information
 from backend.app.infrastructure.json_store import get_offers, get_stock, get_user_prefs
 
 
@@ -138,7 +139,7 @@ def compare_supermarket_offers(raw_query, sort='price'):
         discount = min(100, float(pct[1].replace(',', '.'))) if pct else 0
         if bulk:
             discount = discount / 2 if pct else (100 / 3 if re.search(r'3\s*x\s*2', promo) else 0)
-        offers.append({'id': item.get('id', ''), 'product': product,
+        offers.append({**loyalty_information(item.get('store', '')), 'id': item.get('id', ''), 'product': product,
                        'store': item.get('store', 'Supermercado'), 'store_badge': '',
                        'brand': item.get('brand', 'Sin marca informada'),
                        'promo_price': price, 'regular_price': price,

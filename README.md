@@ -97,7 +97,7 @@ Las credenciales se comparten por un medio privado y no se publican en el reposi
 
 `python scripts/crear_zip_presentacion.py` genera `output/Presentacion_Expensas-House.zip` desde el código confirmado en Git. Incluye únicamente el código con sus archivos de configuración y recursos necesarios, y `ENLACES_PROYECTO.txt` con los enlaces a GitHub y Vercel. No contiene informes, cuadernillos, fotografías personales ni APK.
 
-La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.6 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.6).
+La presentación, el informe breve y la documentación de módulos se consultan en este repositorio. La APK Android 1.3.7 se distribuye por separado en [GitHub Releases](https://github.com/griseldablanco78-blip/Expensas_House/releases/tag/v1.3.7).
 
 ### Actualización 1.3.4
 
@@ -124,3 +124,7 @@ Sin peso en la consulta se admiten todos los tamaños. Con peso se exige equival
 Actualización del buscador: sin marca solicitada se comparan todas las marcas coincidentes de cada supermercado. Para «arroz blanco», se incluyen las descripciones de arroz simple «largo fino» y «doble carolina», aunque no contengan la palabra blanco; se excluyen integral, amarillo, arroz con azafrán u otros condimentos, parboil, arroz preparado, postres y derivados. Una marca explícita y el peso indicado siguen siendo obligatorios. La regla se ejecuta en la API utilizada tanto por web como por Android.
 
 En arroz blanco, «doble», «fino» y «partido» solo restringen los resultados cuando la persona los escribe. Si no se especifican, se incluyen las variedades blancas coincidentes. El precio menor determina la recomendación entre las presentaciones solicitadas.
+
+### Actualización 1.3.7
+
+Las tarjetas de ofertas de web y Android identifican Club Día, Comunidad Coto, Mi Carrefour, Vea Ahorro y Jumbo Más según el supermercado. El detalle enlaza a la información oficial y aclara que los beneficios personales dependen de cupones, vigencia, sucursal, pago y acumulabilidad. Es un aviso informativo: no consulta cuentas de esos clubes ni calcula rebajas personales; el orden y la oferta top siguen usando el precio observado.

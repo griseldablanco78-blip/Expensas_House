@@ -85,11 +85,14 @@ private fun CompactOfferCard(offer: ProductOffer, isTop: Boolean, modifier: Modi
             OfferImage(offer.image_url, offer.product)
             Text(offer.product, style = MaterialTheme.typography.bodySmall, maxLines = if (expanded) Int.MAX_VALUE else 2, overflow = TextOverflow.Ellipsis)
             Text(offerMoney(offer.promo_price), style = MaterialTheme.typography.titleMedium)
+            offer.loyalty_program?.let { Text("¿Tenés $it? Revisá tus beneficios en el detalle.", style = MaterialTheme.typography.labelSmall, color = MaterialTheme.colorScheme.primary) }
             if (!offer.size_confirmed) Text("Tamaño sin confirmar", style = MaterialTheme.typography.labelSmall)
             TextButton(onClick = { expanded = !expanded }, contentPadding = PaddingValues(0.dp)) { Text(if (expanded) "Cerrar detalle" else "Ver detalle") }
             if (expanded) {
                 Text(offer.promo_text, style = MaterialTheme.typography.bodySmall)
                 if (!offer.conditions.isNullOrBlank()) Text(offer.conditions, style = MaterialTheme.typography.bodySmall)
+                offer.loyalty_notice?.let { Text(it, style = MaterialTheme.typography.bodySmall) }
+                if (offer.loyalty_url?.startsWith("https://") == true) TextButton(onClick = { uri.openUri(offer.loyalty_url) }, contentPadding = PaddingValues(0.dp)) { Text("Consultar ${offer.loyalty_program} ↗") }
                 Text("Fuente: ${offer.source.orEmpty()}", style = MaterialTheme.typography.bodySmall)
                 Text(if (offer.size_confirmed) "Presentación coincidente" else "Presentación sin confirmar", style = MaterialTheme.typography.bodySmall)
                 offer.updated_at?.takeIf { it.isNotBlank() }?.let { Text("Consulta: ${it.take(19).replace('T',' ')}", style = MaterialTheme.typography.bodySmall) }

@@ -52,14 +52,17 @@ function renderComparisonResults(data) {
     card.className = `store-card ${isTop ? 'is-winner' : ''}`;
     const image = safeUrl(off.image_url);
     const link = safeUrl(off.direct_link);
+    const loyaltyLink = safeUrl(off.loyalty_url);
     card.innerHTML = `
       <h3 class="offer-store-title">${escapeHtml(off.store)}</h3>
       ${isTop ? '<strong class="top-offer-label">🏆 Oferta top · menor precio</strong>' : ''}
       <div class="product-image-slot">${image ? `<img class="offer-product-image" src="${escapeHtml(image)}" alt="${escapeHtml(off.product)}" loading="lazy" referrerpolicy="no-referrer">` : '<span class="product-photo-empty"><span aria-hidden="true">▧</span>Sin fotografía<small>Podés agregarla en Mis ofertas</small></span>'}</div>
       <h4 class="store-product-title">${escapeHtml(off.product)}</h4>
       <strong class="promo-price">$${off.promo_price.toLocaleString('es-AR')}</strong>
+      ${off.loyalty_program ? `<small class="loyalty-hint">¿Tenés ${escapeHtml(off.loyalty_program)}? Revisá tus beneficios en el detalle.</small>` : ''}
       <details class="offer-card-detail"><summary>Ver detalle</summary>
       <p>${escapeHtml(off.product)}</p><p>${escapeHtml(off.promo_text)}</p><p>${escapeHtml(off.conditions)}</p>
+      ${off.loyalty_notice ? `<p class="loyalty-notice">${escapeHtml(off.loyalty_notice)}</p>${loyaltyLink ? `<a href="${escapeHtml(loyaltyLink)}" target="_blank" rel="noopener noreferrer">Consultar ${escapeHtml(off.loyalty_program)} ↗</a>` : ''}` : ''}
       <small>Fuente: ${escapeHtml(off.source)}${off.updated_at ? ` · ${escapeHtml(off.updated_at)}` : ' · Sin fecha informada'}</small>
       ${link ? `<a href="${escapeHtml(link)}" target="_blank" rel="noopener noreferrer">Ver oferta en el supermercado</a>` : ''}
       </details>

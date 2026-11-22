@@ -392,6 +392,19 @@ class Workflows(unittest.TestCase):
         without_size=offer_service.compare_supermarket_offers('Arroz blanco')
         self.assertIn('5',[row['id'] for row in without_size['offers']])
 
+    @patch.object(offer_service, 'ratoneando_offers', return_value=([], ''))
+    def test_loyalty_notice_does_not_change_observed_prices_or_ranking(self, _):
+        stores=['Día','Coto','Carrefour','Vea','Jumbo']
+        self.state['offers']=[{'id':store,'product':'Arroz 1kg','store':store,'price':1500+index} for index,store in enumerate(stores)]
+        db.save_db(self.state)
+        result=offer_service.compare_supermarket_offers('arroz 1 kg')
+        self.assertEqual([row['promo_price'] for row in result['offers']],[1500,1501,1502,1503,1504])
+        self.assertEqual([row['loyalty_program'] for row in result['offers']],['Club Día','Comunidad Coto','Mi Carrefour','Vea Ahorro','Jumbo Más'])
+        for row in result['offers']:
+            self.assertIn('No se calculan beneficios personales',row['loyalty_notice'])
+            self.assertTrue(row['loyalty_url'].startswith('https://'))
+        self.assertEqual(result['top_offer']['store'],'Día')
+
     def test_saved_offer_photo_is_validated_and_used_in_comparison(self):
         self.state['offers'] = [{'id':'saved', 'product':'Leche entera', 'store':'A', 'price':''}]
         db.save_db(self.state)

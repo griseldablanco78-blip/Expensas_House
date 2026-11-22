@@ -40,6 +40,7 @@ data class ComparisonAnalysis(val best_single: BestPrice? = null, val max_saving
 data class ProductOffer(val product: String, val store: String, val promo_price: Double,
     val promo_text: String, val image_url: String? = null, val direct_link: String? = null,
     val conditions: String? = null, val source: String? = null,
+    val loyalty_program: String? = null, val loyalty_url: String? = null, val loyalty_notice: String? = null,
     val id: String = "", val brand: String? = null, val saving_percent: Double = 0.0,
     val promo_type: String? = null, val size_confirmed: Boolean = true,
     val updated_at: String? = null, val unit: String? = null, val unit_price: Double? = null)

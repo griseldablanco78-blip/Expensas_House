@@ -307,3 +307,20 @@ test('WEB-17: tachito permite cancelar y eliminar el ticket con presupuesto corr
   expect(budget.totalSpent).toBe(0);
   await expect(page.locator('#saved-receipt-dialog')).not.toBeVisible();
 });
+
+
+test('WEB-18: aviso Club Día informa beneficios sin rebajar el precio publicado', async ({page}) => {
+  await page.evaluate(async () => {
+    const response=await fetch('/api/offers/saved',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({product:'Arroz ClubQA 1kg',store:'Día',price:900})});
+    if(!response.ok)throw new Error(await response.text());
+  });
+  await page.locator('#ai-search-input').fill('Arroz ClubQA 1kg');
+  await page.locator('#btn-ai-search').click();
+  const card=page.locator('.store-card').filter({hasText:'Arroz ClubQA'});
+  await expect(card.locator('.promo-price')).toHaveText('$900');
+  await expect(card.locator('.loyalty-hint')).toContainText('Club Día');
+  await card.locator('.offer-card-detail summary').click();
+  await expect(card.locator('.loyalty-notice')).toContainText('No se calculan beneficios personales');
+  await expect(card.getByRole('link',{name:'Consultar Club Día'})).toHaveAttribute('href','https://diaonline.supermercadosdia.com.ar/clubdia');
+  await expect(card.locator('.promo-price')).toHaveText('$900');
+});
