@@ -46,6 +46,7 @@ test-results/
 .env.*
 !.env.example
 /frontend/web/vendor/
+/frontend/web/models/.clip-build/
 /public/
 /output/apk/
 
