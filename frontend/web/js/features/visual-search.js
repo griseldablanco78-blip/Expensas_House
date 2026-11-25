@@ -5,7 +5,7 @@ let productVisionAssetsPromise;
 async function getProductVisionAssets(progress) {
   if (!productVisionAssetsPromise) productVisionAssetsPromise=(async()=>{
     progress('Cargando el reconocedor visual de Expensas House…');
-    const {AutoProcessor,CLIPVisionModelWithProjection,RawImage,env}=await import('/static/vendor/transformers/transformers.min.js');
+    const {AutoImageProcessor,CLIPVisionModelWithProjection,RawImage,env}=await import('/static/vendor/transformers/transformers.min.js');
     env.allowRemoteModels=false;
     env.allowLocalModels=true;
     env.localModelPath='/static/models/';
@@ -22,7 +22,7 @@ async function getProductVisionAssets(progress) {
             progress(`Descargando el modelo desde Vercel: ${event.file} ${Math.round(event.progress||0)}%`);
         }
       }),
-      AutoProcessor.from_pretrained(modelId,{local_files_only:true}),
+      AutoImageProcessor.from_pretrained(modelId,{local_files_only:true}),
       fetch('/static/models/clip-vit-base-patch32/labels.json',{cache:'force-cache'})
     ]);
     if(!response.ok) throw new Error('No se pudieron cargar las etiquetas visuales.');
