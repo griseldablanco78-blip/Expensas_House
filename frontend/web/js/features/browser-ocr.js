@@ -202,29 +202,52 @@ async function browserProductImageQuery(file, progress = () => {}) {
   }).catch(error=>{receiptWorkerPromise=null;throw error;});
   progress('Preparando el lector de texto…');
   const worker=await receiptWorkerPromise;
-  await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1',user_defined_dpi:'300'});
-  let result=await worker.recognize(canvas,{});
-  if ((result.data.text||'').trim().length < 4) {
-    await worker.setParameters({tessedit_pageseg_mode:'6'});
-    result=await worker.recognize(canvas,{});
-  }
   const stop = new Set('nuestra naturaleza es cuidarte elaborado industria producto informacion nutricional ingredientes contiene conservar mantengase origen argentina contenido neto peso neto alimento calidad premium seleccion especial sin tacc'.split(' '));
-  const lines=(result.data.text||'').split(/\r?\n/).map(line=>line.replace(/(\d)\s+(kg|g|gr|mg|l|lt|ml)\b/gi,'$1$2').replace(/[^\p{L}\p{N},. ]/gu,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
-  const scored=lines.map((line,index)=>{
-    const words=line.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(word=>word.length>1&&!stop.has(word)&&!['kg','gr','mg','ml','lt'].includes(word));
-    const hasSize=/\b\d+(?:[.,]\d+)?\s?(?:kg|g|gr|mg|l|lt|ml)\b/i.test(line);
-    const productWord=/\b(arroz|leche|fideos?|azucar|harina|aceite|yerba|cafe|galletitas?|atun|tomate|detergente|jabon|queso|yogur|cereal|lentejas?|porotos?)\b/i.test(line);
-    return {line,words,score:(hasSize?8:0)+(productWord?8:0)+Math.min(words.length,5)+(line.length>70?-5:0),index};
-  }).filter(item=>item.words.length);
-  scored.sort((a,b)=>b.score-a.score||a.index-b.index);
-  const selected=[]; let count=0;
-  for(const item of scored){
-    const fresh=item.words.filter(word=>!selected.includes(word));
-    if(!fresh.length) continue;
-    for(const word of fresh){selected.push(word);count++;if(count>=9)break;}
-    if(count>=9)break;
+  const families = 'arroz leche fideo azucar harina aceite yerba cafe galletita atun tomate detergente jabon queso yogur cereal lenteja poroto lavandina shampoo agua gaseosa jugo pan manteca crema papel higienico servilleta rollo panal toalla'.split(' ');
+  const descriptors = 'largo fino integral blanco carolina protein fresca simple hoja doble premium descremada entera'.split(' ');
+  const brands = 'molinos ala arcor serenisima sancor paulina mana bagley terrabusi lucchetti gallo caserita marolio cocinero natura nobleza dia'.split(' ');
+  const dictionary = [...families, ...descriptors, ...brands];
+  const normalizeWord = word => word.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
+  const distance = (a,b) => {
+    let row=Array.from({length:b.length+1},(_,i)=>i);
+    for(let i=1;i<=a.length;i++){const next=[i];for(let j=1;j<=b.length;j++)next[j]=Math.min(next[j-1]+1,row[j]+1,row[j-1]+(a[i-1]===b[j-1]?0:1));row=next;}
+    return row[b.length];
+  };
+  const correctWord = word => {
+    if(dictionary.includes(word)) return word;
+    if(word.length<5) return word;
+    const candidates=dictionary.filter(candidate=>Math.abs(candidate.length-word.length)<=1 && distance(word,candidate)<=1);
+    return candidates.length===1 ? candidates[0] : word;
+  };
+  const texts=[];
+  await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1',user_defined_dpi:'300'});
+  texts.push((await worker.recognize(canvas,{})).data.text||'');
+  // Read the main face separately, then rotate narrow side panels where package text is vertical.
+  progress('Leyendo marca, producto y presentación del envase…');
+  const face=document.createElement('canvas'); face.width=Math.round(canvas.width*.78); face.height=canvas.height;
+  face.getContext('2d').drawImage(canvas,0,0,face.width,face.height,0,0,face.width,face.height);
+  await worker.setParameters({tessedit_pageseg_mode:'11'});
+  texts.push((await worker.recognize(face,{})).data.text||'');
+  const side=document.createElement('canvas'); side.width=canvas.width-face.width; side.height=canvas.height;
+  side.getContext('2d').drawImage(canvas,face.width,0,side.width,side.height,0,0,side.width,side.height);
+  for(const degrees of [90,270]){
+    const rotated=rotateCanvas(side,degrees);
+    await worker.setParameters({tessedit_pageseg_mode:'6'});
+    texts.push((await worker.recognize(rotated,{})).data.text||'');
   }
-  const query=selected.join(' ').trim();
+  const lines=texts.join('\n').split(/\r?\n/).map(line=>line.replace(/(\d)\s+(kg|g|gr|mg|l|lt|ml)\b/gi,'$1$2').replace(/[^\p{L}\p{N},. ]/gu,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+  const found=new Set();
+  for(const line of lines){
+    const words=line.split(/\s+/).map(normalizeWord).filter(word=>word.length>=3&&!stop.has(word)&&!['kilogramo','gramos','litros'].includes(word)).map(correctWord);
+    words.forEach(word=>found.add(word));
+  }
+  // Prefer recognized product families and brands over slogans, OCR fragments and pack copy.
+  const selected=[];
+  for(const word of [...families,...descriptors,...brands]) if(found.has(word)) selected.push(word);
+  if(!selected.length){
+    for(const word of found) if(word.length>=4&&!/^\d/.test(word)) selected.push(word);
+  }
+  const query=[...new Set(selected)].slice(0,5).join(' ').trim();
   if(query.length<3) throw new Error('No se pudo identificar el producto. Probá una foto más nítida o escribí su nombre.');
   return query;
 }
