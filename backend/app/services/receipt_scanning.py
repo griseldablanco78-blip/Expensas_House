@@ -38,6 +38,13 @@ def receipt_header(text):
     return {'store': store, 'purchase_date': purchased}
 
 
+def clean_product_description(value):
+    """Keep the product name and discard Coto's payment-promotion caption."""
+    value = re.sub(r'\b(?:off\s+)?promo(?:cion)?\s+visa\b.*$', '', value, flags=re.I)
+    value = re.sub(r'\bvisa\b.*\b(?:off\s+)?promo(?:cion)?\b.*$', '', value, flags=re.I)
+    return re.sub(r'\s+', ' ', value).strip(' *-:')
+
+
 def parse_receipt(text):
     items, warnings = [], []
     total = None
@@ -67,6 +74,16 @@ def parse_receipt(text):
         if not line:
             continue
         norm = normalize(line)
+        # Coto prints a bold item name and may place "OFF PROMO VISA" on a
+        # separate row. Keep any amount on that row for the existing arithmetic,
+        # but never let the card-promotion caption become part of the item name.
+        visa_promotion = re.search(r'\b(?:off\s+)?promo(?:cion)?\b.*\bvisa\b|\bvisa\b.*\b(?:off\s+)?promo(?:cion)?\b', norm)
+        if visa_promotion:
+            promotion_amounts = list(re.finditer(amount, line))
+            if not promotion_amounts:
+                continue
+            line = ' '.join(match.group(0) for match in promotion_amounts)
+            norm = normalize(line)
         if re.match(r'^(?:cant(?:idad)?\b|descripcion\b|precio unit)', norm):
             pending_description = []
             continue
@@ -150,7 +167,7 @@ def parse_receipt(text):
         if line[last.end():].strip(' *') not in ('', 'A', 'B', 'C'):
             continue
         description = line[:values[0].start()].strip(' $:-')
-        description = ' '.join([*pending_description, description]).strip()
+        description = clean_product_description(' '.join([*pending_description, description]))
         pending_description = []
         if quantity <= 0 or not meaningful_name(description):
             warnings.append('Se omitió una línea sin nombre de producto legible. Revisá el texto y la foto.')
