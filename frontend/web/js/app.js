@@ -662,9 +662,16 @@ function initEventListeners() {
     if (!file) return;
     imageBtn.disabled = true;
     try {
-      const query = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
+      let query, detectedByVision = false;
+      try {
+        query = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
+      } catch (ocrError) {
+        const visual = await classifyProductImage(file, message => { imageStatus.textContent = message; });
+        if (!visual) throw ocrError;
+        query = visual.query; detectedByVision = true;
+      }
       searchInput.value = query;
-      imageStatus.textContent = `Producto detectado: “${query}”. Comparando en los cinco supermercados…`;
+      imageStatus.textContent = `${detectedByVision ? 'Tipo de producto reconocido visualmente' : 'Descripción leída del envase'}: “${query}”. Comparando en los cinco supermercados…`;
       await performAIComparison(query, file);
       imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
     } catch (error) {
