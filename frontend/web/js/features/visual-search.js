@@ -14,7 +14,9 @@ async function getProductVisionAssets(progress) {
     const modelId='clip-vit-base-patch32';
     const [model,processor,response]=await Promise.all([
       CLIPVisionModelWithProjection.from_pretrained(modelId,{
-        model_file_name:'vision_model_quantized',
+        // The library appends `_quantized` for dtype q8 on WASM, so keep this as the base name.
+        model_file_name:'vision_model',
+        dtype:'q8',
         local_files_only:true,
         device:'wasm',
         progress_callback:event=>{
