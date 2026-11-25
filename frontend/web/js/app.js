@@ -653,6 +653,24 @@ function initEventListeners() {
   // Buscador principal
   const searchInput = document.getElementById('ai-search-input');
   const searchBtn = document.getElementById('btn-ai-search');
+  const imageBtn = document.getElementById('btn-image-search');
+  const imageInput = document.getElementById('product-image-input');
+  const imageStatus = document.getElementById('image-search-status');
+  imageBtn.addEventListener('click', () => imageInput.click());
+  imageInput.addEventListener('change', async () => {
+    const file = imageInput.files && imageInput.files[0];
+    if (!file) return;
+    imageBtn.disabled = true;
+    try {
+      const query = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
+      searchInput.value = query;
+      imageStatus.textContent = `Producto detectado: “${query}”. Comparando en los cinco supermercados…`;
+      await performAIComparison(query);
+      imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
+    } catch (error) {
+      imageStatus.textContent = error.message || 'No se pudo leer la imagen.';
+    } finally { imageBtn.disabled = false; imageInput.value = ''; }
+  });
   searchInput.addEventListener('input', () => {
     comparisonSerial++;
     document.getElementById('comparator-results').classList.add('hidden');

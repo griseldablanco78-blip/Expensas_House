@@ -175,3 +175,56 @@ async function browserReceiptOcr(file, mode, progress) {
   if (Number(result.data.confidence || 0) < 75) warnings.push('Lectura de baja confianza: revisá los nombres y precios antes de confirmar.');
   return {text,image,warnings};
 }
+
+// Product package search reuses the locally hosted Spanish Tesseract model.
+// The photo stays in the browser; only the extracted query reaches the catalog API.
+async function browserProductImageQuery(file, progress = () => {}) {
+  if (!file || !/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Elegí una imagen JPG, PNG o WebP.');
+  if (file.size > 10 * 1024 * 1024) throw new Error('La imagen debe pesar menos de 10 MB.');
+  const bitmap = await createImageBitmap(file, {imageOrientation:'from-image'});
+  if (bitmap.width * bitmap.height > 25000000) { bitmap.close(); throw new Error('La imagen supera los 25 megapíxeles.'); }
+  const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+  const canvas = document.createElement('canvas');
+  canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
+  const context = canvas.getContext('2d');
+  context.fillStyle = '#fff'; context.fillRect(0,0,canvas.width,canvas.height);
+  context.drawImage(bitmap,0,0,canvas.width,canvas.height); bitmap.close();
+  receiptOcrProgress = progress;
+  if (!window.Tesseract) await new Promise((resolve,reject)=>{
+    const script=document.createElement('script'); script.src='/static/vendor/ocr/tesseract.min.js';
+    script.onload=resolve; script.onerror=()=>reject(new Error('No se pudieron cargar los archivos del lector. Reintentá con conexión.'));
+    document.head.appendChild(script);
+  });
+  if (!receiptWorkerPromise) receiptWorkerPromise=Tesseract.createWorker('spa',1,{
+    workerPath:'/static/vendor/ocr/worker.min.js', corePath:'/static/vendor/ocr/core',
+    langPath:'/static/vendor/ocr/lang', workerBlobURL:false,
+    logger:event=>{ const labels={'recognizing text':'Leyendo el envase','loading language traineddata':'Descargando modelo en español','loading tesseract core':'Preparando motor OCR','initializing tesseract':'Iniciando lector','initializing api':'Preparando idioma'}; if(labels[event.status]) receiptOcrProgress(labels[event.status]+'… '+Math.round((event.progress||0)*100)+'%'); }
+  }).catch(error=>{receiptWorkerPromise=null;throw error;});
+  progress('Preparando el lector de texto…');
+  const worker=await receiptWorkerPromise;
+  await worker.setParameters({tessedit_pageseg_mode:'11',preserve_interword_spaces:'1',user_defined_dpi:'300'});
+  let result=await worker.recognize(canvas,{});
+  if ((result.data.text||'').trim().length < 4) {
+    await worker.setParameters({tessedit_pageseg_mode:'6'});
+    result=await worker.recognize(canvas,{});
+  }
+  const stop = new Set('nuestra naturaleza es cuidarte elaborado industria producto informacion nutricional ingredientes contiene conservar mantengase origen argentina contenido neto peso neto alimento calidad premium seleccion especial sin tacc'.split(' '));
+  const lines=(result.data.text||'').split(/\r?\n/).map(line=>line.replace(/(\d)\s+(kg|g|gr|mg|l|lt|ml)\b/gi,'$1$2').replace(/[^\p{L}\p{N},. ]/gu,' ').replace(/\s+/g,' ').trim()).filter(Boolean);
+  const scored=lines.map((line,index)=>{
+    const words=line.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(word=>word.length>1&&!stop.has(word)&&!['kg','gr','mg','ml','lt'].includes(word));
+    const hasSize=/\b\d+(?:[.,]\d+)?\s?(?:kg|g|gr|mg|l|lt|ml)\b/i.test(line);
+    const productWord=/\b(arroz|leche|fideos?|azucar|harina|aceite|yerba|cafe|galletitas?|atun|tomate|detergente|jabon|queso|yogur|cereal|lentejas?|porotos?)\b/i.test(line);
+    return {line,words,score:(hasSize?8:0)+(productWord?8:0)+Math.min(words.length,5)+(line.length>70?-5:0),index};
+  }).filter(item=>item.words.length);
+  scored.sort((a,b)=>b.score-a.score||a.index-b.index);
+  const selected=[]; let count=0;
+  for(const item of scored){
+    const fresh=item.words.filter(word=>!selected.includes(word));
+    if(!fresh.length) continue;
+    for(const word of fresh){selected.push(word);count++;if(count>=9)break;}
+    if(count>=9)break;
+  }
+  const query=selected.join(' ').trim();
+  if(query.length<3) throw new Error('No se pudo identificar el producto. Probá una foto más nítida o escribí su nombre.');
+  return query;
+}

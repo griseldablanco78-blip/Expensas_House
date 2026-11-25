@@ -13,8 +13,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
   
   <!-- CSS Stylesheet -->
-  <link rel="stylesheet" href="/static/css/style.css?v=cloud-10">
-  <link rel="stylesheet" href="/static/css/polish.css?v=cloud-10">
+  <link rel="stylesheet" href="/static/css/style.css?v=cloud-11">
+  <link rel="stylesheet" href="/static/css/polish.css?v=cloud-11">
 </head>
 <body>
   <p id="environment-notice" hidden role="status" style="padding:12px;text-align:center;background:#fff3cd;color:#503b00">Entorno de pruebas · datos ficticios.</p>
@@ -100,6 +100,8 @@
           <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
             <input type="text" id="ai-search-input" placeholder="Ej.: leche La Serenísima 1 L" autocomplete="off">
+            <input type="file" id="product-image-input" accept="image/jpeg,image/png,image/webp" class="hidden" aria-label="Elegir imagen del producto">
+            <button type="button" id="btn-image-search" class="voice-btn image-search-btn" title="Buscar ofertas a partir de una foto" aria-label="Buscar por imagen">🖼️</button>
             
             <!-- Botón de Voz a Texto -->
             <button id="btn-voice-search" class="voice-btn" title="Buscar usando tu voz (Speech to Text)">
@@ -113,6 +115,8 @@
               <span class="sparkle">✨</span>
             </button>
           </div>
+
+          <div id="image-search-status" class="image-search-status" role="status" aria-live="polite"></div>
 
           <!-- Indicador de estado de voz -->
           <div id="voice-status-bar" class="voice-status-bar hidden">
@@ -672,14 +676,14 @@
 
   </div>
   <!-- JavaScript -->
-  <script src="/static/js/core/api.js?v=cloud-10"></script>
-  <script src="/static/js/core/auth.js?v=cloud-10"></script>
-  <script src="/static/js/core/dom.js?v=cloud-10"></script>
-  <script src="/static/js/features/offers.js?v=cloud-10"></script>
-  <script src="/static/js/features/chat.js?v=cloud-10"></script>
-  <script src="/static/js/features/browser-ocr.js?v=cloud-10"></script>
-  <script src="/static/js/features/receipts.js?v=cloud-10"></script>
-  <script src="/static/js/features/expenses.js?v=cloud-10"></script>
-  <script src="/static/js/app.js?v=cloud-10"></script>
+  <script src="/static/js/core/api.js?v=cloud-11"></script>
+  <script src="/static/js/core/auth.js?v=cloud-11"></script>
+  <script src="/static/js/core/dom.js?v=cloud-11"></script>
+  <script src="/static/js/features/offers.js?v=cloud-11"></script>
+  <script src="/static/js/features/chat.js?v=cloud-11"></script>
+  <script src="/static/js/features/browser-ocr.js?v=cloud-11"></script>
+  <script src="/static/js/features/receipts.js?v=cloud-11"></script>
+  <script src="/static/js/features/expenses.js?v=cloud-11"></script>
+  <script src="/static/js/app.js?v=cloud-11"></script>
 </body>
 </html>
