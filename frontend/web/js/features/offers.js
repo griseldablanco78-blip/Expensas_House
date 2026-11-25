@@ -1,4 +1,4 @@
-async function performAIComparison(query) {
+async function performAIComparison(query, imageFile = null) {
   if (!query || !query.trim()) { document.getElementById('offer-source-status').textContent = 'Escribí el producto que querés buscar.'; return; }
   const serial = ++comparisonSerial;
 
@@ -11,7 +11,14 @@ async function performAIComparison(query) {
   resultsContainer.style.opacity = '0.3';
 
   try {
-    const res = await fetch(`/api/offers/compare?q=${encodeURIComponent(query)}&sort=${document.getElementById('offer-sort').value}`);
+    let res;
+    if (imageFile) {
+      const body = new FormData();
+      body.set('q', query); body.set('sort', document.getElementById('offer-sort').value); body.set('image', imageFile);
+      res = await fetch('/api/offers/compare-image', {method:'POST', body});
+    } else {
+      res = await fetch(`/api/offers/compare?q=${encodeURIComponent(query)}&sort=${document.getElementById('offer-sort').value}`);
+    }
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data.detail || "No se pudieron consultar las ofertas");
     if (serial === comparisonSerial && searchInput.value.trim() === query.trim()) renderComparisonResults(data);
@@ -57,6 +64,7 @@ function renderComparisonResults(data) {
       <h3 class="offer-store-title">${escapeHtml(off.store)}</h3>
       ${isTop ? '<strong class="top-offer-label">🏆 Oferta top · menor precio</strong>' : ''}
       <div class="product-image-slot">${image ? `<img class="offer-product-image" src="${escapeHtml(image)}" alt="${escapeHtml(off.product)}" loading="lazy" referrerpolicy="no-referrer">` : '<span class="product-photo-empty"><span aria-hidden="true">▧</span>Sin fotografía<small>Podés agregarla en Mis ofertas</small></span>'}</div>
+      ${Number.isFinite(off.visual_similarity) ? `<small class="visual-similarity">📷 Similitud de imagen: ${off.visual_similarity}%</small>` : ''}
       <h4 class="store-product-title">${escapeHtml(off.product)}</h4>
       <strong class="promo-price">$${off.promo_price.toLocaleString('es-AR')}</strong>
       ${off.loyalty_program ? `<small class="loyalty-hint">¿Tenés ${escapeHtml(off.loyalty_program)}? Revisá tus beneficios en el detalle.</small>` : ''}

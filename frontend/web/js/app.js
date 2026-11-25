@@ -665,7 +665,7 @@ function initEventListeners() {
       const query = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
       searchInput.value = query;
       imageStatus.textContent = `Producto detectado: “${query}”. Comparando en los cinco supermercados…`;
-      await performAIComparison(query);
+      await performAIComparison(query, file);
       imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
     } catch (error) {
       imageStatus.textContent = error.message || 'No se pudo leer la imagen.';

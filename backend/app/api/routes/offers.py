@@ -1,5 +1,5 @@
 """Offers HTTP routes."""
-from fastapi import APIRouter, UploadFile, File, HTTPException
+from fastapi import APIRouter, UploadFile, File, Form, HTTPException
 from fastapi.responses import FileResponse, Response
 from backend.app.infrastructure import cloud_storage
 from pydantic import BaseModel, Field
@@ -10,6 +10,7 @@ from io import BytesIO
 import secrets
 import re
 from backend.app.services.offers import compare_supermarket_offers
+from backend.app.services.product_image_similarity import rank_catalog_images
 
 router = APIRouter(tags=["offers"])
 IMAGE_DIR = PROJECT_ROOT / 'data' / 'product_images'
@@ -101,6 +102,23 @@ def offer_image(filename: str):
 def api_compare_offers(q: str = "leche", sort: str = "price"):
     """Busca ofertas guardadas y del proveedor configurado, usando reglas y unidades equivalentes."""
     return compare_supermarket_offers(q, sort)
+
+
+@router.post('/api/offers/compare-image')
+async def api_compare_offers_by_image(q: str = Form(...), sort: str = Form('price'), image: UploadFile = File(...)):
+    """Search catalogs by the OCR description, then compare their public product photos."""
+    raw = await image.read(10 * 1024 * 1024 + 1)
+    if len(raw) > 10 * 1024 * 1024:
+        raise HTTPException(413, 'La foto debe pesar menos de 10 MB.')
+    try:
+        comparison = compare_supermarket_offers(q, sort)
+        warning = rank_catalog_images(raw, comparison['offers'])
+    except ValueError as error:
+        raise HTTPException(400, str(error)) from error
+    comparison['warning'] = ' '.join(filter(None, [comparison.get('warning'), warning]))
+    comparison['visual_search'] = True
+    # The winning offer remains the cheapest item among the text-matched catalog entries.
+    return comparison
 
 
 
