@@ -203,9 +203,9 @@ async function browserProductImageQuery(file, progress = () => {}) {
   progress('Preparando el lector de texto…');
   const worker=await receiptWorkerPromise;
   const stop = new Set('nuestra naturaleza es cuidarte elaborado industria producto informacion nutricional ingredientes contiene conservar mantengase origen argentina contenido neto peso neto alimento calidad premium seleccion especial sin tacc'.split(' '));
-  const families = 'arroz leche fideo azucar harina aceite yerba cafe galletita atun tomate detergente jabon queso yogur cereal lenteja poroto lavandina shampoo agua gaseosa jugo pan manteca crema papel higienico servilleta rollo panal toalla'.split(' ');
-  const descriptors = 'largo fino integral blanco carolina protein fresca simple hoja doble premium descremada entera'.split(' ');
-  const brands = 'molinos ala arcor serenisima sancor paulina mana bagley terrabusi lucchetti gallo caserita marolio cocinero natura nobleza dia'.split(' ');
+  const families = 'arroz leche fideo azucar harina aceite yerba cafe galletita atun tomate detergente jabon queso yogur cereal lenteja poroto lavandina shampoo agua gaseosa jugo pan manteca crema papel higienico servilleta rollo panal toalla cerveza vino sidra bebida vermut aperitivo fernet whisky gin vodka ron licor'.split(' ');
+  const descriptors = 'largo fino integral blanco carolina protein fresca simple hoja doble premium descremada entera clasica rubia roja ipa negra light tostada'.split(' ');
+  const brands = 'molinos ala arcor serenisima sancor paulina mana bagley terrabusi lucchetti gallo caserita marolio cocinero natura nobleza dia quilmes brahma andes patagonia budweiser heineken stella corona schneider imperial amstel'.split(' ');
   const dictionary = [...families, ...descriptors, ...brands];
   const normalizeWord = word => word.toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'');
   const distance = (a,b) => {
@@ -244,9 +244,8 @@ async function browserProductImageQuery(file, progress = () => {}) {
   // Prefer recognized product families and brands over slogans, OCR fragments and pack copy.
   const selected=[];
   for(const word of [...families,...descriptors,...brands]) if(found.has(word)) selected.push(word);
-  if(!selected.length){
-    for(const word of found) if(word.length>=4&&!/^\d/.test(word)) selected.push(word);
-  }
+  const hasReliableIdentity = families.some(word=>found.has(word)) || brands.some(word=>found.has(word));
+  if(!hasReliableIdentity) throw new Error('No pude reconocer la categoría o marca con seguridad. Escribí la descripción detectada y volvé a buscar.');
   const query=[...new Set(selected)].slice(0,5).join(' ').trim();
   if(query.length<3) throw new Error('No se pudo identificar el producto. Probá una foto más nítida o escribí su nombre.');
   return query;

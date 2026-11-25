@@ -7,7 +7,8 @@ ALIASES = {"leches":"leche", "galletas":"galletita", "galletitas":"galletita", "
            "quesos":"queso", "panes":"pan", "postres":"postre", "jabon":"jabon", "jabones":"jabon"}
 FAMILIES = {"leche", "galletita", "arroz", "fideo", "queso", "yogur", "dulce", "postre", "flan",
             "helado", "chocolate", "bebida", "gaseosa", "jugo", "agua", "cafe", "yerba", "te", "pan",
-            "manteca", "crema", "aceite", "detergente", "jabon", "lavandina", "shampoo", "acondicionador"}
+            "manteca", "crema", "aceite", "detergente", "jabon", "lavandina", "shampoo", "acondicionador",
+            "cerveza", "vino", "sidra", "vermut", "aperitivo", "fernet", "whisky", "gin", "vodka", "ron", "licor"}
 RICE_VARIANTS = {"integral", "yamani", "salvaje", "negro", "rojo", "amarillo", "amarilla", "amarillos", "azafran", "curcuma", "curry", "saborizado", "parboil", "parbolizado", "preparado", "vegetales", "leche"}
 MILK_VARIANTS = {"condensada", "polvo", "chocolatada", "saborizada", "infantil", "formula"}
 
