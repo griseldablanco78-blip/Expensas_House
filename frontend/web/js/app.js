@@ -662,16 +662,17 @@ function initEventListeners() {
     if (!file) return;
     imageBtn.disabled = true;
     try {
-      let query, detectedByVision = false;
+      let query = '', visual = null, ocrQuery = '', ocrError = null, visionError = null;
+      try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
+      catch (error) { visionError = error; }
       try {
-        query = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
-      } catch (ocrError) {
-        const visual = await classifyProductImage(file, message => { imageStatus.textContent = message; });
-        if (!visual) throw ocrError;
-        query = visual.query; detectedByVision = true;
-      }
+        ocrQuery = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
+      } catch (error) { ocrError = error; }
+      if (visual) query = enrichVisualProductQuery(visual, ocrQuery);
+      else if (ocrQuery) query = ocrQuery;
+      else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
       searchInput.value = query;
-      imageStatus.textContent = `${detectedByVision ? 'Tipo de producto reconocido visualmente' : 'Descripción leída del envase'}: “${query}”. Comparando en los cinco supermercados…`;
+      imageStatus.textContent = `${visual ? `Imagen reconocida: ${visual.title}` : 'Descripción leída del envase'} · búsqueda: “${query}”. Comparando en los cinco supermercados…`;
       await performAIComparison(query, file);
       imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
     } catch (error) {

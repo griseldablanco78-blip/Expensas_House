@@ -1,9 +1,12 @@
 // Pretrained CLIP runs in the browser. The uploaded photo is never sent to Hugging Face.
 let productVisionPipelinePromise;
 const productImageClasses = [
+  {label:'a can of Quilmes Clásica beer', query:'cerveza quilmes clasica', title:'lata de cerveza Quilmes clásica'},
   {label:'an aluminum can of beer', query:'cerveza', title:'lata de cerveza'},
   {label:'a bottle of beer', query:'cerveza', title:'cerveza'},
+  {label:'a bag of Molinos Ala long grain fine rice', query:'arroz molinos ala largo fino', title:'arroz Molinos Ala largo fino'},
   {label:'a bag of uncooked rice', query:'arroz', title:'paquete de arroz'},
+  {label:'a pouch of La Serenísima protein milk', query:'leche serenisima protein', title:'leche Protein La Serenísima'},
   {label:'a carton or pouch of milk', query:'leche', title:'envase de leche'},
   {label:'a package of pasta noodles', query:'fideos', title:'paquete de fideos'},
   {label:'a bag of flour', query:'harina', title:'paquete de harina'},
@@ -52,4 +55,17 @@ async function classifyProductImage(file, progress=()=>{}) {
     if(!match || !match.query || Number(best.score)<0.12) return null;
     return {...match,score:Number(best.score)};
   } finally { URL.revokeObjectURL(source); }
+}
+
+function enrichVisualProductQuery(visual, textQuery='') {
+  const base=visual.query.split(/\s+/);
+  const family=base[0];
+  const allowed={
+    cerveza:'quilmes brahma andes patagonia budweiser heineken stella corona schneider imperial amstel clasica rubia roja ipa negra light',
+    arroz:'molinos ala largo fino integral blanco carolina',
+    leche:'serenisima sancor protein fresca descremada entera',
+  };
+  const valid=new Set((allowed[family]||'').split(' '));
+  const extras=(textQuery||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/).filter(word=>valid.has(word));
+  return [...new Set([...base,...extras])].join(' ');
 }
