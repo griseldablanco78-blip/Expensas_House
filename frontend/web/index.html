@@ -392,11 +392,17 @@
           <label>Supermercado <input id="receipt-store" maxlength="150" placeholder="Nombre del supermercado"></label>
           <div class="table-container"><table class="data-table"><thead><tr><th>Descripción</th><th>Cantidad</th><th>Precio unitario ($)</th><th hidden>Descuento de la línea ($)</th><th>Total del producto ($)</th><th></th></tr></thead><tbody id="receipt-lines"></tbody></table></div>
           <button id="receipt-add-line" type="button" class="btn-secondary">+ Producto</button>
+          <div id="receipt-amount-summary" class="receipt-amount-summary" aria-live="polite">
+            <p>Total de productos reconocidos: <strong id="receipt-products-total">$0,00</strong></p>
+            <p id="receipt-printed-products-row" hidden>Total productos (impreso): <strong id="receipt-printed-products-total">$0,00</strong></p>
+            <p><span id="receipt-adjustment-label">Descuentos/ajustes del ticket:</span> <strong id="receipt-adjustment-total">$0,00</strong></p>
+            <p>Total pagado (renglón «TOTAL»): <strong id="receipt-confirmed-total">$0,00</strong></p>
+          </div>
           <label hidden>IVA informado ($; vacío si no figura) <input id="receipt-vat" type="number" min="0" step="0.01"></label>
           <label hidden><input id="receipt-vat-included" type="checkbox" checked> El IVA está incluido en los precios</label>
-          <p>Se descontará del presupuesto el total pagado del ticket.</p>
-          <label>Total gastado ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
-          <label hidden>Ajuste por descuento o impuestos (si el total difiere) <input id="receipt-adjustment" placeholder="Ej.: descuento de fidelidad"></label>
+          <p>Se descontará del presupuesto el importe indicado como «TOTAL» en el ticket.</p>
+          <label>Total pagado del ticket ($) <input id="receipt-total" type="number" min="0.01" step="0.01"></label>
+          <label id="receipt-adjustment-label-field" hidden>Motivo de la diferencia entre productos y total <input id="receipt-adjustment" placeholder="Ej.: descuento Visa impreso en el ticket"></label>
           <button id="receipt-confirm" type="button" class="btn-primary">Confirmar ticket y descontar del presupuesto</button>
         </div>
       </section>

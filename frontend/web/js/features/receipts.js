@@ -9,6 +9,29 @@ function setupReceiptScanner() {
   let pending = null;
   try { pending = JSON.parse(localStorage.getItem(storageKey) || 'null'); } catch { localStorage.removeItem(storageKey); }
   let busy = false;
+  let printedProductsTotal = null;
+
+  function updateReceiptSummary() {
+    const products = [...rows.children].reduce((sum, row) => sum + Number(row.querySelector('[data-field=line_total]').value || 0), 0);
+    const paid = Number(byId('receipt-total').value || 0);
+    const comparisonProducts = printedProductsTotal ?? products;
+    const difference = comparisonProducts - paid;
+    const format = value => Number(value || 0).toLocaleString('es-AR', {style:'currency', currency:'ARS'});
+    byId('receipt-products-total').textContent = format(products);
+    byId('receipt-printed-products-row').hidden = printedProductsTotal == null;
+    if (printedProductsTotal != null) byId('receipt-printed-products-total').textContent = format(printedProductsTotal);
+    byId('receipt-confirmed-total').textContent = format(paid);
+    byId('receipt-adjustment-total').textContent = format(Math.abs(difference) < .02 ? 0 : Math.abs(difference));
+    byId('receipt-adjustment-label').textContent = difference > .02 ? 'Descuentos del ticket:' : difference < -.02 ? 'Impuestos/ajustes del ticket:' : 'Descuentos/ajustes del ticket:';
+    const adjustmentLabel = byId('receipt-adjustment-label-field');
+    adjustmentLabel.hidden = Math.abs(difference) < .02;
+    if (Math.abs(difference) >= .02 && !byId('receipt-adjustment').value.trim()) {
+      byId('receipt-adjustment').value = difference > 0
+        ? 'Descuento global impreso en el ticket'
+        : 'Impuesto o ajuste impreso en el ticket';
+    }
+    if (Math.abs(difference) < .02) byId('receipt-adjustment').value = '';
+  }
 
   function addLine(item = {}) {
     const row = document.createElement('tr');
@@ -29,16 +52,20 @@ function setupReceiptScanner() {
           row.querySelector('[data-field=line_total]').value =
             (Number(row.querySelector('[data-field=quantity]').value) * Number(row.querySelector('[data-field=unit_price]').value) - Number(row.querySelector('[data-field=discount]').value)).toFixed(2);
         }
+        updateReceiptSummary();
       });
       cell.appendChild(input);
     });
     const remove = document.createElement('button');
     remove.textContent = 'Quitar';
     remove.type = 'button';
-    remove.addEventListener('click', () => row.remove());
+    remove.addEventListener('click', () => { row.remove(); updateReceiptSummary(); });
     row.insertCell().appendChild(remove);
     rows.appendChild(row);
+    updateReceiptSummary();
   }
+
+  byId('receipt-total').addEventListener('input', updateReceiptSummary);
 
   async function readReceipt(photo) {
     if (busy) return;
@@ -68,9 +95,11 @@ function setupReceiptScanner() {
       if (data.store && (photo || !byId('receipt-store').value.trim())) byId('receipt-store').value = data.store;
       if (data.purchase_date) byId('receipt-date').value = data.purchase_date;
       byId('receipt-total').value = data.total;
+      printedProductsTotal = data.printed_products_total ?? null;
+      byId('receipt-adjustment').value = '';
+      updateReceiptSummary();
       byId('receipt-vat').value = data.vat_amount ?? '';
       byId('receipt-vat-included').checked = data.vat_included !== false;
-      byId('receipt-adjustment').value = '';
       byId('receipt-review').classList.remove('hidden');
       status.textContent = ['Revisá descripción, cantidad, precio y total.', ...ocrWarnings, ...data.warnings].join(' ');
     } catch (error) { status.textContent = error.message; }
@@ -139,6 +168,8 @@ function setupReceiptScanner() {
     byId('receipt-vat').value = pending.vat_amount ?? '';
     byId('receipt-vat-included').checked = pending.vat_included !== false;
     byId('receipt-adjustment').value = pending.adjustment_note;
+    printedProductsTotal = null;
+    updateReceiptSummary();
     status.textContent = 'Hay un ticket pendiente de confirmación. Tocá confirmar para reintentar el mismo envío.';
   }
 }

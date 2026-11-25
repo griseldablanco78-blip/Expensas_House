@@ -1807,6 +1807,8 @@ body.dark-theme .boti-msg.user {
 .receipt-scanner label { display: block; margin: 12px 0; }
 .receipt-scanner textarea { width: 100%; padding: 12px; border-radius: 8px; }
 .receipt-scanner input { padding: 8px; max-width: 100%; }
+.receipt-amount-summary { margin: 14px 0; padding: 10px 14px; border-radius: 10px; background: var(--bg-muted, #f2f6f3); }
+.receipt-amount-summary p { margin: 5px 0; }
 #receipt-lines input { width: 100%; min-width: 85px; }
 #receipt-lines td:first-child input { min-width: 180px; }
 .boti-quick-options { display: flex; gap: 6px; padding: 8px; flex-wrap: wrap; }

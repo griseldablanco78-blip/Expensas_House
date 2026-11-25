@@ -45,6 +45,53 @@ def clean_product_description(value):
     return re.sub(r'\s+', ' ', value).strip(' *-:')
 
 
+def printed_receipt_total(lines, amount_pattern):
+    """Find the final payable TOTAL, ignoring the separate product subtotal."""
+    candidates = []
+    for index, line in enumerate(lines):
+        line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', line.strip())
+        normalized = normalize(line)
+        if re.match(r'^t[o0]tal productos\b', normalized):
+            continue
+        if not re.match(r'^(?:importe\s+)?t[o0]tal(?:\s+(?:a pagar|final|general|compra))?\b', normalized):
+            continue
+        values = list(re.finditer(amount_pattern, line))
+        if not values:
+            # Some OCR layouts put the bold TOTAL label and its amount on
+            # separate lines. Accept only a standalone amount immediately after.
+            next_lines = [re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', value.strip())
+                          for value in lines[index + 1:index + 3] if value.strip()]
+            for value in next_lines:
+                if re.fullmatch(r'[$\s]*\d[\d.,]*[.,]\d{2}', value):
+                    values = list(re.finditer(amount_pattern, value))
+                    if values:
+                        break
+                else:
+                    break
+        if values:
+            parsed = money(values[-1].group(1))
+            if parsed is not None:
+                candidates.append(parsed)
+    return candidates[-1] if candidates else None
+
+
+def printed_total_products(lines, amount_pattern):
+    """Read Coto's TOTAL PRODUCTOS line separately from the final amount paid."""
+    for index, source_line in enumerate(lines):
+        line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', source_line.strip())
+        if not re.match(r'^t[o0]tal productos\b', normalize(line)):
+            continue
+        values = list(re.finditer(amount_pattern, line))
+        if not values:
+            next_line = next((value.strip() for value in lines[index + 1:index + 3] if value.strip()), '')
+            next_line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', next_line)
+            if re.fullmatch(r'[$\s]*\d[\d.,]*[.,]\d{2}', next_line):
+                values = list(re.finditer(amount_pattern, next_line))
+        if values:
+            return money(values[-1].group(1))
+    return None
+
+
 def parse_receipt(text):
     items, warnings = [], []
     total = None
@@ -67,6 +114,8 @@ def parse_receipt(text):
         r"(?m)^(\s*\d+(?:[.,]\d+)?\s*[xX×])\s*\n\s*(\d[\d.,]*[.,]\d{2})\s*$",
         r"\1 \2", parsed_text)
     lines = parsed_text.splitlines()
+    printed_total = printed_receipt_total(lines, amount)
+    printed_products_total = printed_total_products(lines, amount)
     for line_index, line in enumerate(lines):
         line = line.strip()
         line = re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', line)
@@ -198,15 +247,21 @@ def parse_receipt(text):
         if re.search(r'\d+[.,]\d{3}\b', item['description']):
             warnings.append('La presentación del producto puede confundir una letra con un dígito. Revisá el nombre contra la imagen.')
     subtotal = cents(sum(i['line_total'] for i in items))
+    if printed_total is not None:
+        total = printed_total
     if total is None:
         total = subtotal
         warnings.append('No se reconoció el TOTAL impreso. Revisá el total calculado.')
     if abs(total - subtotal) > .01:
-        warnings.append('El total impreso difiere de los productos reconocidos. Revisá faltantes, impuestos y descuentos.')
+        if printed_total is not None:
+            warnings.append('Se tomó el importe del renglón TOTAL final. La diferencia con los productos reconocidos puede ser un descuento global; revisá la foto.')
+        else:
+            warnings.append('El total impreso difiere de los productos reconocidos. Revisá faltantes, impuestos y descuentos.')
     if not items:
         warnings.append('No se reconocieron productos. Podés agregarlos manualmente.')
     return {'items': items, 'total': total, 'subtotal': subtotal, 'warnings': warnings,
-            'raw_text': text, 'vat_amount': vat_amount, 'vat_included': True, **receipt_header(text)}
+            'printed_products_total': printed_products_total, 'raw_text': text,
+            'vat_amount': vat_amount, 'vat_included': True, **receipt_header(text)}
 
 
 def scan_receipt(content, preprocessing="standard"):
