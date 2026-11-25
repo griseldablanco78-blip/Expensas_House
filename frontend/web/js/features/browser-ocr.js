@@ -16,6 +16,28 @@ function receiptOcrScore(data) {
   return Number(data.confidence || 0) + namedPrices * 40 + quantities * 15 + Math.min(prices, 15) - 30 * fragments / Math.max(words.length, 1);
 }
 
+function receiptOcrHasProductEvidence(data) {
+  const metadata = /cuit|iva|subtotal|total|descuento|factura|consumidor|efectivo|pagos?|vuelto|tributos|cae|fecha|importe/i;
+  const productLines = (data.text || '').split(/\r?\n/).filter(line =>
+    /[a-záéíóúñ]{3}/i.test(line) && /\d[\d.,]*[.,]\d{2}/.test(line) && !metadata.test(line)
+  );
+  return productLines.length >= 2;
+}
+
+function rotateCanvas(source, degrees) {
+  const swapDimensions = degrees % 180 !== 0;
+  const rotated = document.createElement('canvas');
+  rotated.width = swapDimensions ? source.height : source.width;
+  rotated.height = swapDimensions ? source.width : source.height;
+  const context = rotated.getContext('2d', {willReadFrequently:true});
+  context.fillStyle = '#fff';
+  context.fillRect(0, 0, rotated.width, rotated.height);
+  context.translate(rotated.width / 2, rotated.height / 2);
+  context.rotate(degrees * Math.PI / 180);
+  context.drawImage(source, -source.width / 2, -source.height / 2);
+  return rotated;
+}
+
 function prepareReceiptPixels(context, width, height, adaptive) {
   const pixels = context.getImageData(0, 0, width, height);
   const gray = new Uint8Array(width * height);
@@ -67,7 +89,7 @@ async function browserReceiptOcr(file, mode, progress) {
   const context = canvas.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(0,0,canvas.width,canvas.height);
   context.drawImage(bitmap,0,0,canvas.width,canvas.height);
-  const image = await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));
+  let image = await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',.9));
   if (!image || image.size > 3500000) { bitmap.close(); throw new Error('La imagen preparada supera 3,5 MB. Elegí una foto más pequeña.'); }
   // Read a separate, enlarged copy; the complete color archive remains unchanged.
   const ocrScale = Math.min(3, Math.max(1, 1800 / bitmap.width), Math.sqrt(8000000 / (bitmap.width * bitmap.height)));
@@ -114,16 +136,42 @@ async function browserReceiptOcr(file, mode, progress) {
     const shadowAlternative = await worker.recognize(reading, {});
     if (receiptOcrScore(shadowAlternative.data) > receiptOcrScore(result.data)) result=shadowAlternative;
   }
+  let selectedRotation = 0;
+  if (!receiptOcrHasProductEvidence(result.data)) {
+    let bestScore = receiptOcrScore(result.data);
+    for (const degrees of [90, 180, 270]) {
+      progress('Comprobando la orientación del ticket (' + degrees + '°)…');
+      const rotated = rotateCanvas(reading, degrees);
+      await worker.setParameters({tessedit_pageseg_mode:'6',preserve_interword_spaces:'1',user_defined_dpi:'300'});
+      const candidate = await worker.recognize(rotated, {});
+      const score = receiptOcrScore(candidate.data);
+      if (score > bestScore) {
+        bestScore = score;
+        result = candidate;
+        selectedRotation = degrees;
+      }
+    }
+  }
+  let outputCanvas = canvas;
   let text=result.data.text.trim();
+  if (selectedRotation) {
+    outputCanvas = rotateCanvas(canvas, selectedRotation);
+    image = await new Promise(resolve=>outputCanvas.toBlob(resolve,'image/jpeg',.9));
+    if (!image) throw new Error('No se pudo preparar la imagen orientada del ticket.');
+    if (image.size > 3500000) throw new Error('La imagen preparada supera 3,5 MB. Elegí una foto más pequeña.');
+  }
   const storePattern = /\b(?:dia|carrefour|jumbo|coto|disco|changomas)\b/i;
-  if (!storePattern.test(text.split(/\r?\n/).slice(0,18).join(' ')) && canvas.height > 500) {
+  if (!storePattern.test(text.split(/\r?\n/).slice(0,18).join(' ')) && outputCanvas.height > 500) {
     progress('Revisando el nombre del supermercado…');
-    const header = await worker.recognize(canvas, {rectangle:{
-      left:Math.round(canvas.width*.06), top:Math.round(canvas.height*.04),
-      width:Math.round(canvas.width*.87), height:Math.round(canvas.height*.13)
+    const header = await worker.recognize(outputCanvas, {rectangle:{
+      left:Math.round(outputCanvas.width*.06), top:Math.round(outputCanvas.height*.04),
+      width:Math.round(outputCanvas.width*.87), height:Math.round(outputCanvas.height*.13)
     }});
     if (storePattern.test(header.data.text)) text = header.data.text.trim() + '\n' + text;
   }
   if (!text) throw new Error('No se reconoció texto. Probá una foto completa y más nítida o pegá el texto manualmente.');
-  return {text,image,warnings:Number(result.data.confidence || 0) < 75 ? ['Lectura de baja confianza: revisá los nombres y precios antes de confirmar.'] : []};
+  const warnings = [];
+  if (selectedRotation) warnings.push('Se corrigió la orientación de la foto. Revisá que productos, cantidades e importes coincidan con el ticket.');
+  if (Number(result.data.confidence || 0) < 75) warnings.push('Lectura de baja confianza: revisá los nombres y precios antes de confirmar.');
+  return {text,image,warnings};
 }
