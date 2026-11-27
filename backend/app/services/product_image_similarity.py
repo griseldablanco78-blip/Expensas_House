@@ -1,5 +1,6 @@
 """Lightweight visual matching for user photos and public catalog product images."""
 from concurrent.futures import ThreadPoolExecutor
+import base64
 from functools import lru_cache
 from io import BytesIO
 from urllib.parse import urlparse
@@ -22,6 +23,32 @@ def _decode(raw):
                 return None
             return ImageOps.exif_transpose(source).convert('RGB')
     except (UnidentifiedImageError, OSError, ValueError):
+        return None
+
+
+def _allowed_catalog_url(url):
+    parsed = urlparse(str(url or ''))
+    host = (parsed.hostname or '').lower()
+    return parsed.scheme == 'https' and any(host == suffix or host.endswith('.' + suffix)
+                                             for suffix in ALLOWED_IMAGE_HOSTS)
+
+
+@lru_cache(maxsize=64)
+def _remote_image_bytes(url):
+    if not _allowed_catalog_url(url):
+        return None
+    try:
+        request = Request(url, headers={'Accept': 'image/webp,image/png,image/jpeg',
+                                        'User-Agent': 'ExpensaHouse/1.0'})
+        with urlopen(request, timeout=3) as response:
+            # Follow catalog CDN redirects only when they stay on an approved image host.
+            if not _allowed_catalog_url(response.geturl()):
+                return None
+            raw = response.read(MAX_IMAGE_BYTES + 1)
+        if len(raw) > MAX_IMAGE_BYTES or not _decode(raw):
+            return None
+        return raw
+    except Exception:
         return None
 
 
@@ -79,22 +106,39 @@ def _similarity(left, right):
 
 @lru_cache(maxsize=256)
 def _remote_features(url):
-    parsed = urlparse(url)
-    host = (parsed.hostname or '').lower()
-    if parsed.scheme != 'https' or not any(host == suffix or host.endswith('.' + suffix)
-                                            for suffix in ALLOWED_IMAGE_HOSTS):
-        return None
-    try:
-        request = Request(url, headers={'Accept': 'image/webp,image/png,image/jpeg',
-                                        'User-Agent': 'ExpensaHouse/1.0'})
-        with urlopen(request, timeout=3) as response:
-            raw = response.read(MAX_IMAGE_BYTES + 1)
-        if len(raw) > MAX_IMAGE_BYTES:
-            return None
-        image = _decode(raw)
-        return _features(image) if image else None
-    except Exception:
-        return None
+    raw = _remote_image_bytes(url)
+    image = _decode(raw) if raw else None
+    return _features(image) if image else None
+
+
+def catalog_image_previews(offers, per_store=4):
+    """Return small same-origin previews so the browser can compare with CLIP."""
+    candidates = []
+    counts = {}
+    for index, offer in enumerate(offers):
+        url = str(offer.get('image_url') or '')
+        store = str(offer.get('store') or '')
+        if _allowed_catalog_url(url) and counts.get(store, 0) < per_store:
+            counts[store] = counts.get(store, 0) + 1
+            candidates.append((index, url))
+
+    def prepare(candidate):
+        index, url = candidate
+        raw = _remote_image_bytes(url)
+        image = _decode(raw) if raw else None
+        if not image:
+            return index, None
+        image.thumbnail((256, 256), Image.Resampling.LANCZOS)
+        output = BytesIO()
+        image.save(output, format='JPEG', quality=78, optimize=True)
+        return index, 'data:image/jpeg;base64,' + base64.b64encode(output.getvalue()).decode('ascii')
+
+    previews = {}
+    with ThreadPoolExecutor(max_workers=10) as pool:
+        for index, data_url in pool.map(prepare, candidates):
+            if data_url:
+                previews[index] = data_url
+    return previews
 
 
 def rank_catalog_images(reference_bytes, offers, per_store=4):

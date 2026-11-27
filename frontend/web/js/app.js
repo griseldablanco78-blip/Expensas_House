@@ -663,18 +663,27 @@ function initEventListeners() {
     imageBtn.disabled = true;
     try {
       const file=await normalizeProductSearchImage(selectedFile);
-      let query = '', visual = null, ocrQuery = '', ocrError = null, visionError = null;
-      try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
-      catch (error) { visionError = error; }
+      let query = '', visual = null, imageEmbedding = null, ocrQuery = '', ocrError = null, visionError = null;
       try {
         ocrQuery = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
       } catch (error) { ocrError = error; }
-      if (visual) query = enrichVisualProductQuery(visual, ocrQuery);
-      else if (ocrQuery) query = ocrQuery;
-      else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
+      if (ocrQuery) query = ocrQuery;
+      else {
+        try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
+        catch (error) { visionError = error; }
+        if (visual) { query = enrichVisualProductQuery(visual, ''); imageEmbedding = visual.embedding; }
+        else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
+      }
+      if (!imageEmbedding) {
+        try { imageEmbedding = (await embedProductImage(file, message => { imageStatus.textContent = message; })).vector; }
+        catch (error) {
+          if (!ocrQuery) throw error;
+          console.warn('Se buscará con el texto OCR porque el modelo visual no está disponible:',error);
+        }
+      }
       searchInput.value = query;
-      imageStatus.textContent = `${visual ? `El modelo interpreta la imagen como: ${visual.title}` : 'Texto reconocido en el envase'} · búsqueda: “${query}”. Comparando en los cinco supermercados…`;
-      await performAIComparison(query, file);
+      imageStatus.textContent = `${visual ? `El modelo interpreta la imagen como: ${visual.title}` : 'Texto ampliado reconocido en el envase'} · búsqueda: “${query}”. Buscando y comparando fotos de productos…`;
+      await performAIComparison(query, file, imageEmbedding);
       imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
     } catch (error) {
       imageStatus.textContent = error.message || 'No se pudo leer la imagen.';

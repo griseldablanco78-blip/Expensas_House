@@ -183,12 +183,15 @@ async function browserProductImageQuery(file, progress = () => {}) {
   if (file.size > 10 * 1024 * 1024) throw new Error('La imagen debe pesar menos de 10 MB.');
   const bitmap = await createImageBitmap(file, {imageOrientation:'from-image'});
   if (bitmap.width * bitmap.height > 25000000) { bitmap.close(); throw new Error('La imagen supera los 25 megapíxeles.'); }
-  const scale = Math.min(1, 1800 / Math.max(bitmap.width, bitmap.height));
+  // Small online product photos often contain only 5–10px lettering. Enlarge
+  // them before Tesseract instead of asking the vision labels to guess.
+  const scale = Math.min(3, 1800 / Math.max(bitmap.width, bitmap.height));
   const canvas = document.createElement('canvas');
-  canvas.width = Math.round(bitmap.width * scale); canvas.height = Math.round(bitmap.height * scale);
+  canvas.width = Math.max(1,Math.round(bitmap.width * scale)); canvas.height = Math.max(1,Math.round(bitmap.height * scale));
   const context = canvas.getContext('2d');
   context.fillStyle = '#fff'; context.fillRect(0,0,canvas.width,canvas.height);
-  context.drawImage(bitmap,0,0,canvas.width,canvas.height); bitmap.close();
+  context.filter='contrast(1.35)';
+  context.drawImage(bitmap,0,0,canvas.width,canvas.height); bitmap.close(); context.filter='none';
   receiptOcrProgress = progress;
   if (!window.Tesseract) await new Promise((resolve,reject)=>{
     const script=document.createElement('script'); script.src='/static/vendor/ocr/tesseract.min.js';
@@ -203,7 +206,7 @@ async function browserProductImageQuery(file, progress = () => {}) {
   progress('Preparando el lector de texto…');
   const worker=await receiptWorkerPromise;
   const stop = new Set('nuestra naturaleza es cuidarte elaborado industria producto informacion nutricional ingredientes contiene conservar mantengase origen argentina contenido neto peso neto alimento calidad premium seleccion especial sin tacc'.split(' '));
-  const families = 'arroz leche fideo azucar harina aceite yerba cafe te galletita atun tomate detergente jabon queso yogur cereal avena lenteja lentejas poroto porotos mermelada ketchup mayonesa vinagre verduras congeladas papas congeladas carne vacuna pollo pescado banana naranja cebolla lechuga lavandina shampoo dentifrico pasta cepillo acondicionador desodorante panales pañuelos toallitas repelente suavizante limpiador limpiavidrios alimento perro mascotas manzana papa huevos chocolate esponja bolsa agua gaseosa jugo pan manteca crema papel higienico servilleta rollo panal toalla cerveza vino sidra bebida vermut aperitivo fernet whisky gin vodka ron licor'.split(' ');
+  const families = 'arroz leche fideo azucar harina aceite yerba cafe te galletita atun tomate milanesa detergente jabon queso yogur cereal avena lenteja lentejas poroto porotos mermelada ketchup mayonesa vinagre verduras congeladas papas congeladas carne vacuna pollo pescado banana naranja cebolla lechuga lavandina shampoo dentifrico pasta cepillo acondicionador desodorante panales pañuelos toallitas repelente suavizante limpiador limpiavidrios alimento perro mascotas manzana papa huevos chocolate esponja bolsa agua gaseosa jugo pan manteca crema papel higienico higienico servilleta rollo panal toalla cerveza vino sidra bebida vermut aperitivo fernet whisky gin vodka ron licor'.split(' ');
   const descriptors = 'largo fino integral blanco carolina protein fresca simple hoja doble premium descremada entera clasica rubia roja ipa negra light tostada total fluor menta descartables'.split(' ');
   const brands = 'molinos ala arcor serenisima sancor paulina mana bagley terrabusi lucchetti gallo caserita marolio cocinero natura nobleza dia quilmes brahma andes patagonia budweiser heineken stella corona schneider imperial amstel colgate sensodyne oralb'.split(' ');
   const dictionary = [...families, ...descriptors, ...brands];
@@ -241,9 +244,12 @@ async function browserProductImageQuery(file, progress = () => {}) {
     const words=line.split(/\s+/).map(normalizeWord).filter(word=>word.length>=3&&!stop.has(word)&&!['kilogramo','gramos','litros'].includes(word)).map(correctWord);
     words.forEach(word=>found.add(word));
   }
+  // Some packages print a defining phrase without naming the generic product.
+  if(found.has('simple')&&found.has('hoja')) { found.add('papel'); found.add('higienico'); }
   // Prefer recognized product families and brands over slogans, OCR fragments and pack copy.
   const selected=[];
   for(const word of [...families,...descriptors,...brands]) if(found.has(word)) selected.push(word);
+  if(found.has('simple')&&found.has('hoja')) selected.unshift('papel');
   const hasReliableIdentity = families.some(word=>found.has(word)) || brands.some(word=>found.has(word));
   if(!hasReliableIdentity) throw new Error('No pude reconocer la categoría o marca con seguridad. Escribí la descripción detectada y volvé a buscar.');
   const query=[...new Set(selected)].slice(0,5).join(' ').trim();

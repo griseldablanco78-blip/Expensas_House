@@ -10,7 +10,7 @@ from io import BytesIO
 import secrets
 import re
 from backend.app.services.offers import compare_supermarket_offers
-from backend.app.services.product_image_similarity import rank_catalog_images
+from backend.app.services.product_image_similarity import catalog_image_previews, rank_catalog_images
 
 router = APIRouter(tags=["offers"])
 IMAGE_DIR = PROJECT_ROOT / 'data' / 'product_images'
@@ -113,6 +113,9 @@ async def api_compare_offers_by_image(q: str = Form(...), sort: str = Form('pric
     try:
         comparison = compare_supermarket_offers(q, sort)
         warning = rank_catalog_images(raw, comparison['offers'])
+        previews = catalog_image_previews(comparison['offers'])
+        for index, preview in previews.items():
+            comparison['offers'][index]['catalog_image_preview'] = preview
     except ValueError as error:
         raise HTTPException(400, str(error)) from error
     comparison['warning'] = ' '.join(filter(None, [comparison.get('warning'), warning]))

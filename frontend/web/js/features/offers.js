@@ -1,4 +1,4 @@
-async function performAIComparison(query, imageFile = null) {
+async function performAIComparison(query, imageFile = null, imageEmbedding = null) {
   if (!query || !query.trim()) { document.getElementById('offer-source-status').textContent = 'Escribí el producto que querés buscar.'; return; }
   const serial = ++comparisonSerial;
 
@@ -21,6 +21,17 @@ async function performAIComparison(query, imageFile = null) {
     }
     const data = await readApiJson(res);
     if (!res.ok) throw new Error(data.detail || "No se pudieron consultar las ofertas");
+    if(imageFile && imageEmbedding){
+      const visual=await rerankOffersByCatalogImages(data.offers||[],imageEmbedding,(done,total)=>{
+        document.getElementById('offer-source-status').textContent=`Comparando ${done} de ${total} fotos reales de los supermercados…`;
+      });
+      if(visual){
+        data.top_offer=visual.top_offer;
+        if(data.ai_analysis?.best_single) data.ai_analysis.best_single={store:visual.top_offer.store,price:visual.top_offer.promo_price};
+        data.ai_analysis.verdict='Ofertas ordenadas por similitud visual; entre las fotos más parecidas, se destaca el menor precio.';
+        data.warning=[data.warning,`Coincidencia visual comparada con ${visual.match_count} producto(s) del catálogo. Revisá foto, presentación y condiciones antes de elegir.`].filter(Boolean).join(' ');
+      }
+    }
     if (serial === comparisonSerial && searchInput.value.trim() === query.trim()) renderComparisonResults(data);
   } catch (error) {
     console.error('Error en la comparación IA:', error);

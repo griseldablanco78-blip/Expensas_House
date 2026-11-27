@@ -68,15 +68,21 @@ async function getProductVisionAssets(progress) {
   return productVisionAssetsPromise;
 }
 
-async function classifyProductImage(file, progress=()=>{}) {
+async function embedProductImage(file, progress=()=>{}) {
   const {model,processor,RawImage,labels}=await getProductVisionAssets(progress);
-  progress('Comparando la imagen con categorías de productos…');
+  progress('Calculando la similitud visual…');
   const image=await RawImage.read(file);
   const {pixel_values}=await processor(image);
   const {image_embeds}=await model({pixel_values});
   const vector=Array.from(image_embeds.data);
   const norm=Math.sqrt(vector.reduce((sum,value)=>sum+value*value,0))||1;
-  const similarities=labels.map(item=>vector.reduce((sum,value,index)=>sum+(value/norm)*item.vector[index],0));
+  return {vector:vector.map(value=>value/norm),labels};
+}
+
+async function classifyProductImage(file, progress=()=>{}) {
+  const {vector,labels}=await embedProductImage(file,progress);
+  progress('Comparando la imagen con categorías generales…');
+  const similarities=labels.map(item=>vector.reduce((sum,value,index)=>sum+value*item.vector[index],0));
   const logits=similarities.map(value=>value*100);
   const maximum=Math.max(...logits);
   const probabilities=logits.map(value=>Math.exp(value-maximum));
@@ -96,13 +102,59 @@ async function classifyProductImage(file, progress=()=>{}) {
   const best=labels[bestIndex];
   const score=probabilities[bestIndex]/total;
   if(!best || best.query===null || score<0.12) return null;
-  return {query:best.query,title:best.title,score};
+  return {query:best.query,title:best.title,score,embedding:vector};
+}
+
+async function rerankOffersByCatalogImages(offers, imageEmbedding, progress=()=>{}) {
+  if(!Array.isArray(offers)||!imageEmbedding?.length) return null;
+  const {model,processor,RawImage}=await getProductVisionAssets(()=>{});
+  const candidates=offers.map((offer,index)=>({offer,index})).filter(({offer})=>offer.catalog_image_preview);
+  for(let i=0;i<candidates.length;i++){
+    const {offer}=candidates[i];
+    try{
+      const [,encoded]=offer.catalog_image_preview.split(',',2);
+      if(!encoded) continue;
+      const binary=atob(encoded),bytes=new Uint8Array(binary.length);
+      for(let offset=0;offset<binary.length;offset++) bytes[offset]=binary.charCodeAt(offset);
+      const image=await RawImage.read(new Blob([bytes],{type:'image/jpeg'}));
+      const {pixel_values}=await processor(image);
+      const {image_embeds}=await model({pixel_values});
+      const vector=Array.from(image_embeds.data);
+      const norm=Math.sqrt(vector.reduce((sum,value)=>sum+value*value,0))||1;
+      const similarity=vector.reduce((sum,value,index)=>sum+(value/norm)*imageEmbedding[index],0);
+      offer.visual_similarity=Math.round(Math.max(0,similarity)*100);
+      offer.visual_embedding_similarity=similarity;
+    }catch(error){ console.warn('No se pudo comparar una foto de catálogo:',error); }
+    progress(i+1,candidates.length);
+  }
+  for(const offer of offers) delete offer.catalog_image_preview;
+  const scored=offers.filter(offer=>Number.isFinite(offer.visual_embedding_similarity));
+  if(!scored.length) return null;
+  scored.sort((left,right)=>right.visual_embedding_similarity-left.visual_embedding_similarity);
+  const best=scored[0].visual_embedding_similarity;
+  // The lowest price is selected only among photos close to the visual match.
+  const matches=scored.filter(offer=>best-offer.visual_embedding_similarity<=0.04);
+  const cheapest=matches.reduce((low,offer)=>offer.promo_price<low.promo_price?offer:low,matches[0]);
+  offers.sort((left,right)=>{
+    const a=Number.isFinite(left.visual_embedding_similarity)?left.visual_embedding_similarity:-1;
+    const b=Number.isFinite(right.visual_embedding_similarity)?right.visual_embedding_similarity:-1;
+    return b-a || left.promo_price-right.promo_price;
+  });
+  for(const offer of offers) delete offer.visual_embedding_similarity;
+  return {top_offer:cheapest,match_count:matches.length,best_similarity:best};
 }
 
 function enrichVisualProductQuery(visual, textQuery='') {
   const base=visual.query.split(/\s+/);
   let family=base[0];
   const textWords=(textQuery||'').toLocaleLowerCase('es').normalize('NFD').replace(/[\u0300-\u036f]/g,'').split(/\s+/);
+  // A product name read from the package is stronger evidence than a
+  // conflicting zero-shot category guess (for example milanesas vs. rice).
+  const printedFamily=textWords.find(word=>['milanesa','arroz','leche','dentifrico','papel','cerveza','yogur','fideo','harina','aceite','detergente','shampoo','jabon'].includes(word));
+  if(printedFamily&&printedFamily!==family){
+    if(printedFamily==='papel'&&textWords.includes('higienico')) return [...new Set(textWords)].join(' ');
+    return [...new Set(textWords)].join(' ');
+  }
   const beerBrand=textWords.find(word=>['quilmes','brahma','andes','patagonia','budweiser','heineken','stella','corona','schneider','imperial','amstel'].includes(word));
   if(family==='gaseosa' && beerBrand) { base.splice(0,base.length,'cerveza'); family='cerveza'; }
   const allowed={
