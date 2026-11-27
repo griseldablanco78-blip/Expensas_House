@@ -667,13 +667,13 @@ function initEventListeners() {
       try {
         ocrQuery = await browserProductImageQuery(file, message => { imageStatus.textContent = message; });
       } catch (error) { ocrError = error; }
-      if (ocrQuery) query = ocrQuery;
-      else {
-        try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
-        catch (error) { visionError = error; }
-        if (visual) { query = enrichVisualProductQuery(visual, ''); imageEmbedding = visual.embedding; }
-        else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
-      }
+      // Run both readers: OCR contributes brand/variant while CLIP supplies
+      // the product family when the package only yields a brand (e.g. Colgate).
+      try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
+      catch (error) { visionError = error; }
+      if (visual) { query = enrichVisualProductQuery(visual, ocrQuery); imageEmbedding = visual.embedding; }
+      else if (ocrQuery) query = ocrQuery;
+      else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
       if (!imageEmbedding) {
         try { imageEmbedding = (await embedProductImage(file, message => { imageStatus.textContent = message; })).vector; }
         catch (error) {

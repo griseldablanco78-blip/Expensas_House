@@ -155,6 +155,11 @@ function enrichVisualProductQuery(visual, textQuery='') {
     if(printedFamily==='papel'&&textWords.includes('higienico')) return [...new Set(textWords)].join(' ');
     return [...new Set(textWords)].join(' ');
   }
+  const dentalBrand=textWords.some(word=>['colgate','sensodyne','oralb'].includes(word));
+  if(dentalBrand&&!['dentifrico','cepillo'].includes(family)){
+    base.splice(0,base.length,'dentifrico');
+    family='dentifrico';
+  }
   const beerBrand=textWords.find(word=>['quilmes','brahma','andes','patagonia','budweiser','heineken','stella','corona','schneider','imperial','amstel'].includes(word));
   if(family==='gaseosa' && beerBrand) { base.splice(0,base.length,'cerveza'); family='cerveza'; }
   const allowed={
