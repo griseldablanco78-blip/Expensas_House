@@ -5,7 +5,7 @@
 - License reported by the converted model: MIT.
 - Runtime: Transformers.js 3.8.1 with ONNX Runtime Web 1.22.0-dev.
 - Runtime location: static files bundled and served by this Vercel project; remote model downloads are disabled.
-- `labels.json` contains normalized text embeddings generated locally from `labels.source.json` with the matching pretrained CLIP text encoder. The temporary text encoder is not included in the deployed site.
+- `labels.json` contains normalized text embeddings generated locally from `labels.source.json` with the matching pretrained CLIP text encoder. Each label averages photo, drawing, illustration, and product-image prompts. The temporary text encoder is not included in the deployed site.
 - Vision weight SHA-256: `583fd1110a514667812fee7d684952aaf82a99b959760c8d7dca7e0ab9839299`.
 
-The project does not train or fine-tune CLIP. It uses pretrained weights and compares the uploaded image embedding with a fixed set of product-description embeddings.
+The project does not train or fine-tune CLIP. It uses pretrained weights and compares the uploaded image embedding with a curated set of 82 product-description embeddings. The taxonomy covers common grocery and household products, not every object or product variant. This is zero-shot category matching, not free-form image captioning; results should be checked before searching. Browser-decodable uploads are normalized to JPEG locally before image inference, OCR, and the optional catalog-photo comparison.

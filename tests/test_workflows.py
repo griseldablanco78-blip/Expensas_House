@@ -19,6 +19,27 @@ from backend.app.services.snapshot_merge import merge_snapshot, SyncConflict
 
 
 class Workflows(unittest.TestCase):
+    def test_coto_bold_total_wins_over_products_subtotal(self):
+        text = ('COTO CICSA\nPRODUCTO QA 45.765,01\n'
+                'TOTAL PRODUCTOS 45.765,01\n'
+                'DESCUENTOS POR PROMOCIONES -10.105,61\n'
+                'TOTAL\n35.659,40\nVISA DEBITO')
+        draft = parse_receipt(text)
+        self.assertEqual(draft['printed_products_total'], 45765.01)
+        self.assertEqual(draft['subtotal'], 45765.01)
+        self.assertEqual(draft['total'], 35659.40)
+        self.assertTrue(any('TOTAL final' in warning for warning in draft['warnings']))
+
+    def test_coto_ocr_split_total_label_uses_final_amount_and_not_a_product(self):
+        text = ('COTO CICSA\nPRODUCTO QA 45.765,01\n'
+                'SUBTOT. SIN DESCUENTOS 45.765,01\n'
+                'DESCUENTOS POR PROMOCIONES -10.105,61\n'
+                '356594\nTor AL\n> 35.659,40\nVISA DEBITO')
+        draft = parse_receipt(text)
+        self.assertEqual(draft['total'], 35659.40)
+        self.assertFalse(any('tor al' in item['description'].lower() for item in draft['items']))
+        self.assertTrue(any('TOTAL final' in warning for warning in draft['warnings']))
+
     def test_receipt_mobile_separate_price_quantity_and_description(self):
         for block in ('2749,00\n2,00 X', '2,00 X\n2749,00'):
             with self.subTest(block=block):

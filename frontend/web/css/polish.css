@@ -1,5 +1,5 @@
 /* Expensa House: shared spacing, calm colors and responsive access. */
-:root { --color-leaf:#48876a; --color-primary:#234f40; --bg-app:#f6f7f2; --radius-lg:24px; }
+:root { --color-leaf:#48876a; --color-primary:#234f40; --color-primary-light:#2f6855; --color-leaf-soft:#e6f2eb; --bg-app:#f4f7f2; --bg-card:#fff; --bg-card-subtle:#f2f7f2; --border-color:#dce8df; --radius-lg:24px; }
 button,input,select { font:inherit; }
 button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible { outline:3px solid #b78937; outline-offset:3px; }
 [hidden] { display:none !important; }
@@ -32,11 +32,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .nav-btn { font-size:12px; border-radius:10px; padding:11px 15px; }
 .brand-text h1 { font-size:14px; }.brand-badge { font-size:9px; }
 .app-main { max-width:1240px; padding:32px 28px 110px; }
-.comparator-hero { padding:32px; border-radius:24px; box-shadow:none; border:1px solid var(--border-color); background:var(--bg-card); }
+.comparator-hero { padding:28px 32px; border-radius:24px; box-shadow:none; border:1px solid #d5e8dc; background:linear-gradient(145deg,#f0f8f2 0%,#fbfdf9 72%); }
 .hero-header h2 { font-size:clamp(27px,3vw,39px); line-height:1.2; max-width:650px; margin:auto; }
-.hero-header p { max-width:650px; font-size:14px; margin:15px auto 26px; line-height:1.8; }
+.hero-header p { max-width:650px; font-size:14px; margin:12px auto 20px; line-height:1.55; }
 .hero-pill { font-size:10px; letter-spacing:1px; background:var(--color-leaf-soft); color:var(--color-primary); }
-.search-box-card { box-shadow:none; border:1px solid var(--border-color); }
+.search-box-card { box-shadow:none; border:1px solid #d5e8dc; background:#fff; }
 #offer-source-status:not(:empty) { background:#f8f2e6; border:1px solid #e8d8b8; color:#755820; padding:14px 18px; font-size:13px; border-radius:12px; margin:18px 0; }
 .offer-editor { margin:18px 0; background:var(--bg-card); border:1px solid var(--border-color); border-radius:14px; padding:18px; }
 .offer-editor summary { cursor:pointer; font-size:13px; font-weight:700; }.offer-editor>p { font-size:12px; color:var(--text-muted); margin:12px 0; }
@@ -72,6 +72,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 
 /* Mismo contenido en móvil y escritorio; las columnas se adaptan al ancho. */
 .supermarket-grid { grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:14px; }
+.offer-error-state { grid-column:1/-1; width:100%; box-sizing:border-box; padding:14px 18px; border:1px solid #e7d5c0; border-radius:12px; background:#faf5ee; color:var(--text-main); font-size:13px; line-height:1.45; }
+.page-header { padding:18px 20px; border:1px solid #deebe1; border-radius:16px; background:linear-gradient(120deg,#f0f7f1,#f8fbf7); margin-bottom:22px; }
+.page-header p { max-width:680px; line-height:1.5; }
+#tab-dashboard .card-panel,#tab-budget .card-panel { border-color:#deebe1; }
+#tab-dashboard .metric-card { border-color:#deebe1; }
 .store-card { padding:14px; min-width:0; }
 .store-card .product-image-slot { min-height:110px; height:110px; }
 .store-card .offer-product-image { height:100px; max-height:100px; }
@@ -82,7 +87,11 @@ button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visi
 .offer-receipt-history { margin-top:28px; }
 .saved-receipt-row { display:flex; gap:16px; width:100%; padding:14px; margin:8px 0; text-align:left; background:var(--bg-card); color:var(--text-main); border:1px solid var(--border-color); border-radius:12px; cursor:pointer; }
 .saved-receipt-row:focus-visible { outline:2px solid var(--color-leaf); outline-offset:2px; }
-#saved-receipt-dialog { width:min(640px,calc(100vw - 32px)); max-height:85vh; overflow:auto; border:0; border-radius:18px; padding:20px; }
+#saved-receipt-dialog { position:relative; width:min(640px,calc(100vw - 32px)); max-height:85vh; overflow:auto; border:0; border-radius:18px; padding:24px; }
+#saved-receipt-close { position:absolute; top:10px; right:10px; display:grid; place-items:center; width:38px; height:38px; border:0; border-radius:50%; background:#e8f3eb; color:var(--color-primary); font-size:26px; line-height:1; cursor:pointer; }
+#saved-receipt-close:hover { background:#d7eade; }
+#saved-receipt-close:focus-visible { outline:3px solid #b78937; outline-offset:2px; }
+#saved-receipt-title { padding-right:44px; }
 #saved-receipt-dialog::backdrop { background:rgba(0,0,0,.5); }
 .saved-receipt-photo { width:100%; height:auto; }
 @media(max-width:600px) { .supermarket-grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; } .store-card { padding:10px; } .saved-receipt-row { flex-wrap:wrap; gap:6px 14px; } }

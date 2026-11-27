@@ -45,6 +45,14 @@ def clean_product_description(value):
     return re.sub(r'\s+', ' ', value).strip(' *-:')
 
 
+def is_final_total_label(value):
+    """Recognize a final TOTAL label even when OCR inserts spaces or confuses T/R."""
+    normalized = re.sub(r'[^a-z]', '', normalize(value))
+    if normalized.startswith('totalproductos'):
+        return False
+    return re.fullmatch(r'(?:importe)?t[o0][tr][a4]l(?:apagar|final|general|compra)?', normalized) is not None
+
+
 def printed_receipt_total(lines, amount_pattern):
     """Find the final payable TOTAL, ignoring the separate product subtotal."""
     candidates = []
@@ -53,7 +61,7 @@ def printed_receipt_total(lines, amount_pattern):
         normalized = normalize(line)
         if re.match(r'^t[o0]tal productos\b', normalized):
             continue
-        if not re.match(r'^(?:importe\s+)?t[o0]tal(?:\s+(?:a pagar|final|general|compra))?\b', normalized):
+        if not is_final_total_label(normalized):
             continue
         values = list(re.finditer(amount_pattern, line))
         if not values:
@@ -62,8 +70,9 @@ def printed_receipt_total(lines, amount_pattern):
             next_lines = [re.sub(r'(?<=\d)\s+([.,])\s*(?=\d{2}\b)', r'\1', value.strip())
                           for value in lines[index + 1:index + 3] if value.strip()]
             for value in next_lines:
-                if re.fullmatch(r'[$\s]*\d[\d.,]*[.,]\d{2}', value):
-                    values = list(re.finditer(amount_pattern, value))
+                amount_line = re.sub(r'^[^\d$]*', '', value)
+                if re.fullmatch(r'[$\s]*\d[\d.,]*[.,]\d{2}', amount_line):
+                    values = list(re.finditer(amount_pattern, amount_line))
                     if values:
                         break
                 else:
@@ -123,6 +132,13 @@ def parse_receipt(text):
         if not line:
             continue
         norm = normalize(line)
+        if is_final_total_label(norm):
+            pending_description = []
+            pending_quantity_price = None
+            finished = True
+            if values := list(re.finditer(amount, line)):
+                total = money(values[-1][1])
+            continue
         # Coto prints a bold item name and may place "OFF PROMO VISA" on a
         # separate row. Keep any amount on that row for the existing arithmetic,
         # but never let the card-promotion caption become part of the item name.
@@ -185,12 +201,6 @@ def parse_receipt(text):
                 pending_description = []
             elif meaningful_name(line):
                 pending_description.append(line)
-            continue
-        if re.match(r'^(?:importe\s+)?total\b', norm) and not norm.startswith('total productos'):
-            pending_description = []
-            total = money(values[-1][1])
-            pending_quantity_price = None
-            finished = True
             continue
         if finished:
             continue

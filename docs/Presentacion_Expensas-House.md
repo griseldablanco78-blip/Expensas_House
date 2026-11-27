@@ -75,7 +75,7 @@ Las imágenes ayudan a reconocer marca y presentación, pero no sustituyen la co
 
 ## Ejemplo de interpretación de un ticket
 
-El formato de supermercado revisado imprime `2,00 X 2749,00` encima de `CUNNING COLA 2,25L (21,00) 5498,00`. La interpretación correcta conserva el nombre y la presentación, asigna dos unidades a $2.749 y registra $5.498 como total pagado. `(21,00)` es una alícuota, no el precio unitario. El IVA contenido de $954,20 ya forma parte del total y no se agrega nuevamente. El importe entregado en efectivo y el vuelto no se convierten en gastos ni productos.
+En un ticket de Coto, el subtotal `TOTAL PRODUCTOS` puede ser distinto del importe final impreso en negrita como `TOTAL`, por descuentos generales. El lector separa ambos renglones, propone el importe final para descontarlo del presupuesto y deja visible la diferencia para cotejarla con la foto. La cantidad, el precio por unidad y el neto de cada artículo siguen siendo revisables; el texto reconocido no se considera contabilidad confirmada hasta que la persona lo aprueba.
 
 ## Material incluido en el ZIP
 
@@ -89,7 +89,7 @@ El proyecto utiliza Kotlin y Jetpack Compose en Android; Room/SQLite para la cop
 
 1. **Voz a texto:** convierto el habla en texto mediante Web Speech API o el reconocedor Android. Luego utilizo el texto para buscar ofertas o completar consultas.
 2. **Chatbot Boti House:** responde mediante reglas a consultas de ofertas, presupuesto y faltantes. No entrené un modelo generativo.
-3. **Buscador de ofertas:** normaliza la consulta, busca coincidencias y compara precios publicados. Las ofertas pueden ser manuales o provenir de fuentes externas configuradas.
+3. **Buscador de ofertas:** normaliza la consulta, busca coincidencias y compara precios publicados. La búsqueda por imagen utiliza CLIP ViT-B/32 preentrenado con 82 categorías locales; admite fotos y dibujos que el navegador pueda decodificar. No se reentrena con las cargas y no genera una descripción libre. Tesseract.js añade texto de marca cuando se puede leer. Las ofertas pueden ser manuales o provenir de fuentes externas configuradas.
 
 También utilizo OCR para leer tickets. El motor reconoce texto, mientras que las reglas de Python separan productos, cantidades y precios.
 

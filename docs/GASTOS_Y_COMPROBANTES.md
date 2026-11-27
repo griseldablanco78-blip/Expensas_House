@@ -5,9 +5,9 @@
 En la web, abrir **Presupuesto y gastos**. Elegir el mes para consultar gastos, saldo y agrupación por supermercado. El escáner está dentro del mismo módulo.
 
 1. Elegir o tomar una foto completa; la vista previa permite revisar los bordes.
-2. Usar lectura normal. Si hay sombras, elegir **Foto con sombras · OpenCV** y volver a leer. Instalar previamente `requirements-ocr.txt` en el backend.
-3. Revisar el texto, fecha de compra, supermercado, productos, cantidades e importes. La fecha se inicia con el día actual: corregirla si la compra fue otro día. Supermercado y fecha no se deducen automáticamente.
-4. Confirmar. Recién entonces se registra el gasto. El OCR no decide movimientos monetarios por sí solo.
+2. Usar lectura normal. Si hay sombras, elegir **Foto con sombras · umbral adaptativo** y volver a leer. Ese preprocesamiento de la web se ejecuta localmente en el navegador; no requiere instalar OpenCV.
+3. Revisar descripción, cantidad, precio unitario, total por producto, fecha e importes. Si el ticket muestra `TOTAL PRODUCTOS` y luego un renglón `TOTAL`, usar este último como importe pagado. La diferencia corresponde a descuentos o ajustes y debe coincidir con el comprobante. La fecha se inicia con el día actual: corregirla si la compra fue otro día. Supermercado y fecha son editables.
+4. Confirmar solo después de cotejar el total pagado con el renglón final `TOTAL`. Recién entonces se registra el gasto. El OCR no decide movimientos monetarios por sí solo.
 5. Consultar el historial del mes; descargar el texto o abrir la imagen de respaldo.
 
 La pantalla Android también envía fecha, texto y referencia del comprobante al confirmar. La selección mensual y las descargas se incorporan en esta entrega a la web; la pantalla histórica Android conserva el comportamiento anterior.
@@ -16,14 +16,14 @@ La pantalla Android también envía fecha, texto y referencia del comprobante al
 
 | Dato | Ubicación actual |
 |---|---|
-| Texto reconocido y detalle revisado | Registro de gasto en `data/app_state.json` |
+| Texto reconocido y detalle revisado | Desarrollo local: `data/app_state.json`. Producción: estado JSONB en PostgreSQL/Supabase. |
 | Fecha de compra, supermercado, total e identificador | Mismo registro de gasto |
-| Imagen de respaldo completa, orientada y convertida a JPEG | `data/receipts/<identificador aleatorio>.jpg` |
+| Imagen de respaldo completa, orientada y convertida a JPEG | Desarrollo local: `data/receipts/`. Producción: bucket privado de Supabase Storage. |
 | Archivo de lectura `.txt` | Se genera al descargar desde el registro guardado; incluye texto OCR y detalle revisado |
 
 Las imágenes no se sirven como archivos estáticos públicos. Solo se descargan mediante rutas de la API, con sesión y permisos para consultar gastos. No se suben a GitHub. La imagen se archiva al finalizar la lectura; hasta confirmar no está vinculada a un gasto ni disponible por el historial. Las lecturas abandonadas pueden dejar archivos sin referencia: la limpieza y política de retención quedan pendientes.
 
-Respaldar juntos `data/app_state.json`, `data/accounts.sqlite3` y `data/receipts`. En producción se requiere un volumen persistente o migración a almacenamiento externo privado; un despliegue estático no guarda estos datos.
+En desarrollo local, respaldar juntos `data/app_state.json`, `data/accounts.sqlite3` y `data/receipts`. En producción, respaldar el PostgreSQL y el bucket privado de Supabase mediante sus herramientas administrativas; un despliegue de Vercel no sustituye esos respaldos.
 
 ## Cálculos
 
@@ -38,7 +38,7 @@ El presupuesto configurado es una referencia común, no un presupuesto históric
 ## Herramientas gratuitas
 
 - **Tesseract:** motor OCR abierto; convierte imagen en texto. [Documentación](https://tesseract-ocr.github.io/tessdoc/).
-- **OpenCV:** procesamiento de imágenes; el modo opcional usa umbral adaptativo para fondos desiguales. No sustituye a Tesseract ni garantiza recuperar texto cortado o borroso. [Umbral adaptativo](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html).
+- **OpenCV:** opción de procesamiento para el OCR Python local; el modo de sombras de la web usa su propio umbral adaptativo en JavaScript. Ninguno sustituye al OCR ni garantiza recuperar texto cortado o borroso. [Umbral adaptativo](https://docs.opencv.org/4.x/d7/d4d/tutorial_py_thresholding.html).
 - **Pillow:** orientación, escala, contraste y archivo de imágenes en el flujo normal.
 - **JSON y SQLite:** almacenamiento local actual; no requieren contratar un servicio.
 - **Supabase:** alternativa futura de PostgreSQL y almacenamiento privado con plan gratuito sujeto a límites e inactividad. No está integrado; requiere migrar el acceso a datos y permisos. [Plan vigente](https://supabase.com/pricing).

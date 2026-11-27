@@ -26,7 +26,10 @@ async function performAIComparison(query, imageFile = null) {
     console.error('Error en la comparación IA:', error);
     if (serial === comparisonSerial) {
       document.getElementById('offer-source-status').textContent = error.message;
-      document.getElementById('supermarket-cards-container').textContent = 'No se pudo completar la consulta. Reintentá la búsqueda.';
+      const emptyState = document.createElement('div');
+      emptyState.className = 'offer-error-state';
+      emptyState.innerHTML = '<strong>No pudimos completar la búsqueda</strong><span>Revisá tu conexión e intentá otra vez.</span>';
+      document.getElementById('supermarket-cards-container').replaceChildren(emptyState);
       showToast(error.message);
     }
   } finally {
@@ -52,7 +55,6 @@ function renderComparisonResults(data) {
   alert.style.display = analysis.stock_alert ? 'block' : 'none';
   const container = document.getElementById('supermarket-cards-container');
   container.replaceChildren();
-  if (!offers.length) container.textContent = 'No hay coincidencias con precio en las fuentes disponibles. Probá con menos palabras, por ejemplo leche o arroz, y revisá el estado de las fuentes indicado arriba.';
   offers.forEach((off, index) => {
     const card = document.createElement('div');
     const isTop = data.top_offer && off.id === data.top_offer.id;

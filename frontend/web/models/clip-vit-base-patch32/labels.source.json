@@ -1,29 +1,412 @@
 [
-  {"label":"a can of Quilmes Clásica beer","query":"cerveza quilmes clasica","title":"lata de cerveza Quilmes clásica"},
-  {"label":"an aluminum can of beer","query":"cerveza","title":"lata de cerveza"},
-  {"label":"a bottle of beer","query":"cerveza","title":"cerveza"},
-  {"label":"a bag of Molinos Ala long grain fine rice","query":"arroz molinos ala largo fino","title":"arroz Molinos Ala largo fino"},
-  {"label":"a bag of uncooked rice","query":"arroz","title":"paquete de arroz"},
-  {"label":"a pouch of La Serenísima protein milk","query":"leche serenisima protein","title":"leche Protein La Serenísima"},
-  {"label":"a carton or pouch of milk","query":"leche","title":"envase de leche"},
-  {"label":"a package of pasta noodles","query":"fideos","title":"paquete de fideos"},
-  {"label":"a bag of flour","query":"harina","title":"paquete de harina"},
-  {"label":"a bag of sugar","query":"azucar","title":"paquete de azúcar"},
-  {"label":"a bottle of cooking oil","query":"aceite","title":"botella de aceite"},
-  {"label":"a package of yerba mate","query":"yerba","title":"paquete de yerba"},
-  {"label":"a jar of coffee","query":"cafe","title":"paquete de café"},
-  {"label":"a can of tuna","query":"atun","title":"lata de atún"},
-  {"label":"a can of tomatoes","query":"tomate","title":"lata de tomate"},
-  {"label":"a package of cookies","query":"galletitas","title":"paquete de galletitas"},
-  {"label":"a bottle of dish soap","query":"detergente","title":"botella de detergente"},
-  {"label":"a bar of soap","query":"jabon","title":"jabón"},
-  {"label":"a package of toilet paper rolls","query":"papel higienico","title":"paquete de papel higiénico"},
-  {"label":"a bottle of shampoo","query":"shampoo","title":"botella de shampoo"},
-  {"label":"a bottle of soda","query":"gaseosa","title":"botella de gaseosa"},
-  {"label":"a bottle of water","query":"agua","title":"botella de agua"},
-  {"label":"a bottle of wine","query":"vino","title":"botella de vino"},
-  {"label":"a package of yogurt","query":"yogur","title":"envase de yogur"},
-  {"label":"a package of cheese","query":"queso","title":"paquete de queso"},
-  {"label":"a book","query":null,"title":"libro"},
-  {"label":"a chair","query":null,"title":"silla"}
+  {
+    "label": "a can of Quilmes Clásica beer",
+    "query": "cerveza quilmes clasica",
+    "title": "lata de cerveza Quilmes clásica"
+  },
+  {
+    "label": "an aluminum can of beer",
+    "query": "cerveza",
+    "title": "lata de cerveza"
+  },
+  {
+    "label": "a blue and silver aluminum can of Quilmes beer",
+    "query": "cerveza quilmes",
+    "title": "lata de cerveza Quilmes"
+  },
+  {
+    "label": "a tall blue can of Quilmes Clásica lager beer",
+    "query": "cerveza quilmes clasica",
+    "title": "lata de cerveza Quilmes clásica"
+  },
+  {
+    "label": "a blue can of Argentine lager beer",
+    "query": "cerveza",
+    "title": "lata de cerveza"
+  },
+  {
+    "label": "a bottle of beer",
+    "query": "cerveza",
+    "title": "cerveza"
+  },
+  {
+    "label": "a bag of Molinos Ala long grain fine rice",
+    "query": "arroz molinos ala largo fino",
+    "title": "arroz Molinos Ala largo fino"
+  },
+  {
+    "label": "a bag of uncooked rice",
+    "query": "arroz",
+    "title": "paquete de arroz"
+  },
+  {
+    "label": "a pouch of La Serenísima protein milk",
+    "query": "leche serenisima protein",
+    "title": "leche Protein La Serenísima"
+  },
+  {
+    "label": "a carton or pouch of milk",
+    "query": "leche",
+    "title": "envase de leche"
+  },
+  {
+    "label": "a package of pasta noodles",
+    "query": "fideos",
+    "title": "paquete de fideos"
+  },
+  {
+    "label": "a bag of flour",
+    "query": "harina",
+    "title": "paquete de harina"
+  },
+  {
+    "label": "a bag of sugar",
+    "query": "azucar",
+    "title": "paquete de azúcar"
+  },
+  {
+    "label": "a bottle of cooking oil",
+    "query": "aceite",
+    "title": "botella de aceite"
+  },
+  {
+    "label": "a package of yerba mate",
+    "query": "yerba",
+    "title": "paquete de yerba"
+  },
+  {
+    "label": "a jar of coffee",
+    "query": "cafe",
+    "title": "paquete de café"
+  },
+  {
+    "label": "a can of tuna",
+    "query": "atun",
+    "title": "lata de atún"
+  },
+  {
+    "label": "a can of tomatoes",
+    "query": "tomate",
+    "title": "lata de tomate"
+  },
+  {
+    "label": "a package of cookies",
+    "query": "galletitas",
+    "title": "paquete de galletitas"
+  },
+  {
+    "label": "a bottle of dish soap",
+    "query": "detergente",
+    "title": "botella de detergente"
+  },
+  {
+    "label": "a bar of soap",
+    "query": "jabon",
+    "title": "jabón"
+  },
+  {
+    "label": "a package of toilet paper rolls",
+    "query": "papel higienico",
+    "title": "paquete de papel higiénico"
+  },
+  {
+    "label": "a bottle of shampoo",
+    "query": "shampoo",
+    "title": "botella de shampoo"
+  },
+  {
+    "label": "a bottle of soda",
+    "query": "gaseosa",
+    "title": "botella de gaseosa"
+  },
+  {
+    "label": "a bottle of water",
+    "query": "agua",
+    "title": "botella de agua"
+  },
+  {
+    "label": "a bottle of wine",
+    "query": "vino",
+    "title": "botella de vino"
+  },
+  {
+    "label": "a package of yogurt",
+    "query": "yogur",
+    "title": "envase de yogur"
+  },
+  {
+    "label": "a package of cheese",
+    "query": "queso",
+    "title": "paquete de queso"
+  },
+  {
+    "label": "a box and tube of Colgate Total toothpaste",
+    "query": "dentifrico colgate total",
+    "title": "pasta dental Colgate Total"
+  },
+  {
+    "label": "a package of toothbrushes",
+    "query": "cepillo dental",
+    "title": "cepillo dental"
+  },
+  {
+    "label": "a bottle of laundry detergent",
+    "query": "detergente para ropa",
+    "title": "detergente para ropa"
+  },
+  {
+    "label": "a bottle of dishwashing liquid",
+    "query": "detergente para vajilla",
+    "title": "detergente para vajilla"
+  },
+  {
+    "label": "a bottle of household bleach",
+    "query": "lavandina",
+    "title": "lavandina"
+  },
+  {
+    "label": "a bottle of hair conditioner",
+    "query": "acondicionador",
+    "title": "acondicionador"
+  },
+  {
+    "label": "a stick of deodorant",
+    "query": "desodorante",
+    "title": "desodorante"
+  },
+  {
+    "label": "a pack of disposable diapers",
+    "query": "pañales",
+    "title": "pañales"
+  },
+  {
+    "label": "a roll of kitchen paper towels",
+    "query": "rollo de cocina",
+    "title": "rollo de cocina"
+  },
+  {
+    "label": "a bag of dry cat food",
+    "query": "alimento para gato",
+    "title": "alimento para gato"
+  },
+  {
+    "label": "a bag of dog food",
+    "query": "alimento para perro",
+    "title": "alimento para perro"
+  },
+  {
+    "label": "a fresh red apple",
+    "query": "manzana",
+    "title": "manzana"
+  },
+  {
+    "label": "a sack of potatoes",
+    "query": "papa",
+    "title": "papa"
+  },
+  {
+    "label": "a carton of eggs",
+    "query": "huevos",
+    "title": "huevos"
+  },
+  {
+    "label": "a chocolate bar",
+    "query": "chocolate",
+    "title": "chocolate"
+  },
+  {
+    "label": "a package of sliced bread",
+    "query": "pan",
+    "title": "pan"
+  },
+  {
+    "label": "a household cleaning sponge",
+    "query": "esponja",
+    "title": "esponja"
+  },
+  {
+    "label": "a package of trash bags",
+    "query": "bolsas de residuos",
+    "title": "bolsas de residuos"
+  },
+  {
+    "label": "a book",
+    "query": null,
+    "title": "libro"
+  },
+  {
+    "label": "a chair",
+    "query": null,
+    "title": "silla"
+  },
+  {
+    "label": "a box of breakfast cereal",
+    "query": "cereal",
+    "title": "caja de cereal"
+  },
+  {
+    "label": "a package of oatmeal",
+    "query": "avena",
+    "title": "paquete de avena"
+  },
+  {
+    "label": "a package of dry instant noodles",
+    "query": "fideos instantaneos",
+    "title": "fideos instantáneos"
+  },
+  {
+    "label": "a bottle of ketchup",
+    "query": "ketchup",
+    "title": "botella de ketchup"
+  },
+  {
+    "label": "a jar of mayonnaise",
+    "query": "mayonesa",
+    "title": "frasco de mayonesa"
+  },
+  {
+    "label": "a jar of jam",
+    "query": "mermelada",
+    "title": "frasco de mermelada"
+  },
+  {
+    "label": "a bag of coffee beans",
+    "query": "cafe",
+    "title": "café"
+  },
+  {
+    "label": "a box of tea bags",
+    "query": "te",
+    "title": "caja de té"
+  },
+  {
+    "label": "a bottle of vinegar",
+    "query": "vinagre",
+    "title": "botella de vinagre"
+  },
+  {
+    "label": "a bag of lentils",
+    "query": "lentejas",
+    "title": "paquete de lentejas"
+  },
+  {
+    "label": "a bag of dried beans",
+    "query": "porotos",
+    "title": "paquete de porotos"
+  },
+  {
+    "label": "a package of frozen vegetables",
+    "query": "verduras congeladas",
+    "title": "verduras congeladas"
+  },
+  {
+    "label": "a package of frozen french fries",
+    "query": "papas congeladas",
+    "title": "papas congeladas"
+  },
+  {
+    "label": "a tray of raw beef",
+    "query": "carne vacuna",
+    "title": "carne vacuna"
+  },
+  {
+    "label": "a tray of raw chicken",
+    "query": "pollo",
+    "title": "pollo"
+  },
+  {
+    "label": "a tray of fresh fish",
+    "query": "pescado",
+    "title": "pescado"
+  },
+  {
+    "label": "a fresh banana",
+    "query": "banana",
+    "title": "banana"
+  },
+  {
+    "label": "a fresh orange",
+    "query": "naranja",
+    "title": "naranja"
+  },
+  {
+    "label": "a fresh tomato",
+    "query": "tomate",
+    "title": "tomate"
+  },
+  {
+    "label": "a fresh onion",
+    "query": "cebolla",
+    "title": "cebolla"
+  },
+  {
+    "label": "a fresh lettuce",
+    "query": "lechuga",
+    "title": "lechuga"
+  },
+  {
+    "label": "a bottle of liquid hand soap",
+    "query": "jabon liquido",
+    "title": "jabón líquido"
+  },
+  {
+    "label": "a package of facial tissues",
+    "query": "pañuelos descartables",
+    "title": "pañuelos descartables"
+  },
+  {
+    "label": "a package of sanitary pads",
+    "query": "toallitas femeninas",
+    "title": "toallitas femeninas"
+  },
+  {
+    "label": "a can of insect repellent spray",
+    "query": "repelente",
+    "title": "repelente"
+  },
+  {
+    "label": "a tube of toothpaste",
+    "query": "dentifrico",
+    "title": "pasta dental"
+  },
+  {
+    "label": "a bottle of fabric softener",
+    "query": "suavizante",
+    "title": "suavizante para ropa"
+  },
+  {
+    "label": "a bottle of floor cleaner",
+    "query": "limpiador",
+    "title": "limpiador para pisos"
+  },
+  {
+    "label": "a bottle of window cleaner",
+    "query": "limpiavidrios",
+    "title": "limpiavidrios"
+  },
+  {
+    "label": "a can of beer",
+    "query": "cerveza",
+    "title": "lata de cerveza"
+  },
+  {
+    "label": "a glass bottle of beer",
+    "query": "cerveza",
+    "title": "botella de cerveza"
+  },
+  {
+    "label": "a carton of juice",
+    "query": "jugo",
+    "title": "caja de jugo"
+  },
+  {
+    "label": "a bottle of olive oil",
+    "query": "aceite",
+    "title": "aceite de oliva"
+  },
+  {
+    "label": "a package of pet food",
+    "query": "alimento para mascotas",
+    "title": "alimento para mascotas"
+  }
 ]

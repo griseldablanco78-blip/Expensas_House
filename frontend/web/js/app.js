@@ -658,10 +658,11 @@ function initEventListeners() {
   const imageStatus = document.getElementById('image-search-status');
   imageBtn.addEventListener('click', () => imageInput.click());
   imageInput.addEventListener('change', async () => {
-    const file = imageInput.files && imageInput.files[0];
-    if (!file) return;
+    const selectedFile = imageInput.files && imageInput.files[0];
+    if (!selectedFile) return;
     imageBtn.disabled = true;
     try {
+      const file=await normalizeProductSearchImage(selectedFile);
       let query = '', visual = null, ocrQuery = '', ocrError = null, visionError = null;
       try { visual = await classifyProductImage(file, message => { imageStatus.textContent = message; }); }
       catch (error) { visionError = error; }
@@ -672,7 +673,7 @@ function initEventListeners() {
       else if (ocrQuery) query = ocrQuery;
       else throw visionError || ocrError || new Error('No pude identificar el producto. Escribí una descripción y volvé a buscar.');
       searchInput.value = query;
-      imageStatus.textContent = `${visual ? `Imagen reconocida: ${visual.title}` : 'Descripción leída del envase'} · búsqueda: “${query}”. Comparando en los cinco supermercados…`;
+      imageStatus.textContent = `${visual ? `El modelo interpreta la imagen como: ${visual.title}` : 'Texto reconocido en el envase'} · búsqueda: “${query}”. Comparando en los cinco supermercados…`;
       await performAIComparison(query, file);
       imageStatus.textContent = `Búsqueda desde imagen: “${query}”. Podés corregir el texto y volver a comparar.`;
     } catch (error) {

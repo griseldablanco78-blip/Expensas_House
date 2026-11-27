@@ -16,15 +16,27 @@ const model = await CLIPTextModelWithProjection.from_pretrained(modelDir, {
   local_files_only: true,
   device: 'cpu',
 });
-const tokens = tokenizer(labels.map(({ label }) => `A close-up product photo of ${label}.`), {
+const prompts = labels.flatMap(({ label }) => [
+  `A photo of ${label}.`,
+  `A drawing of ${label}.`,
+  `An illustration of ${label}.`,
+  `A product image of ${label}.`,
+]);
+const tokens = tokenizer(prompts, {
   padding: true,
   truncation: true,
 });
 const { text_embeds: embeddings } = await model(tokens);
 const vectors = [];
 for (let row = 0; row < labels.length; row++) {
-  const start = row * embeddings.dims[1];
-  const vector = Array.from(embeddings.data.slice(start, start + embeddings.dims[1]));
+  const width = embeddings.dims[1];
+  const vector = Array(width).fill(0);
+  for (let prompt = 0; prompt < 4; prompt++) {
+    const start = (row * 4 + prompt) * width;
+    const sample = Array.from(embeddings.data.slice(start, start + width));
+    const norm = Math.sqrt(sample.reduce((sum, value) => sum + value * value, 0)) || 1;
+    for (let column = 0; column < width; column++) vector[column] += sample[column] / norm;
+  }
   const norm = Math.sqrt(vector.reduce((sum, value) => sum + value * value, 0)) || 1;
   vectors.push(vector.map(value => Number((value / norm).toFixed(7))));
 }

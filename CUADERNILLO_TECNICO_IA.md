@@ -5,11 +5,11 @@
 - **Web:** [Abrir Expensas House](https://expensas-house-griselda-blanco.vercel.app)
 - **API y contratos:** [OpenAPI](https://expensas-house-griselda-blanco.vercel.app/docs)
 - **Versión Android verificada:** 1.3.2
-- **Actualización:** 18 de noviembre de 2026.
+- **Actualización:** 26 de noviembre de 2026.
 
 ## Enfoque de la materia: imágenes y aplicación práctica
 
-El procesamiento de la fotografía del ticket es un eje del trabajo: adquisición completa, preparación de una copia para OCR, reconocimiento de caracteres, interpretación de productos/precios y revisión antes de registrar el gasto. El total confirmado actualiza el presupuesto y queda disponible en el resumen por fecha. No se confunde la alícuota `(21,00)` ni la presentación `2,25L` con un importe. Los catálogos externos también aportan imágenes reales de productos a las tarjetas de ofertas; estas fotos se muestran desde las URLs de la fuente, sin generación de imágenes por IA.
+El procesamiento de la fotografía del ticket es un eje del trabajo: adquisición completa, preparación de una copia para OCR, reconocimiento de caracteres, interpretación de productos/precios y revisión antes de registrar el gasto. El total confirmado actualiza el presupuesto y queda disponible en el resumen por fecha. El intérprete prioriza el renglón final rotulado `TOTAL` frente al subtotal `TOTAL PRODUCTOS` y mantiene la diferencia de descuentos o impuestos visible para revisar; no toma el efectivo recibido ni el vuelto como importe gastado. También evita confundir la alícuota `(21,00)` y la presentación `2,25L` con un precio. El OCR puede fallar y la confirmación siempre requiere revisión humana. Los catálogos externos también aportan imágenes reales de productos a las tarjetas de ofertas; estas fotos se muestran desde las URLs de la fuente, sin generación de imágenes por IA.
 
 La [presentación principal](docs/Presentacion_Expensas-House.md) desarrolla el flujo de imágenes, la motivación, las dificultades y una tabla con la función de cada módulo. El ZIP del aula contiene solo código y TXT de enlaces; la APK de Android se descarga por separado desde GitHub Releases.
 
@@ -88,6 +88,7 @@ Las dependencias analíticas y el OCR nativo opcional tienen archivos de requisi
 | Módulo | Técnica actual | Entrenamiento propio | Porcentaje de calidad disponible |
 | --- | --- | --- | --- |
 | Buscador de ofertas | Palabras clave, normalización de texto, marca, presentación y reglas de ordenamiento. | No requiere entrenamiento en esta versión. | No medido mediante un conjunto de consultas etiquetadas. |
+| Búsqueda por imagen | CLIP ViT-B/32 preentrenado, ONNX cuantizado, ejecutado en el navegador; compara la imagen con 82 etiquetas de productos, usando vectores que promedian prompts de foto, dibujo, ilustración e imagen de producto. OCR aporta texto de envase cuando logra reconocerlo. | No se ajustan los pesos: se amplía el vocabulario y se calculan vectores de texto con el encoder CLIP preentrenado local. | En pruebas locales con las imágenes compartidas clasificó Colgate Total como dentífrico, Molinos Ala como arroz y Quilmes como cerveza. No es una descripción abierta y aún requiere evaluación con más envases y dibujos. |
 | Boti House | Reglas para ofertas, presupuesto y faltantes; consulta datos del hogar. | No hay entrenamiento conversacional propio. | No hay una tasa global de aciertos publicada. |
 | Voz web | Servicio de reconocimiento expuesto por Web Speech API, idioma `es-AR`. | Se utiliza el servicio disponible en el navegador. | No se midió WER con grabaciones y transcripciones de referencia. |
 | Voz Android | Reconocedor instalado en el sistema mediante `RecognizerIntent`, idioma `es-AR`. | Se utiliza un servicio preexistente del dispositivo. | No se midió WER con un corpus propio. |
@@ -110,6 +111,16 @@ Mientras esa conexión no esté habilitada, Expensas House conserva ofertas manu
 La web incluye «Consultar en Ratoneando», que abre el sitio oficial con la misma búsqueda por palabras clave. Es una consulta externa; sus resultados no se presentan como datos importados por la API de Expensas House. La licencia del código permite estudiar o desplegar el proyecto según sus condiciones; el uso del servicio alojado requiere respetar sus controles de acceso.
 
 **Cómo medir la calidad sin entrenar:** preparar consultas con resultados relevantes revisados, medir Precision@5, verificar equivalencia de unidades y registrar disponibilidad, antigüedad de precios y tiempo de respuesta. La regla del comparador mejora a partir de errores observados en esas consultas.
+
+### Búsqueda visual y entrenamiento
+
+`frontend/web/js/features/visual-search.js` carga `openai/clip-vit-base-patch32` en formato ONNX cuantizado desde archivos estáticos de la propia aplicación. Transformers.js 3.8.1 y ONNX Runtime Web ejecutan el encoder visual dentro del navegador. CLIP convierte la imagen en un vector y lo compara por similitud coseno con 82 vectores de categorías de productos que están en `labels.json`. Para admitir fotos y dibujos, cada vector promedia los embeddings de cuatro descripciones (`photo`, `drawing`, `illustration` y `product image`). El script genera estos vectores localmente con el encoder CLIP correspondiente a partir de `labels.source.json`; los pesos son preentrenados y no se actualizan cuando una persona sube una imagen.
+
+Las etiquetas de Colgate, arroz y cerveza se verificaron con las imágenes que compartió la estudiante: CLIP propuso «dentífrico Colgate Total», «arroz Molinos Ala» y «cerveza Quilmes». Luego el OCR puede complementar la marca o presentación que lea en el envase. La búsqueda resultante consulta los catálogos de supermercados y compara las fotos publicadas disponibles. Antes de procesar, los formatos que el navegador pueda decodificar se normalizan como JPEG; la imagen también se envía al endpoint de esta aplicación para comparar con las imágenes del catálogo. No se manda a Hugging Face ni a un servicio de entrenamiento externo.
+
+La cobertura queda limitada al vocabulario curado de 82 clases comunes de alimentos y artículos del hogar. Aunque el modelo puede comparar dibujos e ilustraciones con los prompts correspondientes, no produce una descripción libre ni conoce automáticamente cada producto. Cuando dos categorías se parecen, la predicción puede ser incorrecta; por eso se muestra como interpretación del modelo, el texto de búsqueda queda editable y se debe revisar antes de consultar ofertas.
+
+Ampliar etiquetas no equivale a entrenar el modelo. Un ajuste supervisado exigiría fotos representativas con categorías verificadas, separación por producto entre entrenamiento, validación y prueba, y una evaluación independiente antes de publicar pesos nuevos. `n8n` es un orquestador de flujos: puede automatizar la revisión o el armado de datos, pero por sí solo no entrena el clasificador. Para este proyecto conviene primero ampliar y medir las etiquetas CLIP; si se reúne un conjunto suficiente y diverso, recién entonces evaluar fine-tuning de CLIP o un clasificador liviano como MobileNet.
 
 ## 6. Chatbot Boti House
 

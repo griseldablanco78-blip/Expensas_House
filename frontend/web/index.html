@@ -91,8 +91,8 @@
       <div class="comparator-hero">
         <div class="hero-header">
           <div class="hero-pill">🛒 COMPARADOR DE OFERTAS</div>
-          <h2>Buscá tu producto y descubrí tu oferta top</h2>
-          <p>Compará marcas, presentaciones y precios entre los supermercados disponibles. Encontrá la opción que más te conviene.</p>
+          <h2>Encontrá la mejor oferta para tu compra</h2>
+          <p>Escribí, dictá o subí una foto del producto. La búsqueda visual interpreta el envase y compara precios publicados.</p>
         </div>
 
         <!-- Barra de Búsqueda Inteligente con Voz -->
@@ -100,7 +100,7 @@
           <div class="search-input-wrapper">
             <span class="search-icon">🔍</span>
             <input type="text" id="ai-search-input" placeholder="Ej.: leche La Serenísima 1 L" autocomplete="off">
-            <input type="file" id="product-image-input" accept="image/jpeg,image/png,image/webp" class="hidden" aria-label="Elegir imagen del producto">
+            <input type="file" id="product-image-input" accept="image/*" class="hidden" aria-label="Elegir imagen del producto">
             <button type="button" id="btn-image-search" class="voice-btn image-search-btn" title="Buscar ofertas a partir de una foto" aria-label="Buscar por imagen">🖼️</button>
             
             <!-- Botón de Voz a Texto -->
@@ -204,11 +204,11 @@
       </div>
       <section class="offer-receipt-history" aria-labelledby="offer-receipt-title">
         <h3 id="offer-receipt-title">Tickets guardados</h3>
-        <p>Doble clic o doble toque para abrir el ticket.</p>
+        <p>Abrí un comprobante para revisar el detalle de una compra.</p>
         <div id="offer-receipt-list"></div>
       </section>
       <dialog id="saved-receipt-dialog" aria-labelledby="saved-receipt-title">
-        <button type="button" id="saved-receipt-close" class="btn-secondary">Cerrar ticket</button>
+        <button type="button" id="saved-receipt-close" aria-label="Cerrar ticket" title="Cerrar ticket">×</button>
         <h3 id="saved-receipt-title">Ticket guardado</h3>
         <div id="saved-receipt-content"></div>
       </dialog>
@@ -220,8 +220,8 @@
     <section id="tab-dashboard" class="tab-pane">
       <div class="page-header">
         <div>
-          <h2>Tu Casa en Perspectiva</h2>
-          <p>Métricas consolidadas de inventario, consumo y presupuesto familiar.</p>
+          <h2>Resumen de tu casa</h2>
+          <p>Consultá de un vistazo el stock, las compras y el presupuesto del mes.</p>
         </div>
       </div>
 
@@ -289,7 +289,7 @@
       <div class="page-header">
         <div>
           <h2>Inventario del Hogar</h2>
-          <p>Gestioná unidades cerradas en alacena y productos abiertos actualmente en uso.</p>
+          <p>Organizá lo que tenés en casa y seguí las cantidades disponibles.</p>
         </div>
         <button id="btn-open-add-stock-modal" type="button" class="btn-primary add-product-button">
           <span class="add-product-icon" aria-hidden="true">+</span><span>Agregar producto</span>
@@ -344,7 +344,7 @@
       <div class="page-header">
         <div>
           <h2>Lista de Compras</h2>
-          <p>Productos que faltan en casa o agregados desde las ofertas encontradas por el comparador.</p>
+          <p>Anotá lo que necesitás comprar y sumá productos desde las ofertas.</p>
         </div>
         <button id="btn-open-add-shopping-modal" type="button" class="btn-primary add-product-button">
           <span class="add-product-icon" aria-hidden="true">+</span><span>Agregar a la lista</span>
@@ -362,8 +362,8 @@
     <section id="tab-budget" class="tab-pane">
       <div class="page-header">
         <div>
-          <h2>Presupuesto & Registro de Gastos</h2>
-          <p>Controlá el presupuesto mensual y cargá los tickets de compra del supermercado.</p>
+          <h2>Presupuesto y gastos</h2>
+          <p>Registrá tus compras y consultá cuánto llevás gastado este mes.</p>
         </div>
         <div class="header-actions">
           <button id="btn-open-budget-modal" class="btn-secondary">⚙️ Definir Presupuesto</button>
@@ -661,7 +661,7 @@
 
       <div class="boti-messages-container" id="boti-messages" role="log" aria-live="polite">
         <div class="boti-msg bot">
-          ¡Hola! Soy Boti House. Pregúntame sobre qué te falta en la alacena, cuánto presupuesto te queda o qué ofertas de supermercados te convienen.
+          ¡Hola! Soy Boti House. Te ayudo a revisar tu alacena, tus gastos y las ofertas disponibles.
         </div>
       </div>
 
@@ -688,7 +688,7 @@
   <script src="/static/js/features/offers.js?v=cloud-13"></script>
   <script src="/static/js/features/chat.js?v=cloud-11"></script>
   <script src="/static/js/features/browser-ocr.js?v=cloud-14"></script>
-  <script src="/static/js/features/visual-search.js?v=cloud-19"></script>
+  <script src="/static/js/features/visual-search.js?v=cloud-20"></script>
   <script src="/static/js/features/receipts.js?v=cloud-11"></script>
   <script src="/static/js/features/expenses.js?v=cloud-11"></script>
   <script src="/static/js/app.js?v=cloud-17"></script>
